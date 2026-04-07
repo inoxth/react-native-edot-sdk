@@ -17,6 +17,10 @@
   },
   "exclude": ["example", "node_modules"],
   "references": [
-    { "path": "packages/react-native" }
+    { "path": "packages/react-native" },
+    { "path": "packages/react-native-navigation" },
+    { "path": "packages/react-native-wix-navigation" },
+    { "path": "packages/react-native-expo-router" },
+    { "path": "packages/react-native-tracer-provider" }
   ]
 }
