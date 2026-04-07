@@ -57,3 +57,8 @@ export interface EdotUser {
   email?: string;
   name?: string;
 }
+
+export interface SpanContext {
+  traceId: string;
+  spanId: string;
+}

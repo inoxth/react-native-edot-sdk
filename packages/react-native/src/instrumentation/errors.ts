@@ -1,5 +1,6 @@
 import { EdotNativeModule } from '../nativeModule';
 import type { EdotConfig } from '../types';
+import { getActiveViewContext, getActiveViewName } from '../context/ActiveViewContext';
 
 type ErrorHandler = (error: Error, isFatal?: boolean) => void;
 
@@ -9,12 +10,28 @@ declare const ErrorUtils: {
 };
 
 function reportError(error: Error, source: string, isFatal: boolean): void {
-  const spanId = EdotNativeModule.startSpan('JS Error', {
+  const viewContext = getActiveViewContext();
+  const viewName = getActiveViewName();
+
+  const attributes: Record<string, string> = {
     'exception.type': error.name,
     'exception.message': error.message,
     'exception.stacktrace': error.stack ?? '',
     'error.source': source,
-  }, null);
+  };
+  if (viewName) {
+    attributes['view.name'] = viewName;
+  }
+  if (viewContext) {
+    attributes['view.id'] = viewContext.spanId;
+  }
+
+  const spanId = EdotNativeModule.startSpan('JS Error', attributes, null);
+
+  if (viewContext) {
+    EdotNativeModule.addSpanLink(spanId, viewContext.traceId, viewContext.spanId);
+  }
+
   EdotNativeModule.endSpan(spanId, 2);
 
   EdotNativeModule.reportJsException({

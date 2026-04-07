@@ -3,6 +3,7 @@ import { EdotNativeModule } from '../nativeModule';
 import { sanitizeUrl, shouldIgnore, shouldPropagate } from './urlUtils';
 import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
+import { getActiveViewContext, getActiveViewName } from '../context/ActiveViewContext';
 
 const DEDUP_HEADER = 'X-Edot-RN-Traced';
 
@@ -53,12 +54,26 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         }
       }
 
-      const nativeSpanId = EdotNativeModule.startSpan(
-        spanName,
-        { 'http.method': method, 'http.url': sanitizedUrl },
-        null,
-      );
+      const viewContext = getActiveViewContext();
+      const viewName = getActiveViewName();
+
+      const attributes: Record<string, string> = {
+        'http.method': method,
+        'http.url': sanitizedUrl,
+      };
+      if (viewName) {
+        attributes['view.name'] = viewName;
+      }
+      if (viewContext) {
+        attributes['view.id'] = viewContext.spanId;
+      }
+
+      const nativeSpanId = EdotNativeModule.startSpan(spanName, attributes, null);
       state.spanId = nativeSpanId;
+
+      if (viewContext) {
+        EdotNativeModule.addSpanLink(nativeSpanId, viewContext.traceId, viewContext.spanId);
+      }
 
       originalSetRequestHeader.call(this, DEDUP_HEADER, '1');
       if (shouldPropagate(url, config.tracePropagationTargets)) {
