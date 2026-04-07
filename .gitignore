@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/install-state.gz
+.pnp.*
+
+# Build output
+lib/
+dist/
+
+# iOS
+Pods/
+*.xcworkspace/xcuserdata/
+build/
+*.ipa
+DerivedData/
+
+# Android
+*.apk
+*.aab
+*.keystore
+!debug.keystore
+.gradle/
+local.properties
+
+# IDE
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# TypeScript
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Turborepo
+.turbo/

@@ -1,0 +1,108 @@
+import { Platform } from 'react-native';
+import { EDOT_DEFAULTS } from './defaults';
+import { validateConfig } from './config';
+import { detectResourceAttributes } from './resource';
+import { EdotNativeModule } from './nativeModule';
+let initialized = false;
+function mergeConfig(config) {
+  const merged = {
+    ...EDOT_DEFAULTS,
+    ...config,
+  };
+  const platformConfig =
+    Platform.OS === 'ios' ? merged.ios : Platform.OS === 'android' ? merged.android : undefined;
+  const resourceAttributes = detectResourceAttributes();
+  const nativeConfig = {
+    serverUrl: merged.serverUrl,
+    serviceName: merged.serviceName,
+    serviceVersion: merged.serviceVersion,
+    deploymentEnvironment: merged.deploymentEnvironment,
+    exportProtocol: merged.exportProtocol,
+    sessionSamplingRate: merged.sessionSamplingRate,
+    instrumentNetworkRequests: merged.instrumentNetworkRequests,
+    instrumentJsErrors: merged.instrumentJsErrors,
+    instrumentNativeCrashes: merged.instrumentNativeCrashes,
+    instrumentAppLifecycle: merged.instrumentAppLifecycle,
+    instrumentAppStartup: merged.instrumentAppStartup,
+    trackingConsent: merged.trackingConsent,
+    debug: merged.debug,
+    debugExportToConsole: merged.debugExportToConsole,
+    resourceAttributes,
+    ...platformConfig,
+  };
+  if (merged.secretToken) {
+    nativeConfig.secretToken = merged.secretToken;
+  }
+  if (merged.apiKey) {
+    nativeConfig.apiKey = merged.apiKey;
+  }
+  if (merged.customExportHeaders) {
+    nativeConfig.customExportHeaders = merged.customExportHeaders;
+  }
+  if (merged.globalAttributes) {
+    nativeConfig.globalAttributes = merged.globalAttributes;
+  }
+  if (merged.codePushVersion) {
+    nativeConfig.codePushVersion = merged.codePushVersion;
+  }
+  return nativeConfig;
+}
+function debugLog(config, ...args) {
+  if (config.debug) {
+    console.log('[EDOT]', ...args);
+  }
+}
+export const EdotReactNative = {
+  async initialize(config) {
+    if (initialized) {
+      console.warn('[EDOT] SDK already initialized, ignoring duplicate call');
+      return;
+    }
+    validateConfig(config);
+    const nativeConfig = mergeConfig(config);
+    debugLog(config, 'Initializing with config:', {
+      serverUrl: config.serverUrl,
+      serviceName: config.serviceName,
+      debug: config.debug,
+    });
+    await EdotNativeModule.initialize(nativeConfig);
+    initialized = true;
+    debugLog(config, 'SDK initialized successfully');
+  },
+  async getCurrentSessionId() {
+    return EdotNativeModule.getCurrentSessionId();
+  },
+  setUser(user) {
+    EdotNativeModule.setUser(user);
+  },
+  clearUser() {
+    EdotNativeModule.clearUser();
+  },
+  setSessionAttribute(key, value) {
+    EdotNativeModule.setSessionAttribute(key, value);
+  },
+  setGlobalAttribute(key, value) {
+    EdotNativeModule.setGlobalAttribute(key, String(value));
+  },
+  removeGlobalAttribute(key) {
+    EdotNativeModule.removeGlobalAttribute(key);
+  },
+  setTrackingConsent(consent) {
+    EdotNativeModule.setTrackingConsent(consent);
+  },
+  log(severity, message, attributes) {
+    EdotNativeModule.emitLog(severity, message, attributes ?? {});
+  },
+  addAction(type, name, attributes) {
+    EdotNativeModule.emitLog('info', `UserAction: ${name}`, {
+      'user_action.type': type,
+      'user_action.target': name,
+      ...attributes,
+    });
+  },
+  /** @internal - exposed for testing */
+  _resetForTesting() {
+    initialized = false;
+  },
+};
+//# sourceMappingURL=EdotReactNative.js.map
