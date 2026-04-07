@@ -1,0 +1,51 @@
+schema: spec-driven
+profile: workflows
+
+tools:
+  - claude
+
+context:
+  project_name: "EDOT React Native SDK"
+  project_type: "React Native library (monorepo)"
+
+  tech_stack:
+    - TypeScript (strict mode)
+    - React Native 0.72+ (both Bridge and New Architecture)
+    - Swift 5.10+ (iOS native module)
+    - Kotlin (Android native module)
+    - Jest (unit testing)
+    - Detox (E2E testing)
+    - react-native-builder-bob (library build)
+    - Yarn Workspaces (monorepo)
+    - Changesets (versioning)
+
+  conventions:
+    file_structure: "monorepo with packages/ directory"
+    testing_framework: "Jest for unit, Detox for E2E"
+    code_style: "ESLint + Prettier, strict TypeScript"
+    native_ios: "Swift with ObjC bridge headers"
+    native_android: "Kotlin with ReactContextBaseJavaModule"
+    build_tool: "react-native-builder-bob"
+
+  dependencies:
+    ios:
+      - "ElasticApm v2.0.0 (EDOT iOS SDK via SPM — github.com/elastic/apm-agent-ios)"
+      - "opentelemetry-swift (transitive)"
+      - "plcrashreporter (transitive)"
+    android:
+      - "co.elastic.otel.android.agent Gradle plugin v1.5.0 (EDOT Android SDK — applied by consumer app)"
+      - "io.opentelemetry:opentelemetry-api:1.60.1 (direct dependency of library module)"
+
+  prd_location: "docs/PRD.md"
+
+  api_style: "OpenTelemetry-aligned JavaScript API surface"
+
+artifact_rules:
+  proposal:
+    max_length: "1500 words"
+  specs:
+    require_scenarios: true
+    scenarios_per_requirement: 1
+  tasks:
+    max_per_phase: 15
+    require_file_references: true
