@@ -1220,6 +1220,165 @@ await EdotReactNative.initialize({
 
 ---
 
+### 3.19 View-to-Network Span Correlation (Screen → API Mapping)
+
+A core observability need is answering: "When the user is on Screen X, which API calls fire?" Without explicit correlation, view spans and network spans are flat siblings under the same session — queryable only by overlapping timestamps, not by structural relationship.
+
+#### 3.19.1 Design Approach — Span Links (Not Parent-Child)
+
+Network spans are **linked** to the active view span, not made children of it. This is intentional:
+
+- **Parent-child** would mean the view span cannot end until all child network spans end. If a user navigates away while a slow API request is still in-flight, the previous view span would hang open, corrupting navigation timing data.
+- **Span links** allow independent lifetimes. The view span ends on navigation; the network span ends when the response arrives. The link preserves the relationship without coupling their lifecycles.
+
+#### 3.19.2 Active View Context — Shared State
+
+The navigation plugins (React Navigation, Wix, Expo Router) manage a shared `ActiveViewContext` that the network interceptor reads:
+
+```typescript
+// packages/core/src/context/ActiveViewContext.ts
+
+import { SpanContext } from './types';
+
+let activeViewContext: SpanContext | null = null;
+let activeViewName: string | null = null;
+
+export function setActiveView(spanContext: SpanContext, viewName: string) {
+  activeViewContext = spanContext;
+  activeViewName = viewName;
+}
+
+export function clearActiveView() {
+  activeViewContext = null;
+  activeViewName = null;
+}
+
+export function getActiveViewContext(): SpanContext | null {
+  return activeViewContext;
+}
+
+export function getActiveViewName(): string | null {
+  return activeViewName;
+}
+```
+
+Navigation plugins call `setActiveView()` when a new screen appears and `clearActiveView()` is NOT called on navigation — the new view simply replaces the old one. This ensures there's always an active view context (except before the first screen renders).
+
+#### 3.19.3 Network Interceptor Integration
+
+The fetch/XHR interceptor reads the active view context and attaches it to every network span:
+
+```typescript
+// Inside fetchPatch.ts — when creating a network span
+
+const activeView = getActiveViewContext();
+const activeViewName = getActiveViewName();
+
+const span = tracer.startSpan(`HTTP ${method}`, {
+  kind: SpanKind.CLIENT,
+  attributes: {
+    'http.method': method,
+    'http.url': sanitizedUrl,
+    // View correlation attributes
+    ...(activeViewName && { 'view.name': activeViewName }),
+    ...(activeView && { 'view.id': activeView.spanId }),
+  },
+  // Span link to the active view span
+  links: activeView ? [{ context: activeView }] : [],
+});
+```
+
+This produces two correlation mechanisms:
+
+1. **Span link** — structural relationship queryable in Kibana's trace view.
+2. **`view.name` and `view.id` attributes** — flat attributes on every network span, enabling simple `GROUP BY view.name` queries and dashboard filters.
+
+#### 3.19.4 Span Attributes Added to Network Spans
+
+| Attribute | Source | Example |
+|---|---|---|
+| `view.name` | Active navigation screen name | `ProductDetailScreen` |
+| `view.id` | Active view span's spanId | `abc123def456` |
+| Span Link | OTel link to view span context | `traceId + spanId` of view span |
+
+#### 3.19.5 Querying in Kibana
+
+With these attributes and links, the following queries become possible:
+
+**"Which APIs does ProductDetailScreen call?"**
+```
+span.type: "http" AND view.name: "ProductDetailScreen"
+```
+
+**"Which screen triggered this slow API call?"**
+```
+span.name: "HTTP GET /api/recommendations" → read view.name attribute → "HomeScreen"
+```
+
+**"Show me the full waterfall for a screen visit"**
+Navigate to any view span in Kibana APM → follow span links → see all network requests, errors, and custom spans that occurred during that view.
+
+**"Which screen has the most API calls?"**
+```
+GROUP BY view.name, COUNT(span.type: "http") ORDER BY count DESC
+```
+
+**"Which screen has the slowest cumulative API time?"**
+```
+GROUP BY view.name, SUM(http.duration) ORDER BY sum DESC
+```
+
+#### 3.19.6 Error Span Correlation
+
+The same pattern applies to JS error spans. When a JS error is captured, the active view context is attached:
+
+```typescript
+// Inside reportJsError()
+const activeViewName = getActiveViewName();
+
+const span = tracer.startSpan('JS Error', {
+  attributes: {
+    'exception.type': error.name,
+    'exception.message': error.message,
+    'exception.stacktrace': error.stack,
+    'error.source': source,
+    ...(activeViewName && { 'view.name': activeViewName }),
+  },
+  links: getActiveViewContext() ? [{ context: getActiveViewContext()! }] : [],
+});
+```
+
+This enables: "Which screen has the most errors?" and "What errors occur on the checkout screen?"
+
+#### 3.19.7 Custom Span Correlation
+
+Manual instrumentation spans (via TracerProvider) also receive the active view context automatically if `autoLinkToActiveView` is not disabled:
+
+```typescript
+// In TracerProvider wrapper — startSpan override
+startSpan(name: string, options?: SpanOptions): Span {
+  const activeView = getActiveViewContext();
+  const existingLinks = options?.links ?? [];
+
+  const enrichedOptions = {
+    ...options,
+    attributes: {
+      ...options?.attributes,
+      ...(getActiveViewName() && { 'view.name': getActiveViewName() }),
+    },
+    links: activeView
+      ? [...existingLinks, { context: activeView }]
+      : existingLinks,
+  };
+
+  return originalStartSpan(name, enrichedOptions);
+}
+```
+
+This means custom business logic spans (e.g., `processPayment`) are also linked to the screen where they were triggered — without the developer doing anything extra.
+
+---
+
 ## 4. Native Module Implementation Guide
 
 ### 4.1 iOS Native Module
@@ -1246,11 +1405,12 @@ Pod::Spec.new do |s|
   s.platform     = :ios, '16.0'
 
   s.dependency 'React-Core'
-  # EDOT iOS SDK (ElasticApm v2.0.0) is distributed via SPM:
-  #   https://github.com/elastic/apm-agent-ios.git
-  # Consumer app adds the SPM package; this pod links against it.
-  # ElasticApm transitively brings:
-  #   - opentelemetry-swift, plcrashreporter, Reachability.swift, Kronos
+  s.dependency 'ElasticApm', '~> 2.0'       # EDOT iOS SDK
+  # ElasticApm brings in:
+  #   - opentelemetry-swift ~> 1.16.0
+  #   - plcrashreporter ~> 1.12.0
+  #   - Reachability.swift ~> 5.2.4
+  #   - Kronos ~> 4.2.2
 end
 ```
 
@@ -1304,27 +1464,26 @@ android/
 
 #### 4.2.2 Gradle Dependencies
 
-The EDOT Android SDK is distributed as a **Gradle plugin** that instruments the app at build time. The library module only needs the OpenTelemetry API:
-
 ```kotlin
-// Library module (packages/react-native/android/build.gradle.kts)
 dependencies {
     implementation("com.facebook.react:react-android")
-    implementation("io.opentelemetry:opentelemetry-api:1.60.1")
+    implementation("co.elastic.otel.android:agent:+")        // EDOT Android SDK
+    implementation("co.elastic.otel.android:instrumentation-okhttp:+")
+    // EDOT Android brings in:
+    //   - io.opentelemetry:opentelemetry-api
+    //   - io.opentelemetry:opentelemetry-sdk
+    //   - io.opentelemetry:opentelemetry-exporter-otlp
 }
 ```
 
-The **consumer app** must apply the EDOT Gradle plugin, which provides the agent runtime and sets up `GlobalOpenTelemetry`:
+The app's `build.gradle.kts` must also apply the EDOT Gradle plugin:
 
 ```kotlin
-// Consumer app build.gradle.kts
 plugins {
     id("com.android.application")
-    id("co.elastic.otel.android.agent") version "1.5.0"
+    id("co.elastic.otel.android.agent") version "X.Y.Z"
 }
 ```
-
-The EDOT plugin initializes via `ElasticApmAgent.builder(application).setServiceName().setExportUrl().setExportAuthentication(Authentication.ApiKey()).build()` in the consumer's `MainApplication`.
 
 #### 4.2.3 Key Bridge Methods (exposed to JS)
 
@@ -1563,11 +1722,20 @@ A monorepo example app that demonstrates:
 - Orphaned span cleanup timer.
 - Graceful degradation (no-op fallback when native module missing).
 
-### Phase 3 — Navigation, Consent & Manual APIs (Weeks 7–9)
+### Phase 3 — View-to-Network Span Correlation (Week 7)
 
-- `@inox-edot/react-native-navigation` (React Navigation) with `screenNameMapper`.
-- `@inox-edot/react-native-wix-navigation` (Wix).
-- `@inox-edot/react-native-expo-router` (Expo Router).
+- `ActiveViewContext` module (`setActiveView`, `getActiveViewContext`, `getActiveViewName`).
+- Network interceptor integration: add `view.name`, `view.id` attributes and OTel span links to every fetch/XHR span.
+- Error handler integration: add `view.name` and span link to every JS error span.
+- TracerProvider integration: auto-link custom spans to active view (with `autoLinkToActiveView` opt-out).
+- Export `setActiveView` from core package for navigation plugins to consume in Phase 4.
+- Unit tests for all correlation scenarios (active view, no view, navigation during in-flight request).
+
+### Phase 4 — Navigation, Consent & Manual APIs (Weeks 8–10)
+
+- `@inox-edot/react-native-navigation` (React Navigation) with `screenNameMapper` — calls `setActiveView()` on every screen change.
+- `@inox-edot/react-native-wix-navigation` (Wix) — calls `setActiveView()` on ComponentDidAppear.
+- `@inox-edot/react-native-expo-router` (Expo Router) — calls `setActiveView()` on pathname change.
 - `@inox-edot/react-native-tracer-provider` (manual spans, metrics, logs, `withSpanContext`).
 - Tracking consent API (`granted` / `pending` / `not_granted`) with buffer/flush/purge.
 - User interaction tracking (`addAction`, `withEdotTracking` HOC).
@@ -1575,7 +1743,7 @@ A monorepo example app that demonstrates:
 - Session attributes API.
 - iOS background flush (`beginBackgroundTask`) + disk cache.
 
-### Phase 4 — Polish, Symbolication & Migration (Weeks 10–13)
+### Phase 5 — Polish, Symbolication & Migration (Weeks 11–14)
 
 - `edot-rn-sourcemap-upload` CLI tool (JS source maps, ProGuard mapping, iOS dSYM upload).
 - CodePush/OTA version support and composite version source map upload.
@@ -1589,7 +1757,7 @@ A monorepo example app that demonstrates:
 - npm publish pipeline with Changesets.
 - Security review (no PII in default telemetry, token handling, consent flow audit).
 
-### Phase 5 — Post-MVP Enhancements (Backlog)
+### Phase 6 — Post-MVP Enhancements (Backlog)
 
 - Flipper plugin for real-time telemetry visualization.
 - Request/response body capture (opt-in, with size limits).
@@ -1617,6 +1785,7 @@ A monorepo example app that demonstrates:
 | SDK initialization crashes host app | Low | Critical | Wrap all SDK code in try-catch; provide no-op fallback if native module missing |
 | GDPR non-compliance if PII leaks into telemetry | Medium | Critical | Default URL sanitization strips query params; header capture is opt-in allowlist only; provide `urlSanitizer` callback |
 | Orphaned spans cause memory leaks | Medium | Medium | Periodic cleanup of spans older than 5 minutes; auto-end view spans on navigation |
+| View context stale during navigation transition | Low | Medium | Replace `activeViewContext` atomically in `setActiveView()`; network spans during the brief transition gap (~16ms) link to the old view, which is acceptable |
 
 ---
 
@@ -1632,6 +1801,7 @@ A monorepo example app that demonstrates:
 8. **Privacy**: No PII in default telemetry. URL query params stripped by default. Headers not captured unless allowlisted. Consent API works correctly for all three states.
 9. **Resilience**: SDK never crashes the host app. Missing native module degrades gracefully. Orphaned spans are auto-cleaned.
 10. **Offline**: Android disk buffering works. iOS background flush completes before suspension.
+11. **View-API Correlation**: Every network span and error span includes `view.name` + `view.id` attributes and a span link to the active view. Kibana query `view.name: "ScreenX"` returns all APIs called from that screen.
 
 ---
 
