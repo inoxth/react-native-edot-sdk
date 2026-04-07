@@ -1,6 +1,6 @@
 import { setupErrorHandler, reportError } from '../instrumentation/errors';
 import { EdotNativeModule } from '../nativeModule';
-import { setActiveView, clearActiveView } from '../context/ActiveViewContext';
+import { ActiveViewContext } from '../activeViewContext';
 import type { EdotConfig } from '../types';
 
 jest.mock('../nativeModule', () => ({
@@ -8,7 +8,6 @@ jest.mock('../nativeModule', () => ({
     startSpan: jest.fn().mockReturnValue('err-span-1'),
     endSpan: jest.fn(),
     reportJsException: jest.fn(),
-    addSpanLink: jest.fn(),
   },
 }));
 
@@ -22,15 +21,15 @@ const baseConfig: EdotConfig = {
 describe('error handler view correlation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    clearActiveView();
+    ActiveViewContext._resetForTesting();
   });
 
   afterEach(() => {
-    clearActiveView();
+    ActiveViewContext._resetForTesting();
   });
 
-  it('includes view.name and view.id when active view exists', () => {
-    setActiveView({ traceId: 'vt1', spanId: 'vs1' }, 'CheckoutScreen');
+  it('includes view.name when active view exists', () => {
+    ActiveViewContext.setActiveView({ name: 'CheckoutScreen', spanId: 'vs1' });
 
     reportError(new TypeError('test error'), 'js_uncaught', true);
 
@@ -38,26 +37,29 @@ describe('error handler view correlation', () => {
       'JS Error',
       expect.objectContaining({
         'view.name': 'CheckoutScreen',
-        'view.id': 'vs1',
       }),
       null,
     );
   });
 
-  it('calls addSpanLink when active view exists', () => {
-    setActiveView({ traceId: 'vt1', spanId: 'vs1' }, 'CheckoutScreen');
-
-    reportError(new TypeError('test error'), 'js_uncaught', true);
-
-    expect(EdotNativeModule.addSpanLink).toHaveBeenCalledWith('err-span-1', 'vt1', 'vs1');
-  });
-
-  it('omits view attributes when no active view', () => {
+  it('omits view.name when no active view', () => {
     reportError(new Error('test error'), 'js_uncaught', false);
 
     const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
     expect(attrs).not.toHaveProperty('view.name');
-    expect(attrs).not.toHaveProperty('view.id');
-    expect(EdotNativeModule.addSpanLink).not.toHaveBeenCalled();
+  });
+
+  it('sets up global error handler', () => {
+    const mockSetGlobal = jest.fn();
+    const mockGetGlobal = jest.fn().mockReturnValue(() => {});
+    (global as Record<string, unknown>).ErrorUtils = {
+      getGlobalHandler: mockGetGlobal,
+      setGlobalHandler: mockSetGlobal,
+    };
+
+    const teardown = setupErrorHandler(baseConfig);
+    expect(mockSetGlobal).toHaveBeenCalled();
+
+    teardown();
   });
 });

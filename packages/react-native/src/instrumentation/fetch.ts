@@ -1,9 +1,9 @@
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
+import { ActiveViewContext } from '../activeViewContext';
 import { sanitizeUrl, shouldIgnore, shouldPropagate, extractMethod, extractUrl } from './urlUtils';
 import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
-import { getActiveViewContext, getActiveViewName } from '../context/ActiveViewContext';
 
 const DEDUP_HEADER = 'X-Edot-RN-Traced';
 
@@ -33,25 +33,18 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       const traceId = generateTraceId();
       const spanId = generateSpanId();
 
-      const viewContext = getActiveViewContext();
-      const viewName = getActiveViewName();
+      const activeView = ActiveViewContext.getActiveView();
 
-      const attributes: Record<string, string> = {
+      const spanAttributes: Record<string, string> = {
         'http.method': method,
         'http.url': sanitizedUrl,
       };
-      if (viewName) {
-        attributes['view.name'] = viewName;
-      }
-      if (viewContext) {
-        attributes['view.id'] = viewContext.spanId;
+      if (activeView) {
+        spanAttributes['view.name'] = activeView.name;
+        spanAttributes['view.id'] = activeView.spanId;
       }
 
-      const nativeSpanId = EdotNativeModule.startSpan(spanName, attributes, null);
-
-      if (viewContext) {
-        EdotNativeModule.addSpanLink(nativeSpanId, viewContext.traceId, viewContext.spanId);
-      }
+      const nativeSpanId = EdotNativeModule.startSpan(spanName, spanAttributes, null);
 
       const headers = new Headers(init?.headers);
       headers.set(DEDUP_HEADER, '1');

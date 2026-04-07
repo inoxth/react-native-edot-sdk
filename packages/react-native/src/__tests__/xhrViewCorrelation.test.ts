@@ -1,6 +1,6 @@
 import { setupXhrInstrumentation } from '../instrumentation/xhr';
 import { EdotNativeModule } from '../nativeModule';
-import { setActiveView, clearActiveView } from '../context/ActiveViewContext';
+import { ActiveViewContext } from '../activeViewContext';
 import type { EdotConfig } from '../types';
 
 jest.mock('../nativeModule', () => ({
@@ -9,7 +9,6 @@ jest.mock('../nativeModule', () => ({
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
     recordSpanException: jest.fn(),
-    addSpanLink: jest.fn(),
   },
 }));
 
@@ -47,16 +46,16 @@ describe('XHR view correlation', () => {
   beforeEach(() => {
     global.XMLHttpRequest = MockXMLHttpRequest as unknown as typeof XMLHttpRequest;
     jest.clearAllMocks();
-    clearActiveView();
+    ActiveViewContext._resetForTesting();
   });
 
   afterEach(() => {
     teardown?.();
-    clearActiveView();
+    ActiveViewContext._resetForTesting();
   });
 
   it('includes view.name and view.id when active view exists', () => {
-    setActiveView({ traceId: 'ht1', spanId: 'hs1' }, 'HomeScreen');
+    ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'hs1' });
     teardown = setupXhrInstrumentation(baseConfig);
 
     const xhr = new XMLHttpRequest();
@@ -73,17 +72,6 @@ describe('XHR view correlation', () => {
     );
   });
 
-  it('calls addSpanLink when active view exists', () => {
-    setActiveView({ traceId: 'ht1', spanId: 'hs1' }, 'HomeScreen');
-    teardown = setupXhrInstrumentation(baseConfig);
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://api.example.com/feed');
-    xhr.send();
-
-    expect(EdotNativeModule.addSpanLink).toHaveBeenCalledWith('xhr-span-1', 'ht1', 'hs1');
-  });
-
   it('omits view attributes when no active view', () => {
     teardown = setupXhrInstrumentation(baseConfig);
 
@@ -94,17 +82,16 @@ describe('XHR view correlation', () => {
     const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
     expect(attrs).not.toHaveProperty('view.name');
     expect(attrs).not.toHaveProperty('view.id');
-    expect(EdotNativeModule.addSpanLink).not.toHaveBeenCalled();
   });
 
   it('captures view context at send time', () => {
-    setActiveView({ traceId: 'vt-a', spanId: 'vs-a' }, 'ScreenA');
+    ActiveViewContext.setActiveView({ name: 'ScreenA', spanId: 'vs-a' });
     teardown = setupXhrInstrumentation(baseConfig);
 
     const xhr = new XMLHttpRequest();
     xhr.open('GET', 'https://api.example.com/slow');
 
-    setActiveView({ traceId: 'vt-b', spanId: 'vs-b' }, 'ScreenB');
+    ActiveViewContext.setActiveView({ name: 'ScreenB', spanId: 'vs-b' });
     xhr.send();
 
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(

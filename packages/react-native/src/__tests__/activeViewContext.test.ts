@@ -1,41 +1,60 @@
-import {
-  setActiveView,
-  clearActiveView,
-  getActiveViewContext,
-  getActiveViewName,
-} from '../context/ActiveViewContext';
+import { ActiveViewContext } from '../activeViewContext';
 
 describe('ActiveViewContext', () => {
   afterEach(() => {
-    clearActiveView();
+    ActiveViewContext._resetForTesting();
   });
 
   it('returns null when no active view is set', () => {
-    expect(getActiveViewContext()).toBeNull();
-    expect(getActiveViewName()).toBeNull();
+    expect(ActiveViewContext.getActiveView()).toBeNull();
   });
 
-  it('stores view context and name after setActiveView', () => {
-    const context = { traceId: 'trace-1', spanId: 'span-1' };
-    setActiveView(context, 'HomeScreen');
+  it('stores active view after setActiveView', () => {
+    ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'span-1' });
 
-    expect(getActiveViewContext()).toEqual({ traceId: 'trace-1', spanId: 'span-1' });
-    expect(getActiveViewName()).toBe('HomeScreen');
+    expect(ActiveViewContext.getActiveView()).toEqual({ name: 'HomeScreen', spanId: 'span-1' });
   });
 
-  it('replaces view context on subsequent setActiveView calls', () => {
-    setActiveView({ traceId: 'trace-a', spanId: 'span-a' }, 'ScreenA');
-    setActiveView({ traceId: 'trace-b', spanId: 'span-b' }, 'ScreenB');
+  it('replaces active view on subsequent setActiveView calls', () => {
+    ActiveViewContext.setActiveView({ name: 'ScreenA', spanId: 'span-a' });
+    ActiveViewContext.setActiveView({ name: 'ScreenB', spanId: 'span-b' });
 
-    expect(getActiveViewContext()).toEqual({ traceId: 'trace-b', spanId: 'span-b' });
-    expect(getActiveViewName()).toBe('ScreenB');
+    expect(ActiveViewContext.getActiveView()).toEqual({ name: 'ScreenB', spanId: 'span-b' });
   });
 
-  it('clears view context after clearActiveView', () => {
-    setActiveView({ traceId: 'trace-1', spanId: 'span-1' }, 'Screen');
-    clearActiveView();
+  it('clears active view after clearActiveView', () => {
+    ActiveViewContext.setActiveView({ name: 'Screen', spanId: 'span-1' });
+    ActiveViewContext.clearActiveView();
 
-    expect(getActiveViewContext()).toBeNull();
-    expect(getActiveViewName()).toBeNull();
+    expect(ActiveViewContext.getActiveView()).toBeNull();
+  });
+
+  it('notifies listeners on setActiveView', () => {
+    const listener = jest.fn();
+    ActiveViewContext.addListener(listener);
+
+    ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'span-1' });
+
+    expect(listener).toHaveBeenCalledWith({ name: 'HomeScreen', spanId: 'span-1' });
+  });
+
+  it('notifies listeners with null on clearActiveView', () => {
+    ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'span-1' });
+    const listener = jest.fn();
+    ActiveViewContext.addListener(listener);
+
+    ActiveViewContext.clearActiveView();
+
+    expect(listener).toHaveBeenCalledWith(null);
+  });
+
+  it('removes listener on unsubscribe', () => {
+    const listener = jest.fn();
+    const unsubscribe = ActiveViewContext.addListener(listener);
+    unsubscribe();
+
+    ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'span-1' });
+
+    expect(listener).not.toHaveBeenCalled();
   });
 });

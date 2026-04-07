@@ -1,6 +1,6 @@
 import { setupFetchInstrumentation } from '../instrumentation/fetch';
 import { EdotNativeModule } from '../nativeModule';
-import { setActiveView, clearActiveView } from '../context/ActiveViewContext';
+import { ActiveViewContext } from '../activeViewContext';
 import type { EdotConfig } from '../types';
 
 jest.mock('../nativeModule', () => ({
@@ -9,7 +9,6 @@ jest.mock('../nativeModule', () => ({
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
     recordSpanException: jest.fn(),
-    addSpanLink: jest.fn(),
   },
 }));
 
@@ -30,16 +29,16 @@ describe('fetch view correlation', () => {
     );
     global.fetch = originalFetch;
     jest.clearAllMocks();
-    clearActiveView();
+    ActiveViewContext._resetForTesting();
   });
 
   afterEach(() => {
     teardown?.();
-    clearActiveView();
+    ActiveViewContext._resetForTesting();
   });
 
   it('includes view.name and view.id when active view exists', async () => {
-    setActiveView({ traceId: 'vt1', spanId: 'vs1' }, 'ProductDetailScreen');
+    ActiveViewContext.setActiveView({ name: 'ProductDetailScreen', spanId: 'vs1' });
     teardown = setupFetchInstrumentation(baseConfig);
 
     await global.fetch('https://api.example.com/products/1');
@@ -54,15 +53,6 @@ describe('fetch view correlation', () => {
     );
   });
 
-  it('calls addSpanLink when active view exists', async () => {
-    setActiveView({ traceId: 'vt1', spanId: 'vs1' }, 'ProductDetailScreen');
-    teardown = setupFetchInstrumentation(baseConfig);
-
-    await global.fetch('https://api.example.com/products/1');
-
-    expect(EdotNativeModule.addSpanLink).toHaveBeenCalledWith('net-span-1', 'vt1', 'vs1');
-  });
-
   it('omits view attributes when no active view', async () => {
     teardown = setupFetchInstrumentation(baseConfig);
 
@@ -71,11 +61,10 @@ describe('fetch view correlation', () => {
     const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
     expect(attrs).not.toHaveProperty('view.name');
     expect(attrs).not.toHaveProperty('view.id');
-    expect(EdotNativeModule.addSpanLink).not.toHaveBeenCalled();
   });
 
   it('captures view context at request start, not completion', async () => {
-    setActiveView({ traceId: 'vt-a', spanId: 'vs-a' }, 'ScreenA');
+    ActiveViewContext.setActiveView({ name: 'ScreenA', spanId: 'vs-a' });
 
     let resolveResponse: (value: Response) => void;
     const pendingResponse = new Promise<Response>((resolve) => {
@@ -86,7 +75,7 @@ describe('fetch view correlation', () => {
 
     const fetchPromise = global.fetch('https://api.example.com/slow');
 
-    setActiveView({ traceId: 'vt-b', spanId: 'vs-b' }, 'ScreenB');
+    ActiveViewContext.setActiveView({ name: 'ScreenB', spanId: 'vs-b' });
 
     resolveResponse!(new Response('ok', { status: 200 }));
     await fetchPromise;
@@ -99,6 +88,5 @@ describe('fetch view correlation', () => {
       }),
       null,
     );
-    expect(EdotNativeModule.addSpanLink).toHaveBeenCalledWith('net-span-1', 'vt-a', 'vs-a');
   });
 });
