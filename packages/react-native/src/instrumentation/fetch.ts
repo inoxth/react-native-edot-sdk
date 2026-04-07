@@ -1,5 +1,6 @@
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
+import { ActiveViewContext } from '../activeViewContext';
 import { sanitizeUrl, shouldIgnore, shouldPropagate, extractMethod, extractUrl } from './urlUtils';
 import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
@@ -32,10 +33,18 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       const traceId = generateTraceId();
       const spanId = generateSpanId();
 
-      const nativeSpanId = EdotNativeModule.startSpan(spanName, {
+      const activeView = ActiveViewContext.getActiveView();
+
+      const spanAttributes: Record<string, string> = {
         'http.method': method,
         'http.url': sanitizedUrl,
-      }, null);
+      };
+      if (activeView) {
+        spanAttributes['view.name'] = activeView.name;
+        spanAttributes['view.id'] = activeView.spanId;
+      }
+
+      const nativeSpanId = EdotNativeModule.startSpan(spanName, spanAttributes, null);
 
       const headers = new Headers(init?.headers);
       headers.set(DEDUP_HEADER, '1');

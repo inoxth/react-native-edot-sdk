@@ -1,5 +1,6 @@
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
+import { ActiveViewContext } from '../activeViewContext';
 import { sanitizeUrl, shouldIgnore, shouldPropagate } from './urlUtils';
 import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
@@ -53,9 +54,20 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         }
       }
 
+      const activeView = ActiveViewContext.getActiveView();
+
+      const spanAttributes: Record<string, string> = {
+        'http.method': method,
+        'http.url': sanitizedUrl,
+      };
+      if (activeView) {
+        spanAttributes['view.name'] = activeView.name;
+        spanAttributes['view.id'] = activeView.spanId;
+      }
+
       const nativeSpanId = EdotNativeModule.startSpan(
         spanName,
-        { 'http.method': method, 'http.url': sanitizedUrl },
+        spanAttributes,
         null,
       );
       state.spanId = nativeSpanId;
