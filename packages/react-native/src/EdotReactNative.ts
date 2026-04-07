@@ -4,8 +4,15 @@ import { EDOT_DEFAULTS } from './defaults';
 import { validateConfig } from './config';
 import { detectResourceAttributes } from './resource';
 import { EdotNativeModule } from './nativeModule';
+import { setupFetchInstrumentation } from './instrumentation/fetch';
+import { setupXhrInstrumentation } from './instrumentation/xhr';
+import { setupErrorHandler } from './instrumentation/errors';
+import { setupLifecycleTracking } from './instrumentation/lifecycle';
+import { setupStartupTracing } from './instrumentation/startup';
+import { setupSpanCleanup } from './instrumentation/spanCleanup';
 
 let initialized = false;
+const teardowns: Array<() => void> = [];
 
 function mergeConfig(config: EdotConfig): Record<string, unknown> {
   const merged = {
@@ -82,6 +89,31 @@ export const EdotReactNative = {
     await EdotNativeModule.initialize(nativeConfig);
     initialized = true;
 
+    const merged = { ...EDOT_DEFAULTS, ...config };
+
+    if (merged.instrumentNetworkRequests) {
+      teardowns.push(setupFetchInstrumentation(config));
+      teardowns.push(setupXhrInstrumentation(config));
+      debugLog(config, 'Network instrumentation enabled');
+    }
+
+    if (merged.instrumentJsErrors) {
+      teardowns.push(setupErrorHandler(config));
+      debugLog(config, 'JS error tracking enabled');
+    }
+
+    if (merged.instrumentAppLifecycle) {
+      teardowns.push(setupLifecycleTracking(config));
+      debugLog(config, 'Lifecycle tracking enabled');
+    }
+
+    if (merged.instrumentAppStartup) {
+      teardowns.push(setupStartupTracing(config));
+      debugLog(config, 'Startup tracing enabled');
+    }
+
+    teardowns.push(setupSpanCleanup());
+
     debugLog(config, 'SDK initialized successfully');
   },
 
@@ -135,6 +167,8 @@ export const EdotReactNative = {
 
   /** @internal - exposed for testing */
   _resetForTesting(): void {
+    teardowns.forEach((fn) => fn());
+    teardowns.length = 0;
     initialized = false;
   },
 };

@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { EdotReactNative } from '@inox-edot/react-native';
+import { EdotReactNative, EdotErrorBoundary } from '@inox-edot/react-native';
 
 export function App(): React.JSX.Element {
   const [sessionId, setSessionId] = useState<string>('');
@@ -69,7 +69,19 @@ export function App(): React.JSX.Element {
     addLog('Global attribute removed: tenant_id');
   }, [addLog]);
 
+  const handleFetchRequest = useCallback(async () => {
+    try {
+      const response = await fetch('https://jsonplaceholder.typicode.com/posts/1');
+      const data = await response.json();
+      addLog(`Fetch OK: ${data.title?.substring(0, 30)}...`);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      addLog(`Fetch error: ${message}`);
+    }
+  }, [addLog]);
+
   return (
+    <EdotErrorBoundary fallback={<Text style={styles.title}>Something went wrong</Text>}>
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <ScrollView contentInsetAdjustmentBehavior="automatic" style={styles.scroll}>
@@ -86,6 +98,7 @@ export function App(): React.JSX.Element {
           <Button title="Set Session Attr" onPress={handleSetAttribute} />
           <Button title="Set Global Attr" onPress={handleSetGlobalAttribute} />
           <Button title="Remove Global Attr" onPress={handleRemoveGlobalAttribute} />
+          <Button title="Test Fetch" onPress={handleFetchRequest} />
         </View>
 
         <View style={styles.section}>
@@ -98,6 +111,7 @@ export function App(): React.JSX.Element {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </EdotErrorBoundary>
   );
 }
 
