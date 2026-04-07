@@ -46,3 +46,6 @@ tsconfig.tsbuildinfo
 
 # Turborepo
 .turbo/
+
+# Claude Code
+.claude/tsc-cache/
