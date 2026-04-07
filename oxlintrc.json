@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicolo-ribaudo/oxc-config-schema/refs/heads/main/schema.json",
+  "plugins": ["typescript", "react", "import"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "pedantic": "off",
+    "style": "off",
+    "nursery": "off"
+  },
+  "rules": {
+    "no-unused-vars": "warn",
+    "typescript/no-explicit-any": "warn",
+    "@typescript-eslint/no-wrapper-object-types": "off"
+  },
+  "ignorePatterns": ["node_modules", "lib", "**/*.d.ts", "**/*.d.ts.map", "**/*.test.d.ts", "example"]
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicolo-ribaudo/oxc-config-schema/refs/heads/main/oxfmt.json",
+  "printWidth": 100,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "arrowParens": "always",
+  "bracketSpacing": true,
+  "semi": true,
+  "tabWidth": 2,
+  "useTabs": false,
+  "ignore": ["node_modules", "lib", "*.d.ts", "example/ios", "example/android"]
+}
