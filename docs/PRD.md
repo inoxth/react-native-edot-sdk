@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-This document specifies the design and implementation requirements for **`@anthropic-edot/react-native`** — an open-source React Native SDK that wraps the native EDOT (Elastic Distribution of OpenTelemetry) iOS and Android SDKs into a unified JavaScript/TypeScript API. The SDK enables React Native applications to send OpenTelemetry-compliant traces, metrics, and logs to an Elastic APM Server (or any OTLP-compatible backend).
+This document specifies the design and implementation requirements for **`@inox-edot/react-native`** — an open-source React Native SDK that wraps the native EDOT (Elastic Distribution of OpenTelemetry) iOS and Android SDKs into a unified JavaScript/TypeScript API. The SDK enables React Native applications to send OpenTelemetry-compliant traces, metrics, and logs to an Elastic APM Server (or any OTLP-compatible backend).
 
 The primary use case is a client migration from the **DataDog React Native SDK (`@datadog/mobile-react-native`)** to EDOT. The SDK must achieve feature parity with DataDog RUM capabilities while leveraging Elastic's native EDOT agents under the hood.
 
@@ -116,14 +116,14 @@ The primary use case is a client migration from the **DataDog React Native SDK (
 ### 2.3 Monorepo Package Structure
 
 ```
-@anthropic-edot/react-native                  # Core SDK (required)
-@anthropic-edot/react-native-navigation       # @react-navigation/native plugin
-@anthropic-edot/react-native-wix-navigation   # react-native-navigation (Wix) plugin
-@anthropic-edot/react-native-expo-router      # expo-router plugin
-@anthropic-edot/react-native-tracer-provider  # OTel TracerProvider wrapper
+@inox-edot/react-native                  # Core SDK (required)
+@inox-edot/react-native-navigation       # @react-navigation/native plugin
+@inox-edot/react-native-wix-navigation   # react-native-navigation (Wix) plugin
+@inox-edot/react-native-expo-router      # expo-router plugin
+@inox-edot/react-native-tracer-provider  # OTel TracerProvider wrapper
 ```
 
-**Note on naming**: The `@anthropic-edot` scope is a placeholder. Final scope should be coordinated with the client and Elastic. Alternatives: `@edot-rn`, `@elastic-otel-rn`, or the client's own npm scope.
+**Note on naming**: The `@inox-edot` scope is a placeholder. Final scope should be coordinated with the client and Elastic. Alternatives: `@edot-rn`, `@elastic-otel-rn`, or the client's own npm scope.
 
 ---
 
@@ -134,7 +134,7 @@ The primary use case is a client migration from the **DataDog React Native SDK (
 #### 3.1.1 JavaScript API
 
 ```typescript
-import { EdotReactNative, EdotConfig } from '@anthropic-edot/react-native';
+import { EdotReactNative, EdotConfig } from '@inox-edot/react-native';
 
 const config: EdotConfig = {
   // Required
@@ -397,10 +397,10 @@ Navigation tracking is split into separate packages per navigation library, each
 | `view.previous` | Previous screen name |
 | `view.transition_type` | `push`, `pop`, `replace`, `tab`, `modal` |
 
-#### 3.3.2 `@anthropic-edot/react-native-navigation` (React Navigation)
+#### 3.3.2 `@inox-edot/react-native-navigation` (React Navigation)
 
 ```typescript
-import { createEdotNavigationContainerRef } from '@anthropic-edot/react-native-navigation';
+import { createEdotNavigationContainerRef } from '@inox-edot/react-native-navigation';
 import { NavigationContainer } from '@react-navigation/native';
 
 const navigationRef = createEdotNavigationContainerRef();
@@ -419,10 +419,10 @@ function App() {
 
 **Implementation**: Listen to `onStateChange` on the NavigationContainer. On each state change, resolve the current route name via `navigationRef.getCurrentRoute()`. Start a new "view" span, end the previous one. Track the span from the navigation event until the next navigation event.
 
-#### 3.3.3 `@anthropic-edot/react-native-wix-navigation` (Wix react-native-navigation)
+#### 3.3.3 `@inox-edot/react-native-wix-navigation` (Wix react-native-navigation)
 
 ```typescript
-import { registerEdotNavigationListener } from '@anthropic-edot/react-native-wix-navigation';
+import { registerEdotNavigationListener } from '@inox-edot/react-native-wix-navigation';
 import { Navigation } from 'react-native-navigation';
 
 registerEdotNavigationListener(Navigation);
@@ -430,10 +430,10 @@ registerEdotNavigationListener(Navigation);
 
 **Implementation**: Register a `ComponentDidAppearListener` on Wix Navigation's event emitter. Each `componentDidAppear` event creates a new view span with the component name.
 
-#### 3.3.4 `@anthropic-edot/react-native-expo-router` (Expo Router)
+#### 3.3.4 `@inox-edot/react-native-expo-router` (Expo Router)
 
 ```typescript
-import { EdotExpoNavigationProvider } from '@anthropic-edot/react-native-expo-router';
+import { EdotExpoNavigationProvider } from '@inox-edot/react-native-expo-router';
 
 export default function RootLayout() {
   return (
@@ -471,7 +471,7 @@ The SDK must capture:
 **Implementation — EdotErrorBoundary:**
 
 ```typescript
-import { EdotErrorBoundary } from '@anthropic-edot/react-native';
+import { EdotErrorBoundary } from '@inox-edot/react-native';
 
 function App() {
   return (
@@ -596,7 +596,7 @@ The SDK exposes an OpenTelemetry-aligned API for custom instrumentation.
 #### 3.7.1 Tracer Provider
 
 ```typescript
-import { getTracerProvider } from '@anthropic-edot/react-native-tracer-provider';
+import { getTracerProvider } from '@inox-edot/react-native-tracer-provider';
 
 const tracerProvider = getTracerProvider();
 const tracer = tracerProvider.getTracer('checkout-flow', '1.0.0');
@@ -632,7 +632,7 @@ parentSpan.end();
 #### 3.7.3 Custom Metrics
 
 ```typescript
-import { getMeterProvider } from '@anthropic-edot/react-native-tracer-provider';
+import { getMeterProvider } from '@inox-edot/react-native-tracer-provider';
 
 const meter = getMeterProvider().getMeter('app-metrics', '1.0.0');
 
@@ -660,7 +660,7 @@ cartSize.add(-1);  // item removed
 #### 3.7.4 Custom Logs
 
 ```typescript
-import { EdotReactNative } from '@anthropic-edot/react-native';
+import { EdotReactNative } from '@inox-edot/react-native';
 
 // Structured logging
 EdotReactNative.log('info', 'User completed onboarding', {
@@ -831,7 +831,7 @@ For Expo apps using EAS Build:
 
 #### 3.9.5 Unified CLI Tool Summary
 
-The `edot-rn-sourcemap-upload` CLI (shipped as part of the `@anthropic-edot/react-native` package or as a standalone `@anthropic-edot/cli` package) must support:
+The `edot-rn-sourcemap-upload` CLI (shipped as part of the `@inox-edot/react-native` package or as a standalone `@inox-edot/cli` package) must support:
 
 | Flag | Description |
 |---|---|
@@ -854,7 +854,7 @@ DataDog has a first-class `trackingConsent` mechanism. The PRD must match this f
 #### 3.10.1 Tracking Consent API
 
 ```typescript
-import { EdotReactNative, TrackingConsent } from '@anthropic-edot/react-native';
+import { EdotReactNative, TrackingConsent } from '@inox-edot/react-native';
 
 // At init time (default: 'granted')
 await EdotReactNative.initialize({
@@ -1022,7 +1022,7 @@ DataDog captures user actions (taps, scrolls). The EDOT SDK should provide equiv
 Provide an optional HOC or hook that tracks user taps on interactive elements:
 
 ```typescript
-import { withEdotTracking } from '@anthropic-edot/react-native';
+import { withEdotTracking } from '@inox-edot/react-native';
 
 // HOC approach
 const TrackedButton = withEdotTracking(TouchableOpacity, {
@@ -1165,7 +1165,7 @@ This is necessary because native spans can be started/ended from multiple thread
 JavaScript `async/await` does not have Zone.js-like context propagation. The SDK should provide a helper for manually propagating parent span context through async call chains:
 
 ```typescript
-import { withSpanContext } from '@anthropic-edot/react-native-tracer-provider';
+import { withSpanContext } from '@inox-edot/react-native-tracer-provider';
 
 const parentSpan = tracer.startSpan('checkoutFlow');
 
@@ -1246,12 +1246,11 @@ Pod::Spec.new do |s|
   s.platform     = :ios, '16.0'
 
   s.dependency 'React-Core'
-  s.dependency 'ElasticApm', '~> 2.0'       # EDOT iOS SDK
-  # ElasticApm brings in:
-  #   - opentelemetry-swift ~> 1.16.0
-  #   - plcrashreporter ~> 1.12.0
-  #   - Reachability.swift ~> 5.2.4
-  #   - Kronos ~> 4.2.2
+  # EDOT iOS SDK (ElasticApm v2.0.0) is distributed via SPM:
+  #   https://github.com/elastic/apm-agent-ios.git
+  # Consumer app adds the SPM package; this pod links against it.
+  # ElasticApm transitively brings:
+  #   - opentelemetry-swift, plcrashreporter, Reachability.swift, Kronos
 end
 ```
 
@@ -1305,26 +1304,27 @@ android/
 
 #### 4.2.2 Gradle Dependencies
 
+The EDOT Android SDK is distributed as a **Gradle plugin** that instruments the app at build time. The library module only needs the OpenTelemetry API:
+
 ```kotlin
+// Library module (packages/react-native/android/build.gradle.kts)
 dependencies {
     implementation("com.facebook.react:react-android")
-    implementation("co.elastic.otel.android:agent:+")        // EDOT Android SDK
-    implementation("co.elastic.otel.android:instrumentation-okhttp:+")
-    // EDOT Android brings in:
-    //   - io.opentelemetry:opentelemetry-api
-    //   - io.opentelemetry:opentelemetry-sdk
-    //   - io.opentelemetry:opentelemetry-exporter-otlp
+    implementation("io.opentelemetry:opentelemetry-api:1.60.1")
 }
 ```
 
-The app's `build.gradle.kts` must also apply the EDOT Gradle plugin:
+The **consumer app** must apply the EDOT Gradle plugin, which provides the agent runtime and sets up `GlobalOpenTelemetry`:
 
 ```kotlin
+// Consumer app build.gradle.kts
 plugins {
     id("com.android.application")
-    id("co.elastic.otel.android.agent") version "X.Y.Z"
+    id("co.elastic.otel.android.agent") version "1.5.0"
 }
 ```
+
+The EDOT plugin initializes via `ElasticApmAgent.builder(application).setServiceName().setExportUrl().setExportAuthentication(Authentication.ApiKey()).build()` in the consumer's `MainApplication`.
 
 #### 4.2.3 Key Bridge Methods (exposed to JS)
 
@@ -1424,7 +1424,7 @@ export default EdotNativeModule;
 
 1. Remove `@datadog/mobile-react-native` and all `@datadog/mobile-react-*` packages.
 2. Remove DataDog iOS pod (`DatadogSDKObjc`, `DatadogSDKBridge`) and Android dependencies.
-3. Install `@anthropic-edot/react-native` and relevant navigation plugin.
+3. Install `@inox-edot/react-native` and relevant navigation plugin.
 4. Update `Podfile` to include EDOT iOS dependency. Run `pod install`.
 5. Update `android/build.gradle.kts` to apply EDOT Gradle plugin.
 6. Replace `DdSdkReactNative.initialize()` with `EdotReactNative.initialize()` — translate config.
@@ -1448,7 +1448,7 @@ For Expo managed workflow (`expo prebuild`), provide a config plugin that automa
 {
   "expo": {
     "plugins": [
-      ["@anthropic-edot/react-native", {
+      ["@inox-edot/react-native", {
         "ios": {
           "serverUrl": "https://apm.example.com:8200"
         },
@@ -1469,7 +1469,7 @@ The config plugin must:
 
 ### 6.2 Expo Router Integration
 
-The `@anthropic-edot/react-native-expo-router` package already handles Expo Router navigation tracking (Section 3.3.4).
+The `@inox-edot/react-native-expo-router` package already handles Expo Router navigation tracking (Section 3.3.4).
 
 ---
 
@@ -1565,10 +1565,10 @@ A monorepo example app that demonstrates:
 
 ### Phase 3 — Navigation, Consent & Manual APIs (Weeks 7–9)
 
-- `@anthropic-edot/react-native-navigation` (React Navigation) with `screenNameMapper`.
-- `@anthropic-edot/react-native-wix-navigation` (Wix).
-- `@anthropic-edot/react-native-expo-router` (Expo Router).
-- `@anthropic-edot/react-native-tracer-provider` (manual spans, metrics, logs, `withSpanContext`).
+- `@inox-edot/react-native-navigation` (React Navigation) with `screenNameMapper`.
+- `@inox-edot/react-native-wix-navigation` (Wix).
+- `@inox-edot/react-native-expo-router` (Expo Router).
+- `@inox-edot/react-native-tracer-provider` (manual spans, metrics, logs, `withSpanContext`).
 - Tracking consent API (`granted` / `pending` / `not_granted`) with buffer/flush/purge.
 - User interaction tracking (`addAction`, `withEdotTracking` HOC).
 - Global attributes API.
@@ -1596,7 +1596,7 @@ A monorepo example app that demonstrates:
 - W3C Baggage propagation alongside traceparent.
 - Network timing breakdown (DNS, TLS, TTFB — requires native bridge).
 - Rage tap / dead tap detection (frustration signals).
-- Redux state change tracking plugin (`@anthropic-edot/react-native-redux`).
+- Redux state change tracking plugin (`@inox-edot/react-native-redux`).
 
 ---
 
