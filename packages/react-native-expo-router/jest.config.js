@@ -6,7 +6,7 @@ module.exports = {
     'node_modules/(?!(react-native|@react-native|@react-native-community|@inox-edot|expo-router)/)',
   ],
   moduleNameMapper: {
-    '^@inox-edot/react-native/active-view-context$': '<rootDir>/../react-native/src/activeViewContext',
+    '^@inox-edot/core$': '<rootDir>/../core/src/index.ts',
     '^@inox-edot/react-native/nativeModule$': '<rootDir>/../react-native/src/nativeModule',
   },
 };

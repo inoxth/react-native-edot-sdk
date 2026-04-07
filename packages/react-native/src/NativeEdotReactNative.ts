@@ -2,20 +2,20 @@ import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
 export interface Spec extends TurboModule {
-  initialize(config: Object): Promise<void>;
+  initialize(config: object): Promise<void>;
   getCurrentSessionId(): Promise<string>;
-  setUser(userInfo: Object): void;
+  setUser(userInfo: object): void;
   clearUser(): void;
   setSessionAttribute(key: string, value: string): void;
   setGlobalAttribute(key: string, value: string): void;
   removeGlobalAttribute(key: string): void;
-  reportJsException(errorInfo: Object): void;
-  startSpan(name: string, attributes: Object, parentSpanId: string | null): string;
+  reportJsException(errorInfo: object): void;
+  startSpan(name: string, attributes: object, parentSpanId: string | null): string;
   endSpan(spanId: string, statusCode: number): void;
   setSpanAttribute(spanId: string, key: string, value: string): void;
-  recordSpanException(spanId: string, errorInfo: Object): void;
-  recordMetric(name: string, value: number, attributes: Object, metricType: string): void;
-  emitLog(severity: string, message: string, attributes: Object): void;
+  recordSpanException(spanId: string, errorInfo: object): void;
+  recordMetric(name: string, value: number, attributes: object, metricType: string): void;
+  emitLog(severity: string, message: string, attributes: object): void;
   setTrackingConsent(consent: string): void;
   addSpanLink(spanId: string, linkedTraceId: string, linkedSpanId: string): void;
 }

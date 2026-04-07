@@ -30,7 +30,8 @@ describe('setupStartupTracing', () => {
         if (typeof callback === 'function') {
           capturedCallback = callback;
         }
-        return { then: jest.fn(), done: jest.fn(), cancel: jest.fn() };
+        const handle = { done: jest.fn(), cancel: jest.fn() };
+        return Object.assign(Promise.resolve(), handle);
       });
     jest.clearAllMocks();
   });

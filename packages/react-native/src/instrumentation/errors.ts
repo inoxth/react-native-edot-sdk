@@ -9,6 +9,10 @@ declare const ErrorUtils: {
   setGlobalHandler: (handler: ErrorHandler) => void;
 };
 
+type ServiceContext = Pick<EdotConfig, 'serviceName' | 'serviceVersion' | 'deploymentEnvironment'>;
+
+let serviceContext: ServiceContext | null = null;
+
 function reportError(error: Error, source: string, isFatal: boolean): void {
   const activeView = ActiveViewContext.getActiveView();
 
@@ -20,6 +24,11 @@ function reportError(error: Error, source: string, isFatal: boolean): void {
   };
   if (activeView) {
     attributes['view.name'] = activeView.name;
+  }
+  if (serviceContext) {
+    attributes['service.name'] = serviceContext.serviceName;
+    attributes['service.version'] = serviceContext.serviceVersion;
+    attributes['deployment.environment'] = serviceContext.deploymentEnvironment;
   }
 
   const spanId = EdotNativeModule.startSpan('JS Error', attributes, null);
@@ -99,12 +108,19 @@ function setupPromiseRejectionHandler(debug: boolean): () => void {
 }
 
 export function setupErrorHandler(config: EdotConfig): () => void {
+  serviceContext = {
+    serviceName: config.serviceName,
+    serviceVersion: config.serviceVersion,
+    deploymentEnvironment: config.deploymentEnvironment,
+  };
+
   const teardownGlobal = setupGlobalErrorHandler(config.debug ?? false);
   const teardownPromise = setupPromiseRejectionHandler(config.debug ?? false);
 
   return () => {
     teardownGlobal();
     teardownPromise();
+    serviceContext = null;
   };
 }
 

@@ -1,4 +1,4 @@
-import { ActiveViewContext } from '@inox-edot/react-native/active-view-context';
+import { ActiveViewContext } from '@inox-edot/core';
 import type { WixNavigation, EdotWixNavigationOptions, ComponentDidAppearEvent } from './types';
 
 interface NativeModule {
