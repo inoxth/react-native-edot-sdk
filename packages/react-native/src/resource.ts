@@ -14,7 +14,7 @@ export interface ResourceAttributes {
 
 export function detectResourceAttributes(): ResourceAttributes {
   return {
-    'telemetry.sdk.name': 'edot-react-native',
+    'telemetry.sdk.name': 'react-native-edot',
     'telemetry.sdk.version': sdkPackage.version,
     'telemetry.sdk.language': 'javascript',
     'os.type': Platform.OS,

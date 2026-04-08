@@ -89,7 +89,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     @ReactMethod(isBlockingSynchronousMethod = true)
     fun startSpan(name: String, attributes: ReadableMap, parentSpanId: String?): String {
         val tracer = try {
-            GlobalOpenTelemetry.getTracer("edot-react-native")
+            GlobalOpenTelemetry.getTracer("react-native-edot")
         } catch (e: Exception) {
             return UUID.randomUUID().toString()
         }
@@ -160,7 +160,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     @ReactMethod
     fun recordMetric(name: String, value: Double, attributes: ReadableMap, metricType: String) {
         val meter = try {
-            GlobalOpenTelemetry.getMeter("edot-react-native")
+            GlobalOpenTelemetry.getMeter("react-native-edot")
         } catch (e: Exception) {
             return
         }

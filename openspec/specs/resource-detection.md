@@ -6,11 +6,11 @@ Automatically collect and attach OpenTelemetry resource attributes to all teleme
 ## Requirements
 
 ### Requirement: Automatic resource attribute collection
-The SDK SHALL automatically collect and attach OTel resource attributes to all telemetry. JS-detected attributes: `rn.version`, `rn.hermes`, `rn.architecture`. Native-detected attributes: `os.type`, `os.version`, `device.model.identifier`, `device.manufacturer`, `app.build`. Config-provided attributes: `service.name`, `service.version`, `deployment.environment`. Hardcoded attributes: `telemetry.sdk.name` (`edot-react-native`), `telemetry.sdk.language` (`javascript`).
+The SDK SHALL automatically collect and attach OTel resource attributes to all telemetry. JS-detected attributes: `rn.version`, `rn.hermes`, `rn.architecture`. Native-detected attributes: `os.type`, `os.version`, `device.model.identifier`, `device.manufacturer`, `app.build`. Config-provided attributes: `service.name`, `service.version`, `deployment.environment`. Hardcoded attributes: `telemetry.sdk.name` (`react-native-edot`), `telemetry.sdk.language` (`javascript`).
 
 #### Scenario: Resource attributes are populated after initialization
 - **WHEN** `EdotReactNative.initialize(config)` completes
-- **THEN** `telemetry.sdk.name` is set to `edot-react-native`
+- **THEN** `telemetry.sdk.name` is set to `react-native-edot`
 - **THEN** `os.type` is set to `ios` or `android`
 - **THEN** `rn.version` matches the React Native runtime version
 - **THEN** `rn.hermes` is `true` when Hermes is the JS engine

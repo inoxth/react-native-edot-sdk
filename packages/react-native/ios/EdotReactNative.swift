@@ -30,7 +30,7 @@ class EdotReactNative: NSObject {
   private static var globalAttributes: [String: AttributeValue] = [:]
 
   private var tracer: any Tracer {
-    OpenTelemetry.instance.tracerProvider.get(instrumentationName: "edot-react-native")
+    OpenTelemetry.instance.tracerProvider.get(instrumentationName: "react-native-edot")
   }
 
   private static func readAttributes() -> (global: [String: AttributeValue],
@@ -309,7 +309,7 @@ class EdotReactNative: NSObject {
                     attributes: NSDictionary,
                     metricType: String) {
     #if ELASTIC_APM_AVAILABLE
-    let meter = OpenTelemetry.instance.meterProvider.get(name: "edot-react-native")
+    let meter = OpenTelemetry.instance.meterProvider.get(name: "react-native-edot")
 
     var otelAttrs: [String: AttributeValue] = [:]
     for (key, val) in attributes {
@@ -342,7 +342,7 @@ class EdotReactNative: NSObject {
                attributes: NSDictionary) {
     #if ELASTIC_APM_AVAILABLE
     let logger = OpenTelemetry.instance.loggerProvider
-      .loggerBuilder(instrumentationScopeName: "edot-react-native")
+      .loggerBuilder(instrumentationScopeName: "react-native-edot")
       .build()
 
     var otelAttrs: [String: AttributeValue] = [:]

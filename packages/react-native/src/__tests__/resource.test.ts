@@ -38,7 +38,7 @@ describe('detectResourceAttributes', () => {
   it('includes SDK metadata', () => {
     const { detectResourceAttributes } = require('../resource');
     const attrs = detectResourceAttributes();
-    expect(attrs['telemetry.sdk.name']).toBe('edot-react-native');
+    expect(attrs['telemetry.sdk.name']).toBe('react-native-edot');
     expect(attrs['telemetry.sdk.language']).toBe('javascript');
     expect(attrs['telemetry.sdk.version']).toBeDefined();
   });

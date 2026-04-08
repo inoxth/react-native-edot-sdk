@@ -694,7 +694,7 @@ The SDK must automatically collect and attach these resource attributes (via nat
 | `service.name` | Config | `my-rn-app` |
 | `service.version` | Config | `1.2.0` |
 | `deployment.environment` | Config | `production` |
-| `telemetry.sdk.name` | Hardcoded | `edot-react-native` |
+| `telemetry.sdk.name` | Hardcoded | `react-native-edot` |
 | `telemetry.sdk.version` | Package version | `0.1.0` |
 | `telemetry.sdk.language` | Hardcoded | `javascript` |
 | `os.type` | Native detection | `ios` / `android` |
