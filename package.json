@@ -1,5 +1,5 @@
 {
-  "name": "edot-react-native-sdk",
+  "name": "react-native-edot-sdk",
   "version": "0.0.0",
   "private": true,
   "description": "EDOT React Native SDK — OpenTelemetry-compliant observability for React Native",

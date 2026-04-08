@@ -1,6 +1,6 @@
 # EDOT React Native SDK — Implementation Guide with Claude Code + OpenSpec
 
-**Companion to:** `EDOT-React-Native-SDK-PRD.md`
+**Companion to:** `react-native-edot-sdk-PRD.md`
 **Date:** 2026-04-06
 **Purpose:** Step-by-step instructions for building the EDOT React Native SDK using Claude Code as the AI coding agent and OpenSpec as the spec-driven development framework.
 
@@ -48,7 +48,7 @@ npm install -g react-native-cli
 ### 1.2 Create the Monorepo Root
 
 ```bash
-mkdir edot-react-native-sdk && cd edot-react-native-sdk
+mkdir react-native-edot-sdk && cd react-native-edot-sdk
 git init
 ```
 
@@ -58,7 +58,7 @@ Place the PRD document inside the repo so Claude Code can reference it:
 
 ```bash
 mkdir -p docs
-cp /path/to/EDOT-React-Native-SDK-PRD.md docs/PRD.md
+cp /path/to/react-native-edot-sdk-PRD.md docs/PRD.md
 ```
 
 ---
@@ -78,7 +78,7 @@ When prompted:
 This creates the `openspec/` directory structure:
 
 ```
-edot-react-native-sdk/
+react-native-edot-sdk/
 ├── openspec/
 │   ├── config.yaml
 │   ├── schemas/
