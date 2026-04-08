@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* EdotExampleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* EdotExampleTests.m */; };
+		018204B42F86093B000C19C6 /* ElasticApm in Frameworks */ = {isa = PBXBuildFile; productRef = 018204B32F86093B000C19C6 /* ElasticApm */; };
+		018204C12F860A01000C19C6 /* EdotReactNative.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018204D12F860A01000C19C6 /* EdotReactNative.swift */; };
+		018204C22F860A01000C19C6 /* EdotReactNativeAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018204D22F860A01000C19C6 /* EdotReactNativeAgent.swift */; };
+		018204C32F860A01000C19C6 /* EdotReactNative.m in Sources */ = {isa = PBXBuildFile; fileRef = 018204D32F860A01000C19C6 /* EdotReactNative.m */; };
 		0C80B921A6F3F58F76C31292 /* libPods-EdotExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-EdotExample.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
@@ -30,6 +34,10 @@
 		00E356EE1AD99517003FC87E /* EdotExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EdotExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* EdotExampleTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = EdotExampleTests.m; sourceTree = "<group>"; };
+		018204D12F860A01000C19C6 /* EdotReactNative.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EdotReactNative.swift; path = "../../packages/react-native/ios/EdotReactNative.swift"; sourceTree = "<group>"; };
+		018204D22F860A01000C19C6 /* EdotReactNativeAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EdotReactNativeAgent.swift; path = "../../packages/react-native/ios/EdotReactNativeAgent.swift"; sourceTree = "<group>"; };
+		018204D32F860A01000C19C6 /* EdotReactNative.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = EdotReactNative.m; path = "../../packages/react-native/ios/EdotReactNative.m"; sourceTree = "<group>"; };
+		018204D42F860A01000C19C6 /* EdotReactNative-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "EdotReactNative-Bridging-Header.h"; path = "../../packages/react-native/ios/EdotReactNative-Bridging-Header.h"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* EdotExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EdotExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = EdotExample/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = EdotExample/AppDelegate.mm; sourceTree = "<group>"; };
@@ -60,6 +68,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C80B921A6F3F58F76C31292 /* libPods-EdotExample.a in Frameworks */,
+				018204B42F86093B000C19C6 /* ElasticApm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,6 +97,10 @@
 			children = (
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
+				018204D12F860A01000C19C6 /* EdotReactNative.swift */,
+				018204D22F860A01000C19C6 /* EdotReactNativeAgent.swift */,
+				018204D32F860A01000C19C6 /* EdotReactNative.m */,
+				018204D42F860A01000C19C6 /* EdotReactNative-Bridging-Header.h */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
@@ -189,6 +202,9 @@
 			dependencies = (
 			);
 			name = EdotExample;
+			packageProductDependencies = (
+				018204B32F86093B000C19C6 /* ElasticApm */,
+			);
 			productName = EdotExample;
 			productReference = 13B07F961A680F5B00A75B9A /* EdotExample.app */;
 			productType = "com.apple.product-type.application";
@@ -219,6 +235,9 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
+			packageReferences = (
+				018204B22F86093B000C19C6 /* XCRemoteSwiftPackageReference "apm-agent-ios" */,
+			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -394,6 +413,9 @@
 			files = (
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
+				018204C12F860A01000C19C6 /* EdotReactNative.swift in Sources */,
+				018204C22F860A01000C19C6 /* EdotReactNativeAgent.swift in Sources */,
+				018204C32F860A01000C19C6 /* EdotReactNative.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -418,7 +440,7 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = EdotExampleTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -442,7 +464,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
 				INFOPLIST_FILE = EdotExampleTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -480,6 +502,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = EdotExample;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ELASTIC_APM_AVAILABLE";
+				SWIFT_OBJC_BRIDGING_HEADER = "../../packages/react-native/ios/EdotReactNative-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -506,6 +530,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = EdotExample;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ELASTIC_APM_AVAILABLE";
+				SWIFT_OBJC_BRIDGING_HEADER = "../../packages/react-native/ios/EdotReactNative-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -560,7 +586,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -632,7 +658,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -693,6 +719,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		018204B22F86093B000C19C6 /* XCRemoteSwiftPackageReference "apm-agent-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/elastic/apm-agent-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		018204B32F86093B000C19C6 /* ElasticApm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 018204B22F86093B000C19C6 /* XCRemoteSwiftPackageReference "apm-agent-ios" */;
+			productName = ElasticApm;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

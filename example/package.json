@@ -24,6 +24,7 @@
     "@types/jest": "^30.0.0",
     "detox": "^20.50.1",
     "jest": "^30.3.0",
+    "react-native-dotenv": "^3.4.11",
     "typescript": "~5.4.0"
   }
 }

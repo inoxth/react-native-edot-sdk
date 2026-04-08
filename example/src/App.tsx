@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { EdotReactNative, EdotErrorBoundary } from '@inox-edot/react-native';
+import { EDOT_SERVER_URL, EDOT_SECRET_TOKEN } from '@env';
 
 export function App(): React.JSX.Element {
   const [sessionId, setSessionId] = useState<string>('');
@@ -21,12 +22,17 @@ export function App(): React.JSX.Element {
 
   useEffect(() => {
     async function init(): Promise<void> {
+      if (!EDOT_SERVER_URL) {
+        setStatus('Missing .env — copy .env.example to .env');
+        return;
+      }
       try {
         await EdotReactNative.initialize({
-          serverUrl: 'https://apm.example.com:8200',
-          serviceName: 'edot-example',
+          serverUrl: EDOT_SERVER_URL,
+          serviceName: 'rn-edot-example',
           serviceVersion: '0.1.0',
           deploymentEnvironment: 'development',
+          secretToken: EDOT_SECRET_TOKEN,
           debug: true,
         });
         setStatus('Initialized');

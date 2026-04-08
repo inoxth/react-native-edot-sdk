@@ -1,6 +1,6 @@
 import Foundation
 
-#if canImport(ElasticApm)
+#if ELASTIC_APM_AVAILABLE
 import ElasticApm
 #endif
 
@@ -12,10 +12,11 @@ public class EdotReactNativeAgent: NSObject {
   @objc
   public static func preInitialize(serverUrl: String, secretToken: String? = nil) {
     guard !preInitialized else { return }
+    guard let url = URL(string: serverUrl), !serverUrl.isEmpty else { return }
 
-    #if canImport(ElasticApm)
+    #if ELASTIC_APM_AVAILABLE
     var configBuilder = AgentConfigBuilder()
-      .withExportUrl(URL(string: serverUrl)!)
+      .withExportUrl(url)
 
     if let token = secretToken {
       configBuilder = configBuilder.withSecretToken(token)

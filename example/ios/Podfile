@@ -39,8 +39,8 @@ target 'EdotExample' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  # EDOT React Native SDK
-  pod 'EdotReactNative', :path => '../../packages/react-native/ios'
+  # EDOT React Native SDK: source files are included directly in the app target
+  # (not as a pod) so they can import the ElasticApm SPM package at compile time.
 
   target 'EdotExampleTests' do
     inherit! :complete

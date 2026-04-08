@@ -1,21 +1,49 @@
 import Foundation
 import React
+import os.log
 
-#if canImport(ElasticApm)
+#if ELASTIC_APM_AVAILABLE
 import ElasticApm
-private let elasticAvailable = true
-#else
-private let elasticAvailable = false
+import OpenTelemetryApi
 #endif
+
+private let log = OSLog(subsystem: "com.edot.react-native", category: "SDK")
 
 @objc(EdotReactNative)
 class EdotReactNative: NSObject {
 
+  private static let stateLock = NSLock()
   private static var isInitialized = false
   private static var debugEnabled = false
 
   private let spanLock = NSLock()
-  private var activeSpans: [String: Any] = [:]
+  #if ELASTIC_APM_AVAILABLE
+  private var activeSpans: [String: any Span] = [:]
+  #else
+  private var activeSpans: [String: String] = [:]
+  #endif
+
+  #if ELASTIC_APM_AVAILABLE
+  private static let attrLock = NSLock()
+  private static var userAttributes: [String: AttributeValue] = [:]
+  private static var sessionAttributes: [String: AttributeValue] = [:]
+  private static var globalAttributes: [String: AttributeValue] = [:]
+
+  private var tracer: any Tracer {
+    OpenTelemetry.instance.tracerProvider.get(instrumentationName: "edot-react-native")
+  }
+
+  private static func readAttributes() -> (global: [String: AttributeValue],
+                                            session: [String: AttributeValue],
+                                            user: [String: AttributeValue]) {
+    attrLock.lock()
+    let g = globalAttributes
+    let s = sessionAttributes
+    let u = userAttributes
+    attrLock.unlock()
+    return (g, s, u)
+  }
+  #endif
 
   // MARK: - Initialization
 
@@ -23,26 +51,27 @@ class EdotReactNative: NSObject {
   func initialize(_ config: NSDictionary,
                   resolver resolve: @escaping RCTPromiseResolveBlock,
                   rejecter reject: @escaping RCTPromiseRejectBlock) {
+    EdotReactNative.stateLock.lock()
     if EdotReactNative.isInitialized {
+      EdotReactNative.stateLock.unlock()
       debugLog("Already initialized, merging JS config")
       resolve(nil)
       return
     }
-
     EdotReactNative.debugEnabled = config["debug"] as? Bool ?? false
+    EdotReactNative.stateLock.unlock()
 
-    #if canImport(ElasticApm)
+    #if ELASTIC_APM_AVAILABLE
+    let serverUrl = config["serverUrl"] as? String ?? ""
+
+    guard let url = URL(string: serverUrl), !serverUrl.isEmpty else {
+      reject("EDOT_INIT_ERROR", "Invalid serverUrl: \(serverUrl)", nil)
+      return
+    }
+
     do {
-      let serverUrl = config["serverUrl"] as? String ?? ""
-      let serviceName = config["serviceName"] as? String ?? ""
-      let serviceVersion = config["serviceVersion"] as? String ?? ""
-      let environment = config["deploymentEnvironment"] as? String ?? ""
-
       var configBuilder = AgentConfigBuilder()
-        .withExportUrl(URL(string: serverUrl)!)
-        .withServiceName(serviceName)
-        .withServiceVersion(serviceVersion)
-        .withEnvironment(environment)
+        .withExportUrl(url)
 
       if let secretToken = config["secretToken"] as? String {
         configBuilder = configBuilder.withSecretToken(secretToken)
@@ -53,24 +82,36 @@ class EdotReactNative: NSObject {
       }
 
       if let samplingRate = config["sessionSamplingRate"] as? Double {
-        configBuilder = configBuilder.withSampleRate(samplingRate)
-      }
-
-      if let enableMetricKit = config["enableMetricKit"] as? Bool, enableMetricKit {
-        configBuilder = configBuilder.withMetricKit(true)
+        configBuilder = configBuilder.withSessionSampleRate(samplingRate)
       }
 
       ElasticApmAgent.start(with: configBuilder.build())
 
+      EdotReactNative.attrLock.lock()
+      if let serviceName = config["serviceName"] as? String {
+        EdotReactNative.globalAttributes["service.name"] = .string(serviceName)
+      }
+      if let serviceVersion = config["serviceVersion"] as? String {
+        EdotReactNative.globalAttributes["service.version"] = .string(serviceVersion)
+      }
+      if let environment = config["deploymentEnvironment"] as? String {
+        EdotReactNative.globalAttributes["deployment.environment"] = .string(environment)
+      }
+      EdotReactNative.attrLock.unlock()
+
+      EdotReactNative.stateLock.lock()
       EdotReactNative.isInitialized = true
+      EdotReactNative.stateLock.unlock()
       debugLog("SDK initialized successfully")
       resolve(nil)
     } catch {
-      reject("EDOT_INIT_ERROR", "Failed to initialize EDOT: \(error.localizedDescription)", error)
+      reject("EDOT_INIT_ERROR", "Failed to initialize: \(error.localizedDescription)", error)
     }
     #else
     debugLog("ElasticApm SDK not available — running as stub")
+    EdotReactNative.stateLock.lock()
     EdotReactNative.isInitialized = true
+    EdotReactNative.stateLock.unlock()
     resolve(nil)
     #endif
   }
@@ -80,8 +121,8 @@ class EdotReactNative: NSObject {
   @objc
   func getCurrentSessionId(_ resolve: @escaping RCTPromiseResolveBlock,
                            rejecter reject: @escaping RCTPromiseRejectBlock) {
-    #if canImport(ElasticApm)
-    let sessionId = ElasticApmAgent.shared?.getSessionId() ?? ""
+    #if ELASTIC_APM_AVAILABLE
+    let sessionId = SessionManager.instance.session(false)
     resolve(sessionId)
     #else
     resolve("")
@@ -90,18 +131,27 @@ class EdotReactNative: NSObject {
 
   @objc
   func setUser(_ userInfo: NSDictionary) {
-    #if canImport(ElasticApm)
-    guard let userId = userInfo["id"] as? String else { return }
-    let email = userInfo["email"] as? String
-    let name = userInfo["name"] as? String
-    ElasticApmAgent.shared?.setUser(id: userId, email: email, name: name)
+    #if ELASTIC_APM_AVAILABLE
+    EdotReactNative.attrLock.lock()
+    if let userId = userInfo["id"] as? String {
+      EdotReactNative.userAttributes["enduser.id"] = .string(userId)
+    }
+    if let email = userInfo["email"] as? String {
+      EdotReactNative.userAttributes["enduser.email"] = .string(email)
+    }
+    if let name = userInfo["name"] as? String {
+      EdotReactNative.userAttributes["enduser.name"] = .string(name)
+    }
+    EdotReactNative.attrLock.unlock()
     #endif
   }
 
   @objc
   func clearUser() {
-    #if canImport(ElasticApm)
-    ElasticApmAgent.shared?.setUser(id: nil, email: nil, name: nil)
+    #if ELASTIC_APM_AVAILABLE
+    EdotReactNative.attrLock.lock()
+    EdotReactNative.userAttributes.removeAll()
+    EdotReactNative.attrLock.unlock()
     #endif
   }
 
@@ -109,22 +159,28 @@ class EdotReactNative: NSObject {
 
   @objc
   func setSessionAttribute(_ key: String, value: String) {
-    #if canImport(ElasticApm)
-    ElasticApmAgent.shared?.setAttribute(key: key, value: .string(value))
+    #if ELASTIC_APM_AVAILABLE
+    EdotReactNative.attrLock.lock()
+    EdotReactNative.sessionAttributes[key] = .string(value)
+    EdotReactNative.attrLock.unlock()
     #endif
   }
 
   @objc
   func setGlobalAttribute(_ key: String, value: String) {
-    #if canImport(ElasticApm)
-    ElasticApmAgent.shared?.setGlobalAttribute(key: key, value: .string(value))
+    #if ELASTIC_APM_AVAILABLE
+    EdotReactNative.attrLock.lock()
+    EdotReactNative.globalAttributes[key] = .string(value)
+    EdotReactNative.attrLock.unlock()
     #endif
   }
 
   @objc
   func removeGlobalAttribute(_ key: String) {
-    #if canImport(ElasticApm)
-    ElasticApmAgent.shared?.removeGlobalAttribute(key: key)
+    #if ELASTIC_APM_AVAILABLE
+    EdotReactNative.attrLock.lock()
+    EdotReactNative.globalAttributes.removeValue(forKey: key)
+    EdotReactNative.attrLock.unlock()
     #endif
   }
 
@@ -132,21 +188,19 @@ class EdotReactNative: NSObject {
 
   @objc
   func reportJsException(_ errorInfo: NSDictionary) {
-    #if canImport(ElasticApm)
+    #if ELASTIC_APM_AVAILABLE
     let name = errorInfo["name"] as? String ?? "Unknown"
     let message = errorInfo["message"] as? String ?? ""
     let stack = errorInfo["stack"] as? String ?? ""
     let isFatal = errorInfo["isFatal"] as? Bool ?? false
 
-    ElasticApmAgent.shared?.reportError(
-      message: "\(name): \(message)",
-      attributes: [
-        "exception.type": .string(name),
-        "exception.message": .string(message),
-        "exception.stacktrace": .string(stack),
-        "error.is_fatal": .bool(isFatal),
-      ]
-    )
+    let span = tracer.spanBuilder(spanName: "js_error: \(name)").startSpan()
+    span.setAttribute(key: "exception.type", value: .string(name))
+    span.setAttribute(key: "exception.message", value: .string(message))
+    span.setAttribute(key: "exception.stacktrace", value: .string(stack))
+    span.setAttribute(key: "error.is_fatal", value: .bool(isFatal))
+    span.status = .error(description: message)
+    span.end()
     #endif
   }
 
@@ -156,28 +210,36 @@ class EdotReactNative: NSObject {
   func startSpan(_ name: String,
                  attributes: NSDictionary,
                  parentSpanId: NSString?) -> String {
-    #if canImport(ElasticApm)
-    let tracer = ElasticApmAgent.shared?.getTracer(name: "edot-react-native")
-    let spanBuilder = tracer?.spanBuilder(spanName: name)
+    #if ELASTIC_APM_AVAILABLE
+    var builder = tracer.spanBuilder(spanName: name)
 
-    if let parentId = parentSpanId as String? {
+    if let parentId = parentSpanId as? String {
       spanLock.lock()
-      let parentSpan = activeSpans[parentId] as? Span
+      let parentSpan = activeSpans[parentId]
       spanLock.unlock()
       if let parent = parentSpan {
-        spanBuilder?.setParent(parent)
+        builder = builder.setParent(parent)
       }
     }
 
     for (key, value) in attributes {
       if let k = key as? String, let v = value as? String {
-        spanBuilder?.setAttribute(key: k, value: .string(v))
+        builder = builder.setAttribute(key: k, value: .string(v))
       }
     }
 
-    guard let span = spanBuilder?.startSpan() else {
-      return ""
+    let (global, session, user) = EdotReactNative.readAttributes()
+    for (key, value) in global {
+      builder = builder.setAttribute(key: key, value: value)
     }
+    for (key, value) in session {
+      builder = builder.setAttribute(key: key, value: value)
+    }
+    for (key, value) in user {
+      builder = builder.setAttribute(key: key, value: value)
+    }
+
+    let span = builder.startSpan()
 
     let spanId = UUID().uuidString
     spanLock.lock()
@@ -192,17 +254,20 @@ class EdotReactNative: NSObject {
 
   @objc
   func endSpan(_ spanId: String, statusCode: Int) {
-    #if canImport(ElasticApm)
+    #if ELASTIC_APM_AVAILABLE
     spanLock.lock()
-    let span = activeSpans.removeValue(forKey: spanId) as? Span
+    let span = activeSpans.removeValue(forKey: spanId)
     spanLock.unlock()
 
-    if statusCode == 2 {
-      span?.setStatus(.error)
-    } else {
-      span?.setStatus(.ok)
+    if let otelSpan = span {
+      // OTel StatusCode: 1=Ok, 2=Error
+      if statusCode == 2 {
+        otelSpan.status = .error(description: "")
+      } else {
+        otelSpan.status = .ok
+      }
+      otelSpan.end()
     }
-    span?.end()
     #else
     spanLock.lock()
     activeSpans.removeValue(forKey: spanId)
@@ -212,9 +277,9 @@ class EdotReactNative: NSObject {
 
   @objc
   func setSpanAttribute(_ spanId: String, key: String, value: String) {
-    #if canImport(ElasticApm)
+    #if ELASTIC_APM_AVAILABLE
     spanLock.lock()
-    let span = activeSpans[spanId] as? Span
+    let span = activeSpans[spanId]
     spanLock.unlock()
     span?.setAttribute(key: key, value: .string(value))
     #endif
@@ -222,9 +287,9 @@ class EdotReactNative: NSObject {
 
   @objc
   func recordSpanException(_ spanId: String, errorInfo: NSDictionary) {
-    #if canImport(ElasticApm)
+    #if ELASTIC_APM_AVAILABLE
     spanLock.lock()
-    let span = activeSpans[spanId] as? Span
+    let span = activeSpans[spanId]
     spanLock.unlock()
 
     let message = errorInfo["message"] as? String ?? "Unknown error"
@@ -243,8 +308,8 @@ class EdotReactNative: NSObject {
                     value: Double,
                     attributes: NSDictionary,
                     metricType: String) {
-    #if canImport(ElasticApm)
-    let meter = ElasticApmAgent.shared?.getMeter(name: "edot-react-native")
+    #if ELASTIC_APM_AVAILABLE
+    let meter = OpenTelemetry.instance.meterProvider.get(name: "edot-react-native")
 
     var otelAttrs: [String: AttributeValue] = [:]
     for (key, val) in attributes {
@@ -255,14 +320,14 @@ class EdotReactNative: NSObject {
 
     switch metricType {
     case "counter":
-      let counter = meter?.counterBuilder(name: name).build()
-      counter?.add(value: Int(value), attributes: otelAttrs)
+      var counter = meter.counterBuilder(name: name).build()
+      counter.add(value: Int(value), attributes: otelAttrs)
     case "histogram":
-      let histogram = meter?.histogramBuilder(name: name).build()
-      histogram?.record(value: value, attributes: otelAttrs)
+      var histogram = meter.histogramBuilder(name: name).build()
+      histogram.record(value: value, attributes: otelAttrs)
     case "upDownCounter":
-      let counter = meter?.upDownCounterBuilder(name: name).build()
-      counter?.add(value: Int(value), attributes: otelAttrs)
+      var counter = meter.upDownCounterBuilder(name: name).build()
+      counter.add(value: Int(value), attributes: otelAttrs)
     default:
       debugLog("Unknown metric type: \(metricType)")
     }
@@ -275,7 +340,11 @@ class EdotReactNative: NSObject {
   func emitLog(_ severity: String,
                message: String,
                attributes: NSDictionary) {
-    #if canImport(ElasticApm)
+    #if ELASTIC_APM_AVAILABLE
+    let logger = OpenTelemetry.instance.loggerProvider
+      .loggerBuilder(instrumentationScopeName: "edot-react-native")
+      .build()
+
     var otelAttrs: [String: AttributeValue] = [:]
     for (key, val) in attributes {
       if let k = key as? String, let v = val as? String {
@@ -283,11 +352,11 @@ class EdotReactNative: NSObject {
       }
     }
 
-    ElasticApmAgent.shared?.log(
-      severity: mapSeverity(severity),
-      message: message,
-      attributes: otelAttrs
-    )
+    logger.logRecordBuilder()
+      .setSeverity(mapSeverity(severity))
+      .setBody(.string(message))
+      .setAttributes(otelAttrs)
+      .emit()
     #endif
   }
 
@@ -295,29 +364,18 @@ class EdotReactNative: NSObject {
 
   @objc
   func setTrackingConsent(_ consent: String) {
-    #if canImport(ElasticApm)
-    switch consent {
-    case "granted":
-      ElasticApmAgent.shared?.setTrackingConsent(.granted)
-    case "not_granted":
-      ElasticApmAgent.shared?.setTrackingConsent(.notGranted)
-    case "pending":
-      ElasticApmAgent.shared?.setTrackingConsent(.pending)
-    default:
-      debugLog("Unknown consent state: \(consent)")
-    }
-    #endif
+    os_log("[EDOT] setTrackingConsent(%{public}@) called but not supported by native SDK", log: log, type: .info, consent)
   }
 
   // MARK: - Helpers
 
   private func debugLog(_ message: String) {
     if EdotReactNative.debugEnabled {
-      print("[EDOT] \(message)")
+      os_log("[EDOT] %{public}@", log: log, type: .debug, message)
     }
   }
 
-  #if canImport(ElasticApm)
+  #if ELASTIC_APM_AVAILABLE
   private func mapSeverity(_ severity: String) -> Severity {
     switch severity {
     case "trace": return .trace
