@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "2607fc60629b82b257136dd2a7a373f0a4466c0b49df7746d845d59313c99b21"
     },
+    "index-knowledge": {
+      "source": "maxmurr/skills",
+      "sourceType": "github",
+      "computedHash": "61b65431e105f67dc06c96c4b85ac0255c368daf26427ddeb258ea51a76b8956"
+    },
     "react-native-architecture": {
       "source": "wshobson/agents",
       "sourceType": "github",
