@@ -55,7 +55,18 @@ Each `setup*()` function in `instrumentation/` monkey-patches a global (fetch, X
 
 ### Native Module Loading
 
-`nativeModule.ts` tries TurboModule first, falls back to `NativeModules`, then returns a no-op Proxy. Synchronous `startSpan()` returns a span ID string.
+`nativeModule.ts` fallback chain:
+1. Check `global.__turboModuleProxy` → load TurboModule via `NativeEdotReactNative.ts`
+2. Fall back to `NativeModules.EdotReactNative` (old bridge)
+3. Return no-op Proxy (all calls silently succeed — `startSpan()` returns `''`)
+
+### Resource Detection
+
+`resource.ts` detects platform attributes via React Native globals:
+- `os.type` from `Platform.OS`
+- `rn.hermes` from `global.HermesInternal`
+- `rn.architecture` from `global.nativeFabricUIManager` (fabric vs bridge)
+- Global type augmentations in `globals.d.ts`
 
 ## Dependencies
 

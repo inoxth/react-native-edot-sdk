@@ -24,6 +24,12 @@ src/
 
 None (pure JS/TS).
 
+## Consumers
+
+- `@inox/react-native-edot-sdk` — re-exports `ActiveViewContext` at `/active-view-context`
+- All 3 navigation plugins — import `ActiveViewContext` directly to set/clear active view
+- Instrumentation modules (fetch, XHR, errors) — read `getActiveView()` to correlate spans
+
 ## Anti-Patterns
 
 - **Don't add React Native dependencies** — this package must stay pure JS/TS so it can be imported by any package without pulling in native code.

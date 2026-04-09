@@ -34,7 +34,8 @@ src/
 
 - Both providers are lazy singletons (created on first call)
 - Delegates all operations to `EdotNativeModule` via lazy `require('@inox/react-native-edot-sdk/nativeModule')`
-- `withSpanContext` uses module-scoped `contextParentSpan` variable (not async-safe)
+- `withSpanContext` uses module-scoped `contextParentSpan` variable (not async-safe — concurrent async spans may clobber parent)
+- Both modules export `resetForTesting()` / `resetMeterForTesting()` to clear singletons and cached native module between tests
 
 ## Dependencies
 

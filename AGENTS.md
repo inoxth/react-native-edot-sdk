@@ -100,18 +100,34 @@ Fetch and XHR are monkey-patched to create OTel spans. They capture `http.method
 | Shared cross-package types | `packages/shared/src/` |
 | Specs / requirements | `openspec/specs/` |
 
+## Dependency Graph
+
+```
+shared (pure JS/TS, no deps)
+  ↓
+react-native (core SDK, depends: shared)
+  ↓
+  ├── react-native-navigation (depends: sdk + shared)
+  ├── react-native-expo-router (depends: sdk + shared)
+  ├── react-native-wix-navigation (depends: sdk + shared)
+  └── react-native-tracer-provider (depends: sdk only)
+
+cli (standalone Node.js, depends: commander only)
+```
+
 ## Conventions
 
 ### Tooling
-- **Linting**: oxlint with `correctness: error`, `suspicious: warn`. Config in `oxlintrc.json`.
-- **Formatting**: oxfmt — 100 char width, single quotes, trailing commas. Config in `.oxfmtrc.json`.
-- **TypeScript**: Strict mode. Composite project references in root `tsconfig.json`. Each package has `tsconfig.json` + `tsconfig.build.json`.
+- **Linting**: oxlint with `correctness: error`, `suspicious: warn`, `typescript/no-explicit-any: error`. Config in `oxlintrc.json`.
+- **Formatting**: oxfmt — 100 char width, single quotes, trailing commas. Config in `.oxfmtrc.json`. Ignores `node_modules`, `lib`, `*.d.ts`, `example/ios`, `example/android`.
+- **TypeScript**: Strict mode, `moduleResolution: bundler`. Composite project references in root `tsconfig.json`. Each package has `tsconfig.json` + `tsconfig.build.json`.
 - **Package builds**: `react-native-builder-bob` outputs CommonJS + ESM + TypeScript declarations to `lib/`. The CLI package uses plain `tsc`.
 
 ### Testing
-- Jest with `react-native` preset for RN packages, `babel-jest` for the CLI package.
+- Jest with `react-native` preset for RN packages, `node` environment + `babel-jest` for the CLI package.
 - Each package has its own `jest.config.js`.
 - Cross-package imports resolved via `moduleNameMapper` pointing to sibling `src/` dirs (e.g., `'^@inox/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts'`).
+- Mocking pattern: `jest.mock()` for native module, `jest.clearAllMocks()` in `beforeEach()`. All trackers/providers export `resetForTesting()` functions for test isolation.
 - E2E via Detox in `example/e2e/`. Elements use `testID` props.
 
 ### Example App
