@@ -64,9 +64,8 @@ function setupGlobalErrorHandler(debug: boolean): () => void {
 function setupPromiseRejectionHandler(debug: boolean): () => void {
   try {
     const hermes = global.HermesInternal;
-    if (hermes && typeof hermes === 'object' && 'enablePromiseRejectionTracker' in hermes) {
-      const enableTracker = (hermes as Record<string, (...args: unknown[]) => void>).enablePromiseRejectionTracker;
-      enableTracker({
+    if (hermes?.enablePromiseRejectionTracker) {
+      hermes.enablePromiseRejectionTracker({
         allRejections: true,
         onUnhandled: (_id: number, rejection: Error | unknown) => {
           try {

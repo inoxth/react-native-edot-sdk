@@ -239,7 +239,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         while (iterator.hasNextKey()) {
             val key = iterator.nextKey()
             if (attributes.getType(key) == ReadableType.String) {
-                builder.setAttribute(io.opentelemetry.api.common.AttributeKey.stringKey(key), attributes.getString(key)!!)
+                builder.setAttribute(io.opentelemetry.api.common.AttributeKey.stringKey(key), attributes.getString(key) ?: "")
             }
         }
 
