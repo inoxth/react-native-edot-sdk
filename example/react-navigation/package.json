@@ -1,0 +1,32 @@
+{
+  "name": "edot-example-react-navigation",
+  "version": "0.0.0",
+  "private": true,
+  "installConfig": {
+    "hoistingLimits": "workspaces"
+  },
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start"
+  },
+  "dependencies": {
+    "@inox/react-native-edot-navigation": "workspace:*",
+    "@inox/react-native-edot-sdk": "workspace:*",
+    "@inox/react-native-edot-tracer-provider": "workspace:*",
+    "@react-navigation/bottom-tabs": "^6.0.0",
+    "@react-navigation/native": "^6.0.0",
+    "@react-navigation/native-stack": "^6.0.0",
+    "react": "18.2.0",
+    "react-native": "0.73.6",
+    "react-native-safe-area-context": "^4.0.0",
+    "react-native-screens": "^3.0.0"
+  },
+  "devDependencies": {
+    "@react-native/babel-preset": "^0.73.0",
+    "@react-native/metro-config": "^0.73.0",
+    "@react-native/typescript-config": "^0.73.0",
+    "react-native-dotenv": "^3.4.11",
+    "typescript": "~5.4.0"
+  }
+}

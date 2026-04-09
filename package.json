@@ -5,7 +5,7 @@
   "description": "EDOT React Native SDK — OpenTelemetry-compliant observability for React Native",
   "workspaces": [
     "packages/*",
-    "example"
+    "example/*"
   ],
   "scripts": {
     "lint": "oxlint ./packages",

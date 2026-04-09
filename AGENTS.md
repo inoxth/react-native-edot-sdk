@@ -128,12 +128,17 @@ cli (standalone Node.js, depends: commander only)
 - Each package has its own `jest.config.js`.
 - Cross-package imports resolved via `moduleNameMapper` pointing to sibling `src/` dirs (e.g., `'^@inox/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts'`).
 - Mocking pattern: `jest.mock()` for native module, `jest.clearAllMocks()` in `beforeEach()`. All trackers/providers export `resetForTesting()` functions for test isolation.
-- E2E via Detox in `example/e2e/`. Elements use `testID` props.
+- E2E via Detox in `example/basic/e2e/`. Elements use `testID` props.
 
-### Example App
-- Uses `installConfig.hoistingLimits: "workspaces"` in `package.json` — required so `react-native` stays in `example/node_modules/` for iOS xcodebuild scripts.
-- Metro config adds root workspace as watch folder and maps `@inox/react-native-edot-sdk` to the local package.
-- Detox targets iPhone 17 Pro / iOS 26.4 simulator.
+### Example Apps
+Four example apps under `example/`, each a yarn workspace member:
+- `example/basic/` — SDK init, manual tracing, metrics, logs, network, errors, interactions (no navigation)
+- `example/react-navigation/` — React Navigation with bottom tabs + nested stacks
+- `example/expo-router/` — Expo Router with tab layout + nested routes
+- `example/wix-navigation/` — Wix react-native-navigation with bottomTabs + push
+- All use `.env` for config (server URL, service name, secret token). Copy `.env.example` to `.env`.
+- Each has `installConfig.hoistingLimits: "workspaces"` so native deps resolve correctly.
+- Metro configs add monorepo root as watch folder + extraNodeModules for `@inox/*` packages.
 
 ### OpenSpec Workflow
 Changes tracked in `openspec/changes/` with proposal → design → specs → tasks artifacts. Archived after implementation to `openspec/changes/archive/`. Main specs live in `openspec/specs/`. Use `/opsx:propose`, `/opsx:apply`, `/opsx:archive` skills.

@@ -1,0 +1,28 @@
+{
+  "name": "edot-example-wix-navigation",
+  "version": "0.0.0",
+  "private": true,
+  "installConfig": {
+    "hoistingLimits": "workspaces"
+  },
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start"
+  },
+  "dependencies": {
+    "@inox/react-native-edot-sdk": "workspace:*",
+    "@inox/react-native-edot-tracer-provider": "workspace:*",
+    "@inox/react-native-edot-wix-navigation": "workspace:*",
+    "react": "18.2.0",
+    "react-native": "0.73.6",
+    "react-native-navigation": "^7.0.0"
+  },
+  "devDependencies": {
+    "@react-native/babel-preset": "^0.73.0",
+    "@react-native/metro-config": "^0.73.0",
+    "@react-native/typescript-config": "^0.73.0",
+    "react-native-dotenv": "^3.4.11",
+    "typescript": "~5.4.0"
+  }
+}

@@ -274,10 +274,21 @@ yarn fmt                # oxfmt
 yarn build              # Build all packages
 ```
 
-E2E tests (from `example/`):
+## Examples
+
+| Example | Directory | Description |
+|---|---|---|
+| Basic | [`example/basic/`](./example/basic) | SDK init, manual tracing, metrics, logs, network, errors, interactions — no navigation |
+| React Navigation | [`example/react-navigation/`](./example/react-navigation) | Bottom tabs + stack navigation with `@inox/react-native-edot-navigation` |
+| Expo Router | [`example/expo-router/`](./example/expo-router) | Tab + stack routes with `@inox/react-native-edot-expo-router` |
+| Wix Navigation | [`example/wix-navigation/`](./example/wix-navigation) | Bottom tabs + push navigation with `@inox/react-native-edot-wix-navigation` |
+
+Each example uses `.env` for configuration. Copy `.env.example` to `.env` and fill in your EDOT server details.
+
+E2E tests (from `example/basic/`):
 
 ```bash
-cd example
+cd example/basic
 npx detox build --configuration ios.sim.release
 npx detox test --configuration ios.sim.release
 ```

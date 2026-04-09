@@ -1,0 +1,9 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "paths": {
+      "@inox/react-native-edot-sdk": ["../../packages/react-native/src"]
+    }
+  }
+}
