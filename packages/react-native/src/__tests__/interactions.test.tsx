@@ -32,7 +32,7 @@ describe('withEdotTracking', () => {
     const TrackedButton = withEdotTracking(MockButton);
     const onPress = jest.fn();
 
-    let renderer: any;
+    let renderer: ReturnType<typeof create>;
     act(() => {
       renderer = create(React.createElement(TrackedButton, { onPress, title: 'Add' }));
     });
@@ -56,7 +56,7 @@ describe('withEdotTracking', () => {
   it('uses custom action name', () => {
     const TrackedButton = withEdotTracking(MockButton, 'checkout.confirm');
 
-    let renderer: any;
+    let renderer: ReturnType<typeof create>;
     act(() => {
       renderer = create(React.createElement(TrackedButton, { title: 'Confirm' }));
     });
@@ -77,7 +77,7 @@ describe('withEdotTracking', () => {
     ActiveViewContext.setActiveView({ name: 'CartScreen', spanId: 'span-1' });
     const TrackedButton = withEdotTracking(MockButton);
 
-    let renderer: any;
+    let renderer: ReturnType<typeof create>;
     act(() => {
       renderer = create(React.createElement(TrackedButton, { title: 'Add' }));
     });
@@ -108,7 +108,7 @@ describe('useEdotAction', () => {
   }
 
   it('tracks action with attributes', () => {
-    let api: ReturnType<typeof useEdotAction>;
+    let api: ReturnType<typeof useEdotAction> | undefined;
     act(() => {
       create(React.createElement(TestComponent, {
         onReady: (a) => { api = a; },
@@ -116,7 +116,7 @@ describe('useEdotAction', () => {
     });
 
     act(() => {
-      api!.trackAction('swipe', 'dismiss_card', { 'card.id': '42' });
+      api?.trackAction('swipe', 'dismiss_card', { 'card.id': '42' });
     });
 
     expect(EdotNativeModule.emitLog).toHaveBeenCalledWith(
@@ -133,7 +133,7 @@ describe('useEdotAction', () => {
   it('includes view.name when active view exists', () => {
     ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'span-1' });
 
-    let api: ReturnType<typeof useEdotAction>;
+    let api: ReturnType<typeof useEdotAction> | undefined;
     act(() => {
       create(React.createElement(TestComponent, {
         onReady: (a) => { api = a; },
@@ -141,7 +141,7 @@ describe('useEdotAction', () => {
     });
 
     act(() => {
-      api!.trackAction('tap', 'login');
+      api?.trackAction('tap', 'login');
     });
 
     expect(EdotNativeModule.emitLog).toHaveBeenCalledWith(
@@ -152,7 +152,7 @@ describe('useEdotAction', () => {
   });
 
   it('works without active view', () => {
-    let api: ReturnType<typeof useEdotAction>;
+    let api: ReturnType<typeof useEdotAction> | undefined;
     act(() => {
       create(React.createElement(TestComponent, {
         onReady: (a) => { api = a; },
@@ -160,7 +160,7 @@ describe('useEdotAction', () => {
     });
 
     act(() => {
-      api!.trackAction('tap', 'login');
+      api?.trackAction('tap', 'login');
     });
 
     const callArgs = (EdotNativeModule.emitLog as jest.Mock).mock.calls[0][2];
