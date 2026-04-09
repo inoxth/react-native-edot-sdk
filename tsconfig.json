@@ -3,7 +3,7 @@
     "strict": true,
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "jsx": "react-native",
     "lib": ["es2020"],
     "allowSyntheticDefaultImports": true,
