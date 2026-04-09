@@ -40,15 +40,17 @@ openspec/                          # OpenSpec specs and change tracking
 
 ### Packages
 
-| Package | Description |
-|---|---|
-| `@inox/react-native-edot-shared` | Shared cross-package state (`ActiveViewContext` singleton). Pure JS/TS — no React Native dependency. All navigation plugins depend on this. |
-| `@inox/react-native-edot-sdk` | Main SDK. Config validation, native bridge (TurboModule + NativeModules + no-op fallback), auto-instrumentation (fetch, XHR, errors, lifecycle, startup, span cleanup), public API (`EdotReactNative.initialize()`, `setUser()`, `log()`), and React components (`EdotErrorBoundary`, `withEdotTracking`, `useEdotAction`). |
-| `@inox/react-native-edot-navigation` | React Navigation (`@react-navigation/native`) integration. Creates view spans on route changes via `createEdotNavigationContainerRef()`. |
-| `@inox/react-native-edot-expo-router` | Expo Router integration. Creates view spans on pathname changes via `<EdotExpoNavigationProvider>` wrapper component. |
-| `@inox/react-native-edot-wix-navigation` | Wix react-native-navigation integration. Creates view spans on `ComponentDidAppear` events via `registerEdotNavigationListener()`. |
-| `@inox/react-native-edot-tracer-provider` | Manual instrumentation API. Exposes `getTracerProvider()`, `getMeterProvider()`, `withSpanContext()` for custom spans and metrics. |
-| `@inox/react-native-edot-cli` | CLI tool for source map upload. `edot upload-sourcemap` POSTs bundle + map to EDOT server for server-side crash symbolication. |
+Each package has its own `CLAUDE.md` and `AGENTS.md` with detailed documentation.
+
+| Package | Description | Docs |
+|---|---|---|
+| `@inox/react-native-edot-shared` | Shared cross-package state (`ActiveViewContext` singleton). Pure JS/TS. | [AGENTS.md](./packages/shared/AGENTS.md) |
+| `@inox/react-native-edot-sdk` | Main SDK. Config, native bridge, auto-instrumentation, public API, React components. | [AGENTS.md](./packages/react-native/AGENTS.md) |
+| `@inox/react-native-edot-navigation` | React Navigation integration. View spans on route changes. | [AGENTS.md](./packages/react-native-navigation/AGENTS.md) |
+| `@inox/react-native-edot-expo-router` | Expo Router integration. View spans on pathname changes. | [AGENTS.md](./packages/react-native-expo-router/AGENTS.md) |
+| `@inox/react-native-edot-wix-navigation` | Wix react-native-navigation integration. View spans on `ComponentDidAppear`. | [AGENTS.md](./packages/react-native-wix-navigation/AGENTS.md) |
+| `@inox/react-native-edot-tracer-provider` | Manual instrumentation API. Custom spans and metrics. | [AGENTS.md](./packages/react-native-tracer-provider/AGENTS.md) |
+| `@inox/react-native-edot-cli` | CLI tool for source map upload. | [AGENTS.md](./packages/cli/AGENTS.md) |
 
 ## Architecture
 
@@ -109,7 +111,7 @@ Fetch and XHR are monkey-patched to create OTel spans. They capture `http.method
 ### Testing
 - Jest with `react-native` preset for RN packages, `babel-jest` for the CLI package.
 - Each package has its own `jest.config.js`.
-- Cross-package imports resolved via `moduleNameMapper` pointing to sibling `src/` dirs (e.g., `'^@inox/react-native-edot-shared$': '<rootDir>/../core/src/index.ts'`).
+- Cross-package imports resolved via `moduleNameMapper` pointing to sibling `src/` dirs (e.g., `'^@inox/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts'`).
 - E2E via Detox in `example/e2e/`. Elements use `testID` props.
 
 ### Example App
