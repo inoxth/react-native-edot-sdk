@@ -17,7 +17,6 @@ export interface Spec extends TurboModule {
   recordMetric(name: string, value: number, attributes: object, metricType: string): void;
   emitLog(severity: string, message: string, attributes: object): void;
   setTrackingConsent(consent: string): void;
-  addSpanLink(spanId: string, linkedTraceId: string, linkedSpanId: string): void;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('EdotReactNative');

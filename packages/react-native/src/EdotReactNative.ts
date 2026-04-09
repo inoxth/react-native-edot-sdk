@@ -2,7 +2,6 @@ import { Platform } from 'react-native';
 import type { EdotConfig, EdotUser, TrackingConsent } from './types';
 import { EDOT_DEFAULTS } from './defaults';
 import { validateConfig } from './config';
-import { detectResourceAttributes } from './resource';
 import { EdotNativeModule } from './nativeModule';
 import { setupFetchInstrumentation } from './instrumentation/fetch';
 import { setupXhrInstrumentation } from './instrumentation/xhr';
@@ -15,52 +14,22 @@ let initialized = false;
 const teardowns: Array<() => void> = [];
 
 function mergeConfig(config: EdotConfig): Record<string, unknown> {
-  const merged = {
-    ...EDOT_DEFAULTS,
-    ...config,
-  };
-
   const platformConfig =
-    Platform.OS === 'ios' ? merged.ios : Platform.OS === 'android' ? merged.android : undefined;
+    Platform.OS === 'ios' ? config.ios : Platform.OS === 'android' ? config.android : undefined;
 
-  const resourceAttributes = detectResourceAttributes();
-
-  const nativeConfig: Record<string, unknown> = {
-    serverUrl: merged.serverUrl,
-    serviceName: merged.serviceName,
-    serviceVersion: merged.serviceVersion,
-    deploymentEnvironment: merged.deploymentEnvironment,
-    exportProtocol: merged.exportProtocol,
-    sessionSamplingRate: merged.sessionSamplingRate,
-    instrumentNetworkRequests: merged.instrumentNetworkRequests,
-    instrumentJsErrors: merged.instrumentJsErrors,
-    instrumentNativeCrashes: merged.instrumentNativeCrashes,
-    instrumentAppLifecycle: merged.instrumentAppLifecycle,
-    instrumentAppStartup: merged.instrumentAppStartup,
-    trackingConsent: merged.trackingConsent,
-    debug: merged.debug,
-    debugExportToConsole: merged.debugExportToConsole,
-    resourceAttributes,
+  return {
+    serverUrl: config.serverUrl,
+    serviceName: config.serviceName,
+    serviceVersion: config.serviceVersion,
+    deploymentEnvironment: config.deploymentEnvironment,
+    debug: config.debug ?? EDOT_DEFAULTS.debug,
+    ...(config.sessionSamplingRate !== undefined ? { sessionSamplingRate: config.sessionSamplingRate } : {}),
+    ...(config.trackingConsent ? { trackingConsent: config.trackingConsent } : {}),
+    ...(config.secretToken ? { secretToken: config.secretToken } : {}),
+    ...(config.apiKey ? { apiKey: config.apiKey } : {}),
+    ...(config.globalAttributes ? { globalAttributes: config.globalAttributes } : {}),
     ...platformConfig,
   };
-
-  if (merged.secretToken) {
-    nativeConfig.secretToken = merged.secretToken;
-  }
-  if (merged.apiKey) {
-    nativeConfig.apiKey = merged.apiKey;
-  }
-  if (merged.customExportHeaders) {
-    nativeConfig.customExportHeaders = merged.customExportHeaders;
-  }
-  if (merged.globalAttributes) {
-    nativeConfig.globalAttributes = merged.globalAttributes;
-  }
-  if (merged.codePushVersion) {
-    nativeConfig.codePushVersion = merged.codePushVersion;
-  }
-
-  return nativeConfig;
 }
 
 function debugLog(config: EdotConfig, ...args: unknown[]): void {
@@ -165,7 +134,7 @@ export const EdotReactNative = {
     });
   },
 
-  /** @internal - exposed for testing */
+  /** @internal */
   _resetForTesting(): void {
     teardowns.forEach((fn) => fn());
     teardowns.length = 0;

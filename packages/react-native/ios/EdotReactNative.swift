@@ -69,44 +69,66 @@ class EdotReactNative: NSObject {
       return
     }
 
-    do {
-      var configBuilder = AgentConfigBuilder()
-        .withExportUrl(url)
+    var configBuilder = AgentConfigBuilder()
+      .withExportUrl(url)
 
-      if let secretToken = config["secretToken"] as? String {
-        configBuilder = configBuilder.withSecretToken(secretToken)
-      }
-
-      if let apiKey = config["apiKey"] as? String {
-        configBuilder = configBuilder.withApiKey(apiKey)
-      }
-
-      if let samplingRate = config["sessionSamplingRate"] as? Double {
-        configBuilder = configBuilder.withSessionSampleRate(samplingRate)
-      }
-
-      ElasticApmAgent.start(with: configBuilder.build())
-
-      EdotReactNative.attrLock.lock()
-      if let serviceName = config["serviceName"] as? String {
-        EdotReactNative.globalAttributes["service.name"] = .string(serviceName)
-      }
-      if let serviceVersion = config["serviceVersion"] as? String {
-        EdotReactNative.globalAttributes["service.version"] = .string(serviceVersion)
-      }
-      if let environment = config["deploymentEnvironment"] as? String {
-        EdotReactNative.globalAttributes["deployment.environment"] = .string(environment)
-      }
-      EdotReactNative.attrLock.unlock()
-
-      EdotReactNative.stateLock.lock()
-      EdotReactNative.isInitialized = true
-      EdotReactNative.stateLock.unlock()
-      debugLog("SDK initialized successfully")
-      resolve(nil)
-    } catch {
-      reject("EDOT_INIT_ERROR", "Failed to initialize: \(error.localizedDescription)", error)
+    if let secretToken = config["secretToken"] as? String {
+      configBuilder = configBuilder.withSecretToken(secretToken)
     }
+
+    if let apiKey = config["apiKey"] as? String {
+      configBuilder = configBuilder.withApiKey(apiKey)
+    }
+
+    if let samplingRate = config["sessionSamplingRate"] as? Double {
+      configBuilder = configBuilder.withSessionSampleRate(samplingRate)
+    }
+
+    if let connectionType = config["connectionType"] as? String {
+      configBuilder = configBuilder.useConnectionType(connectionType == "http" ? .http : .grpc)
+    }
+
+    var instrumentationConfig = InstrumentationConfiguration()
+    if let v = config["enableCrashReporting"] as? Bool {
+      instrumentationConfig.enableCrashReporting = v
+    }
+    if let v = config["enableURLSessionInstrumentation"] as? Bool {
+      instrumentationConfig.enableURLSessionInstrumentation = v
+    }
+    if let v = config["enableViewControllerInstrumentation"] as? Bool {
+      instrumentationConfig.enableViewControllerInstrumentation = v
+    }
+    if let v = config["enableAppMetricInstrumentation"] as? Bool {
+      instrumentationConfig.enableAppMetricInstrumentation = v
+    }
+    if let v = config["enableSystemMetrics"] as? Bool {
+      instrumentationConfig.enableSystemMetrics = v
+    }
+    if let v = config["enableLifecycleEvents"] as? Bool {
+      instrumentationConfig.enableLifecycleEvents = v
+    }
+
+    if !EdotReactNativeAgent.isPreInitialized {
+      ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
+    }
+
+    EdotReactNative.attrLock.lock()
+    if let serviceName = config["serviceName"] as? String {
+      EdotReactNative.globalAttributes["service.name"] = .string(serviceName)
+    }
+    if let serviceVersion = config["serviceVersion"] as? String {
+      EdotReactNative.globalAttributes["service.version"] = .string(serviceVersion)
+    }
+    if let environment = config["deploymentEnvironment"] as? String {
+      EdotReactNative.globalAttributes["deployment.environment"] = .string(environment)
+    }
+    EdotReactNative.attrLock.unlock()
+
+    EdotReactNative.stateLock.lock()
+    EdotReactNative.isInitialized = true
+    EdotReactNative.stateLock.unlock()
+    debugLog("SDK initialized successfully")
+    resolve(nil)
     #else
     debugLog("ElasticApm SDK not available — running as stub")
     EdotReactNative.stateLock.lock()

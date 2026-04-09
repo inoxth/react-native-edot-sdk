@@ -48,4 +48,3 @@ function loadNativeModule(): Spec {
 }
 
 export const EdotNativeModule: Spec = loadNativeModule();
-export { createNoOpModule };

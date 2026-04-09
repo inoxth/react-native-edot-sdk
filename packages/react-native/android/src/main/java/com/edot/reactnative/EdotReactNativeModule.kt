@@ -15,6 +15,10 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         private var isInitialized = false
         private var debugEnabled = false
 
+        private val userAttributes = ConcurrentHashMap<String, String>()
+        private val sessionAttributes = ConcurrentHashMap<String, String>()
+        private val globalAttributes = ConcurrentHashMap<String, String>()
+
         fun debugLog(message: String) {
             if (debugEnabled) {
                 android.util.Log.d("EDOT", message)
@@ -37,9 +41,14 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         try {
             debugEnabled = config.getBooleanSafe("debug", false)
 
+            // Store service identity as global attributes (applied to all spans)
+            config.getStringSafe("serviceName")?.let { globalAttributes["service.name"] = it }
+            config.getStringSafe("serviceVersion")?.let { globalAttributes["service.version"] = it }
+            config.getStringSafe("deploymentEnvironment")?.let { globalAttributes["deployment.environment"] = it }
+
             // The EDOT Android agent is initialized by the Gradle plugin
-            // (co.elastic.otel.android.agent) at app startup. This JS-side
-            // initialize() registers JS-specific config and confirms readiness.
+            // (co.elastic.otel.android.agent) at app startup. Runtime config
+            // (serverUrl, auth, sampling) is handled by the plugin configuration.
 
             isInitialized = true
             debugLog("SDK initialized successfully")
@@ -56,34 +65,52 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun setUser(userInfo: ReadableMap) {
-        debugLog("setUser: ${userInfo.getString("id")}")
+        userInfo.getStringSafe("id")?.let { userAttributes["enduser.id"] = it }
+        userInfo.getStringSafe("email")?.let { userAttributes["enduser.email"] = it }
+        userInfo.getStringSafe("name")?.let { userAttributes["enduser.name"] = it }
     }
 
     @ReactMethod
     fun clearUser() {
-        debugLog("clearUser")
+        userAttributes.clear()
     }
 
     @ReactMethod
     fun setSessionAttribute(key: String, value: String) {
-        debugLog("setSessionAttribute: $key=$value")
+        sessionAttributes[key] = value
     }
 
     @ReactMethod
     fun setGlobalAttribute(key: String, value: String) {
-        debugLog("setGlobalAttribute: $key=$value")
+        globalAttributes[key] = value
     }
 
     @ReactMethod
     fun removeGlobalAttribute(key: String) {
-        debugLog("removeGlobalAttribute: $key")
+        globalAttributes.remove(key)
     }
 
     @ReactMethod
     fun reportJsException(errorInfo: ReadableMap) {
-        val name = errorInfo.getString("name") ?: "Unknown"
-        val message = errorInfo.getString("message") ?: ""
-        debugLog("JS Exception: $name: $message")
+        val name = errorInfo.getStringSafe("name") ?: "Unknown"
+        val message = errorInfo.getStringSafe("message") ?: ""
+        val stack = errorInfo.getStringSafe("stack") ?: ""
+        val isFatal = errorInfo.getBooleanSafe("isFatal", false)
+
+        val tracer = try {
+            GlobalOpenTelemetry.getTracer("react-native-edot")
+        } catch (e: Exception) {
+            return
+        }
+
+        val span = tracer.spanBuilder("js_error: $name")
+            .setAttribute("exception.type", name)
+            .setAttribute("exception.message", message)
+            .setAttribute("exception.stacktrace", stack)
+            .setAttribute("error.is_fatal", isFatal)
+            .startSpan()
+        span.setStatus(StatusCode.ERROR, message)
+        span.end()
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
@@ -116,6 +143,16 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
             }
         }
 
+        for ((key, value) in globalAttributes) {
+            spanBuilder.setAttribute(key, value)
+        }
+        for ((key, value) in sessionAttributes) {
+            spanBuilder.setAttribute(key, value)
+        }
+        for ((key, value) in userAttributes) {
+            spanBuilder.setAttribute(key, value)
+        }
+
         val span = spanBuilder.startSpan()
         val spanId = UUID.randomUUID().toString()
         activeSpans[spanId] = span
@@ -125,6 +162,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     @ReactMethod
     fun endSpan(spanId: String, statusCode: Double) {
         val span = activeSpans.remove(spanId) ?: return
+        // OTel StatusCode: 1=Ok, 2=Error
         when (statusCode.toInt()) {
             2 -> span.setStatus(StatusCode.ERROR)
             else -> span.setStatus(StatusCode.OK)
@@ -146,13 +184,13 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     @ReactMethod
     fun recordSpanException(spanId: String, errorInfo: ReadableMap) {
         val span = activeSpans[spanId] ?: return
-        val message = errorInfo.getString("message") ?: "Unknown error"
+        val message = errorInfo.getStringSafe("message") ?: "Unknown error"
         span.addEvent(
             "exception",
             Attributes.builder()
                 .put("exception.message", message)
-                .put("exception.type", errorInfo.getString("name") ?: "Error")
-                .put("exception.stacktrace", errorInfo.getString("stack") ?: "")
+                .put("exception.type", errorInfo.getStringSafe("name") ?: "Error")
+                .put("exception.stacktrace", errorInfo.getStringSafe("stack") ?: "")
                 .build()
         )
     }
@@ -185,15 +223,39 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun emitLog(severity: String, message: String, attributes: ReadableMap) {
-        debugLog("[$severity] $message")
+        val logger = try {
+            GlobalOpenTelemetry.get().logsBridge
+                .loggerBuilder("react-native-edot")
+                .build()
+        } catch (e: Exception) {
+            debugLog("[$severity] $message")
+            return
+        }
+
+        val builder = logger.logRecordBuilder()
+        builder.setBody(message)
+
+        val iterator = attributes.keySetIterator()
+        while (iterator.hasNextKey()) {
+            val key = iterator.nextKey()
+            if (attributes.getType(key) == ReadableType.String) {
+                builder.setAttribute(io.opentelemetry.api.common.AttributeKey.stringKey(key), attributes.getString(key)!!)
+            }
+        }
+
+        builder.emit()
     }
 
     @ReactMethod
     fun setTrackingConsent(consent: String) {
-        debugLog("setTrackingConsent: $consent")
+        android.util.Log.i("EDOT", "setTrackingConsent($consent) called but not supported by native SDK")
     }
 
     private fun ReadableMap.getBooleanSafe(key: String, default: Boolean): Boolean {
         return if (hasKey(key)) getBoolean(key) else default
+    }
+
+    private fun ReadableMap.getStringSafe(key: String): String? {
+        return if (hasKey(key)) getString(key) else null
     }
 }

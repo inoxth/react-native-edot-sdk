@@ -10,5 +10,4 @@ export type {
   TrackingConsent,
   EdotIosConfig,
   EdotAndroidConfig,
-  SpanContext,
 } from './types';

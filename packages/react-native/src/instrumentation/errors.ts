@@ -63,8 +63,10 @@ function setupGlobalErrorHandler(debug: boolean): () => void {
 
 function setupPromiseRejectionHandler(debug: boolean): () => void {
   try {
-    if (global.HermesInternal) {
-      (global.HermesInternal as Record<string, Function>).enablePromiseRejectionTracker?.({
+    const hermes = global.HermesInternal;
+    if (hermes && typeof hermes === 'object' && 'enablePromiseRejectionTracker' in hermes) {
+      const enableTracker = (hermes as Record<string, (...args: unknown[]) => void>).enablePromiseRejectionTracker;
+      enableTracker({
         allRejections: true,
         onUnhandled: (_id: number, rejection: Error | unknown) => {
           try {
@@ -79,7 +81,6 @@ function setupPromiseRejectionHandler(debug: boolean): () => void {
         },
       });
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const tracking = require('promise/setimmediate/rejection-tracking');
       tracking.enable({
         allRejections: true,

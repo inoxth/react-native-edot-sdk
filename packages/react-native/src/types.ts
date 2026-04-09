@@ -7,46 +7,41 @@ export interface EdotConfig {
   secretToken?: string;
   apiKey?: string;
 
-  exportProtocol?: 'otlp/http' | 'otlp/grpc';
-  customExportHeaders?: Record<string, string>;
-
   sessionSamplingRate?: number;
 
   instrumentNetworkRequests?: boolean;
   instrumentJsErrors?: boolean;
-  instrumentNativeCrashes?: boolean;
   instrumentAppLifecycle?: boolean;
   instrumentAppStartup?: boolean;
 
   tracePropagationTargets?: (string | RegExp)[];
   ignoreUrls?: (string | RegExp)[];
 
-  ios?: EdotIosConfig;
-  android?: EdotAndroidConfig;
-
   trackingConsent?: TrackingConsent;
   urlSanitizer?: (url: string) => string;
-  requestHeadersToCapture?: string[];
-  responseHeadersToCapture?: string[];
 
   globalAttributes?: Record<string, string | number | boolean>;
-
-  codePushVersion?: string;
 
   graphqlUrls?: (string | RegExp)[];
 
   debug?: boolean;
-  debugExportToConsole?: boolean;
+
+  ios?: EdotIosConfig;
+  android?: EdotAndroidConfig;
 }
 
 export interface EdotIosConfig {
-  enableMetricKit?: boolean;
-  enableViewControllerTracing?: boolean;
+  connectionType?: 'grpc' | 'http';
+  enableCrashReporting?: boolean;
+  enableURLSessionInstrumentation?: boolean;
+  enableViewControllerInstrumentation?: boolean;
+  enableAppMetricInstrumentation?: boolean;
+  enableSystemMetrics?: boolean;
+  enableLifecycleEvents?: boolean;
 }
 
 export interface EdotAndroidConfig {
-  enableAnrDetection?: boolean;
-  enableSlowRenderingDetection?: boolean;
+  exportProtocol?: 'http' | 'grpc';
   diskBufferingEnabled?: boolean;
 }
 
@@ -56,9 +51,4 @@ export interface EdotUser {
   id: string;
   email?: string;
   name?: string;
-}
-
-export interface SpanContext {
-  traceId: string;
-  spanId: string;
 }

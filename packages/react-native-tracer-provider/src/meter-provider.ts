@@ -52,7 +52,7 @@ function createMeter(_name: string, _version?: string): Meter {
             name,
             value,
             stringifyAttributes(attributes),
-            'up_down_counter',
+            'upDownCounter',
           );
         },
       };

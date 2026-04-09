@@ -87,7 +87,6 @@ await EdotReactNative.initialize({
   // Auto-instrumentation toggles (all default to true)
   instrumentNetworkRequests: true,
   instrumentJsErrors: true,
-  instrumentNativeCrashes: true,
   instrumentAppLifecycle: true,
   instrumentAppStartup: true,
 
@@ -96,17 +95,16 @@ await EdotReactNative.initialize({
   ignoreUrls: [/analytics\.example\.com/],
   graphqlUrls: [/\/graphql$/],
 
-  // Sampling & consent
-  sessionSamplingRate: 1.0,        // 0.0 to 1.0
+  // Sampling & consent (optional, no defaults)
+  sessionSamplingRate: 0.5,        // 0.0 to 1.0
   trackingConsent: 'granted',      // 'granted' | 'pending' | 'not_granted'
 
   // Platform-specific
-  ios: { enableMetricKit: true },
-  android: { enableAnrDetection: true },
+  ios: { connectionType: 'grpc', enableCrashReporting: true },
+  android: { exportProtocol: 'grpc', diskBufferingEnabled: true },
 
   // Debug
   debug: false,
-  debugExportToConsole: false,
 });
 ```
 

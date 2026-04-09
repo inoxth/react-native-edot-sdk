@@ -24,11 +24,4 @@ export function validateConfig(config: EdotConfig): void {
     }
   }
 
-  if (
-    config.exportProtocol !== undefined &&
-    config.exportProtocol !== 'otlp/http' &&
-    config.exportProtocol !== 'otlp/grpc'
-  ) {
-    throw new Error("[EDOT] exportProtocol must be 'otlp/http' or 'otlp/grpc'");
-  }
 }

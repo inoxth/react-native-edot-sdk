@@ -53,8 +53,7 @@ describe('EdotReactNative', () => {
 
       const nativeConfig = (EdotNativeModule.initialize as jest.Mock).mock.calls[0][0];
       expect(nativeConfig.serverUrl).toBe('https://apm.example.com:8200');
-      expect(nativeConfig.exportProtocol).toBe('otlp/http');
-      expect(nativeConfig.sessionSamplingRate).toBe(1.0);
+      expect(nativeConfig.sessionSamplingRate).toBeUndefined();
       expect(nativeConfig.debug).toBe(false);
     });
 
@@ -117,6 +116,94 @@ describe('EdotReactNative', () => {
     it('setTrackingConsent delegates to native', () => {
       EdotReactNative.setTrackingConsent('pending');
       expect(EdotNativeModule.setTrackingConsent).toHaveBeenCalledWith('pending');
+    });
+  });
+
+  describe('platform config', () => {
+    it('spreads ios config into nativeConfig on iOS', async () => {
+      jest.doMock('react-native', () => ({ Platform: { OS: 'ios' } }));
+      jest.resetModules();
+
+      const { EdotReactNative: Fresh } = require('../EdotReactNative');
+      Fresh._resetForTesting();
+
+      await Fresh.initialize({
+        ...validConfig,
+        ios: {
+          connectionType: 'http',
+          enableCrashReporting: false,
+          enableSystemMetrics: false,
+        },
+      });
+
+      const { EdotNativeModule: MockModule } = require('../nativeModule');
+      const nativeConfig = (MockModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.connectionType).toBe('http');
+      expect(nativeConfig.enableCrashReporting).toBe(false);
+      expect(nativeConfig.enableSystemMetrics).toBe(false);
+    });
+
+    it('spreads android config into nativeConfig on Android', async () => {
+      jest.doMock('react-native', () => ({ Platform: { OS: 'android' } }));
+      jest.resetModules();
+
+      const { EdotReactNative: Fresh } = require('../EdotReactNative');
+      Fresh._resetForTesting();
+
+      await Fresh.initialize({
+        ...validConfig,
+        android: {
+          exportProtocol: 'grpc',
+          diskBufferingEnabled: true,
+        },
+      });
+
+      const { EdotNativeModule: MockModule } = require('../nativeModule');
+      const nativeConfig = (MockModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.exportProtocol).toBe('grpc');
+      expect(nativeConfig.diskBufferingEnabled).toBe(true);
+    });
+
+    it('does not include ios config on Android', async () => {
+      jest.doMock('react-native', () => ({ Platform: { OS: 'android' } }));
+      jest.resetModules();
+
+      const { EdotReactNative: Fresh } = require('../EdotReactNative');
+      Fresh._resetForTesting();
+
+      await Fresh.initialize({
+        ...validConfig,
+        ios: { connectionType: 'http' },
+      });
+
+      const { EdotNativeModule: MockModule } = require('../nativeModule');
+      const nativeConfig = (MockModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.connectionType).toBeUndefined();
+    });
+
+    it('only sends optional fields when explicitly set', async () => {
+      await EdotReactNative.initialize(validConfig);
+
+      const nativeConfig = (EdotNativeModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.sessionSamplingRate).toBeUndefined();
+      expect(nativeConfig.trackingConsent).toBeUndefined();
+      expect(nativeConfig.secretToken).toBeUndefined();
+      expect(nativeConfig.apiKey).toBeUndefined();
+      expect(nativeConfig.globalAttributes).toBeUndefined();
+    });
+
+    it('sends optional fields when set', async () => {
+      await EdotReactNative.initialize({
+        ...validConfig,
+        sessionSamplingRate: 0.5,
+        secretToken: 'tok',
+        globalAttributes: { env: 'test' },
+      });
+
+      const nativeConfig = (EdotNativeModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.sessionSamplingRate).toBe(0.5);
+      expect(nativeConfig.secretToken).toBe('tok');
+      expect(nativeConfig.globalAttributes).toEqual({ env: 'test' });
     });
   });
 });

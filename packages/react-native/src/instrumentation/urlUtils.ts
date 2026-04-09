@@ -57,7 +57,7 @@ export function extractMethod(input: RequestInfo, init?: RequestInit): string {
     return init.method.toUpperCase();
   }
   if (typeof input !== 'string' && 'method' in input) {
-    return (input as Request).method.toUpperCase();
+    return input.method.toUpperCase();
   }
   return 'GET';
 }
@@ -66,5 +66,5 @@ export function extractUrl(input: RequestInfo): string {
   if (typeof input === 'string') {
     return input;
   }
-  return (input as Request).url;
+  return input.url;
 }

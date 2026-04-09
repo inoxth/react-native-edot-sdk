@@ -71,13 +71,4 @@ describe('validateConfig', () => {
     expect(() => validateConfig({ ...validConfig, sessionSamplingRate: 0 })).not.toThrow();
     expect(() => validateConfig({ ...validConfig, sessionSamplingRate: 1 })).not.toThrow();
   });
-
-  it('throws for invalid exportProtocol', () => {
-    expect(() =>
-      validateConfig({
-        ...validConfig,
-        exportProtocol: 'invalid' as EdotConfig['exportProtocol'],
-      }),
-    ).toThrow("exportProtocol must be 'otlp/http' or 'otlp/grpc'");
-  });
 });

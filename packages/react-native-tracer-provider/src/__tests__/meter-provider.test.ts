@@ -81,7 +81,7 @@ describe('UpDownCounter', () => {
     resetMeterForTesting();
   });
 
-  it('records up_down_counter metric via native bridge', () => {
+  it('records upDownCounter metric via native bridge', () => {
     const meter = getMeterProvider().getMeter('test');
     const counter = meter.createUpDownCounter('active_connections');
 
@@ -91,7 +91,7 @@ describe('UpDownCounter', () => {
       'active_connections',
       -1,
       { pool: 'main' },
-      'up_down_counter',
+      'upDownCounter',
     );
   });
 });
