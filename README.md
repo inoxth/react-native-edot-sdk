@@ -1,4 +1,4 @@
-# EDOT React Native SDK
+# React Native EDOT SDK
 
 OpenTelemetry-compliant observability SDK for React Native. Wraps the native [EDOT iOS](https://github.com/elastic/apm-agent-ios) and [EDOT Android](https://github.com/elastic/elastic-otel-android) agents to provide automatic and manual instrumentation with zero-config setup.
 
