@@ -1,16 +1,16 @@
 ## Context
 
-Phase 4 shipped navigation plugins (`react-native-navigation`, `react-native-wix-navigation`, `react-native-expo-router`) that each import `ActiveViewContext` via `@inox-edot/react-native/active-view-context`. This creates a tight coupling: navigation packages depend on the main SDK package through an internal subpath. The `packages/core` directory exists in the monorepo but is empty — it was always intended to hold cross-cutting shared state.
+Phase 4 shipped navigation plugins (`react-native-navigation`, `react-native-wix-navigation`, `react-native-expo-router`) that each import `ActiveViewContext` via `@inox/react-native-edot-sdk/active-view-context`. This creates a tight coupling: navigation packages depend on the main SDK package through an internal subpath. The `packages/shared` directory exists in the monorepo but is empty — it was always intended to hold cross-cutting shared state.
 
 Separately, production React Native bundles are minified. The SDK captures `error.stack` on crash, but that stack is full of minified identifiers (`a.b`, line 1 col 42350) that are unreadable without server-side symbolication. The `packages/cli` directory is similarly scaffolded but empty.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Populate `@inox-edot/core` with `ActiveViewContext` and decouple navigation plugins from the main package
+- Populate `@inox/react-native-edot-shared` with `ActiveViewContext` and decouple navigation plugins from the main package
 - Implement `edot upload-sourcemap` CLI command for source map upload
 - Add `service.name`, `service.version`, `deployment.environment` to error spans for backend routing
-- Zero breaking changes to the public `@inox-edot/react-native` API surface
+- Zero breaking changes to the public `@inox/react-native-edot-sdk` API surface
 
 **Non-Goals:**
 - Client-side symbolication (server handles this)
@@ -20,13 +20,13 @@ Separately, production React Native bundles are minified. The SDK captures `erro
 
 ## Decisions
 
-### D1: `@inox-edot/core` owns `ActiveViewContext` singleton
+### D1: `@inox/react-native-edot-shared` owns `ActiveViewContext` singleton
 
-**Decision**: Move `ActiveViewContext` from `packages/react-native/src/activeViewContext.ts` into `packages/core/src/activeViewContext.ts`. Re-export it from `@inox-edot/react-native` for backwards compatibility.
+**Decision**: Move `ActiveViewContext` from `packages/react-native/src/activeViewContext.ts` into `packages/shared/src/activeViewContext.ts`. Re-export it from `@inox/react-native-edot-sdk` for backwards compatibility.
 
-**Rationale**: Navigation plugins need the singleton but cannot depend on the main package without creating a circular or at minimum an over-broad dependency. `@inox-edot/core` has no React Native dependencies — just plain JS — so every package can safely depend on it.
+**Rationale**: Navigation plugins need the singleton but cannot depend on the main package without creating a circular or at minimum an over-broad dependency. `@inox/react-native-edot-shared` has no React Native dependencies — just plain JS — so every package can safely depend on it.
 
-**Alternative considered**: Keep it in `@inox-edot/react-native/active-view-context` subpath and treat it as a stable contract. Rejected: subpath internals are fragile and this pattern was never documented as public API.
+**Alternative considered**: Keep it in `@inox/react-native-edot-sdk/active-view-context` subpath and treat it as a stable contract. Rejected: subpath internals are fragile and this pattern was never documented as public API.
 
 ### D2: CLI is a standalone Node.js binary using Commander
 
@@ -46,21 +46,21 @@ Separately, production React Native bundles are minified. The SDK captures `erro
 
 ### D4: Re-export `ActiveViewContext` from the main package for backwards compat
 
-**Decision**: `packages/react-native/src/activeViewContext.ts` becomes a barrel re-export from `@inox-edot/core`. The package.json subpath export `./active-view-context` continues to work.
+**Decision**: `packages/react-native/src/activeViewContext.ts` becomes a barrel re-export from `@inox/react-native-edot-shared`. The package.json subpath export `./active-view-context` continues to work.
 
 **Rationale**: Any consumer already importing the subpath continues to work without changes.
 
 ## Risks / Trade-offs
 
-- **Circular build order risk**: `@inox-edot/core` must be built before all consumers. The monorepo build order (turborepo/yarn workspaces) must declare the dependency correctly. → Mitigation: add `@inox-edot/core` as a `dependencies` entry in each navigation package's `package.json`.
+- **Circular build order risk**: `@inox/react-native-edot-shared` must be built before all consumers. The monorepo build order (turborepo/yarn workspaces) must declare the dependency correctly. → Mitigation: add `@inox/react-native-edot-shared` as a `dependencies` entry in each navigation package's `package.json`.
 - **Source map upload endpoint compatibility**: EDOT server intake URL may differ per deployment. → Mitigation: CLI accepts `--server-url` and `--service-name` as required flags; no defaults assumed.
 - **Error span attribute duplication**: Adding resource attributes to every error span increases payload size slightly. → Acceptable: 3 string attributes per error span is negligible overhead.
 
 ## Migration Plan
 
-1. Scaffold and implement `packages/core`
+1. Scaffold and implement `packages/shared`
 2. Move `ActiveViewContext` implementation; add re-export shim in `packages/react-native`
-3. Update navigation packages to import from `@inox-edot/core` (peer dep update)
+3. Update navigation packages to import from `@inox/react-native-edot-shared` (peer dep update)
 4. Implement `packages/cli`
 5. Update `errors.ts` to attach resource attributes
 6. Verify all packages build cleanly and tests pass

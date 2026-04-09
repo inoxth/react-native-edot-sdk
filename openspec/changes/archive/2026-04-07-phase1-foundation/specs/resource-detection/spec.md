@@ -37,4 +37,4 @@ The `telemetry.sdk.version` attribute SHALL be read from the SDK's own `package.
 
 #### Scenario: SDK version attribute is correct
 - **WHEN** resource attributes are collected
-- **THEN** `telemetry.sdk.version` matches the version in `@inox-edot/react-native/package.json`
+- **THEN** `telemetry.sdk.version` matches the version in `@inox/react-native-edot-sdk/package.json`

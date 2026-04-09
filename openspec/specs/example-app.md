@@ -6,7 +6,7 @@ Provide a working React Native example app within the monorepo that demonstrates
 ## Requirements
 
 ### Requirement: Minimal React Native example app
-The monorepo SHALL include an `example/` directory containing a React Native app that imports `@inox-edot/react-native` from the workspace. The app SHALL initialize the SDK and display the session ID on screen.
+The monorepo SHALL include an `example/` directory containing a React Native app that imports `@inox/react-native-edot-sdk` from the workspace. The app SHALL initialize the SDK and display the session ID on screen.
 
 #### Scenario: Example app builds on iOS
 - **WHEN** `pod install` is run in `example/ios/` and the app is built via Xcode

@@ -1,5 +1,5 @@
 {
-  "name": "@inox-edot/react-native-wix-navigation",
+  "name": "@inox/react-native-edot-wix-navigation",
   "version": "0.1.0",
   "description": "EDOT Wix react-native-navigation integration — automatic view span tracking",
   "license": "MIT",
@@ -20,8 +20,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@inox-edot/core": "workspace:*",
-    "@inox-edot/react-native": "workspace:*"
+    "@inox/react-native-edot-sdk": "workspace:*",
+    "@inox/react-native-edot-shared": "workspace:*"
   },
   "devDependencies": {
     "react": "^18.2.0",

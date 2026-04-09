@@ -6,6 +6,6 @@ module.exports = {
     'node_modules/(?!(react-native|@react-native|@react-native-community)/)',
   ],
   moduleNameMapper: {
-    '^@inox-edot/core$': '<rootDir>/../core/src/index.ts',
+    '^@inox/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts',
   },
 };

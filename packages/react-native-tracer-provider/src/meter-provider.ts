@@ -8,7 +8,7 @@ let nativeModule: NativeModule | null = null;
 
 function getNativeModule(): NativeModule {
   if (!nativeModule) {
-    const mod = require('@inox-edot/react-native/nativeModule') as {
+    const mod = require('@inox/react-native-edot-sdk/nativeModule') as {
       EdotNativeModule: NativeModule;
     };
     nativeModule = mod.EdotNativeModule;

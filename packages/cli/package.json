@@ -1,5 +1,5 @@
 {
-  "name": "@inox-edot/cli",
+  "name": "@inox/react-native-edot-cli",
   "version": "0.1.0",
   "description": "EDOT React Native CLI — source map upload and SDK tooling",
   "license": "MIT",

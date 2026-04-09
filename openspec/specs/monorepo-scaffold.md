@@ -9,7 +9,7 @@ Define the monorepo structure, build tooling, and shared configuration for the E
 The project SHALL use Yarn Workspaces to manage a monorepo containing the core SDK package and future plugin packages. The root `package.json` SHALL define workspace paths including `packages/*`.
 
 #### Scenario: Monorepo resolves internal dependencies
-- **WHEN** a workspace package declares a dependency on `@inox-edot/react-native`
+- **WHEN** a workspace package declares a dependency on `@inox/react-native-edot-sdk`
 - **THEN** Yarn resolves it to the local workspace package without publishing
 
 ### Requirement: TypeScript strict mode configuration
@@ -49,7 +49,7 @@ The root SHALL configure Jest with `react-native` preset. Each package SHALL hav
 - **THEN** results are reported per-package
 
 ### Requirement: Core package directory structure
-The `@inox-edot/react-native` package SHALL follow this structure:
+The `@inox/react-native-edot-sdk` package SHALL follow this structure:
 - `src/` — TypeScript source
 - `ios/` — Swift native module + podspec
 - `android/` — Kotlin native module + build.gradle.kts

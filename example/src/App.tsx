@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { EdotReactNative, EdotErrorBoundary } from '@inox-edot/react-native';
+import { EdotReactNative, EdotErrorBoundary } from '@inox/react-native-edot-sdk';
 import { EDOT_SERVER_URL, EDOT_SECRET_TOKEN } from '@env';
 
 export function App(): React.JSX.Element {

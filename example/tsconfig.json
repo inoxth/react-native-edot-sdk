@@ -3,7 +3,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "@inox-edot/react-native": ["../packages/react-native/src"]
+      "@inox/react-native-edot-sdk": ["../packages/react-native/src"]
     }
   }
 }

@@ -3,10 +3,10 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/lib/'],
   testPathIgnorePatterns: ['/node_modules/', '\\.d\\.ts$'],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-native-community|@inox-edot)/)',
+    'node_modules/(?!(react-native|@react-native|@react-native-community|@inox)/)',
   ],
   moduleNameMapper: {
-    '^@inox-edot/react-native/active-view-context$': '<rootDir>/../react-native/src/activeViewContext',
-    '^@inox-edot/react-native/nativeModule$': '<rootDir>/../react-native/src/nativeModule',
+    '^@inox/react-native-edot-sdk/active-view-context$': '<rootDir>/../react-native/src/activeViewContext',
+    '^@inox/react-native-edot-sdk/nativeModule$': '<rootDir>/../react-native/src/nativeModule',
   },
 };

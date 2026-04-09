@@ -1,25 +1,25 @@
-## 1. Scaffold `@inox-edot/core` package
+## 1. Scaffold `@inox/react-native-edot-shared` package
 
-- [x] 1.1 Create `packages/core/package.json` with name `@inox-edot/core`, no React Native dependencies
-- [x] 1.2 Create `packages/core/tsconfig.json` and `packages/core/tsconfig.build.json`
-- [x] 1.3 Create `packages/core/src/index.ts` exporting `ActiveViewContext`
-- [x] 1.4 Move `ActiveViewContext` implementation from `packages/react-native/src/activeViewContext.ts` to `packages/core/src/activeViewContext.ts`
-- [x] 1.5 Add `@inox-edot/core` to root tsconfig references
+- [x] 1.1 Create `packages/shared/package.json` with name `@inox/react-native-edot-shared`, no React Native dependencies
+- [x] 1.2 Create `packages/shared/tsconfig.json` and `packages/shared/tsconfig.build.json`
+- [x] 1.3 Create `packages/shared/src/index.ts` exporting `ActiveViewContext`
+- [x] 1.4 Move `ActiveViewContext` implementation from `packages/react-native/src/activeViewContext.ts` to `packages/shared/src/activeViewContext.ts`
+- [x] 1.5 Add `@inox/react-native-edot-shared` to root tsconfig references
 
 ## 2. Wire backwards compatibility in main package
 
-- [x] 2.1 Replace `packages/react-native/src/activeViewContext.ts` with a re-export from `@inox-edot/core`
-- [x] 2.2 Add `@inox-edot/core` as a dependency in `packages/react-native/package.json`
+- [x] 2.1 Replace `packages/react-native/src/activeViewContext.ts` with a re-export from `@inox/react-native-edot-shared`
+- [x] 2.2 Add `@inox/react-native-edot-shared` as a dependency in `packages/react-native/package.json`
 - [x] 2.3 Verify the `./active-view-context` subpath export in `packages/react-native/package.json` still resolves correctly
 
-## 3. Update navigation plugins to use `@inox-edot/core`
+## 3. Update navigation plugins to use `@inox/react-native-edot-shared`
 
-- [x] 3.1 Add `@inox-edot/core` as a dependency in `packages/react-native-navigation/package.json`
-- [x] 3.2 Update imports in `packages/react-native-navigation/src/` from `@inox-edot/react-native/active-view-context` to `@inox-edot/core`
-- [x] 3.3 Add `@inox-edot/core` as a dependency in `packages/react-native-wix-navigation/package.json`
-- [x] 3.4 Update imports in `packages/react-native-wix-navigation/src/` from `@inox-edot/react-native/active-view-context` to `@inox-edot/core`
-- [x] 3.5 Add `@inox-edot/core` as a dependency in `packages/react-native-expo-router/package.json`
-- [x] 3.6 Update imports in `packages/react-native-expo-router/src/` from `@inox-edot/react-native/active-view-context` to `@inox-edot/core`
+- [x] 3.1 Add `@inox/react-native-edot-shared` as a dependency in `packages/react-native-navigation/package.json`
+- [x] 3.2 Update imports in `packages/react-native-navigation/src/` from `@inox/react-native-edot-sdk/active-view-context` to `@inox/react-native-edot-shared`
+- [x] 3.3 Add `@inox/react-native-edot-shared` as a dependency in `packages/react-native-wix-navigation/package.json`
+- [x] 3.4 Update imports in `packages/react-native-wix-navigation/src/` from `@inox/react-native-edot-sdk/active-view-context` to `@inox/react-native-edot-shared`
+- [x] 3.5 Add `@inox/react-native-edot-shared` as a dependency in `packages/react-native-expo-router/package.json`
+- [x] 3.6 Update imports in `packages/react-native-expo-router/src/` from `@inox/react-native-edot-sdk/active-view-context` to `@inox/react-native-edot-shared`
 
 ## 4. Add service attributes to error spans
 
@@ -28,7 +28,7 @@
 - [x] 4.3 Apply same attributes to Promise rejection spans (shared via `reportError`)
 - [x] 4.4 Update unit tests for `errors.ts` to assert service attribute presence
 
-## 5. Implement `@inox-edot/cli`
+## 5. Implement `@inox/react-native-edot-cli`
 
 - [x] 5.1 Create `packages/cli/package.json` with `bin: { edot: './lib/index.js' }` and Commander as a dependency
 - [x] 5.2 Create `packages/cli/tsconfig.json`

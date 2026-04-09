@@ -1,5 +1,5 @@
 import { registerEdotNavigationListener, resetForTesting } from '../wix-navigation-tracker';
-import { ActiveViewContext } from '@inox-edot/core';
+import { ActiveViewContext } from '@inox/react-native-edot-shared';
 import type { WixNavigation, ComponentDidAppearEvent } from '../types';
 
 const mockNativeModule = {
@@ -7,11 +7,11 @@ const mockNativeModule = {
   endSpan: jest.fn(),
 };
 
-jest.mock('@inox-edot/react-native/nativeModule', () => ({
+jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
 }));
 
-jest.mock('@inox-edot/core', () => ({
+jest.mock('@inox/react-native-edot-shared', () => ({
   ActiveViewContext: {
     setActiveView: jest.fn(),
     clearActiveView: jest.fn(),

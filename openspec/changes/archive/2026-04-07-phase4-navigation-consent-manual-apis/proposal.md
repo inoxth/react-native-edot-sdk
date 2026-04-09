@@ -4,9 +4,9 @@ Phase 4 of the EDOT React Native SDK delivers the remaining developer-facing cap
 
 ## What Changes
 
-- Add **three navigation plugin packages** (`@inox-edot/react-native-navigation`, `@inox-edot/react-native-wix-navigation`, `@inox-edot/react-native-expo-router`) that create OTel view spans on screen transitions
+- Add **three navigation plugin packages** (`@inox/react-native-edot-navigation`, `@inox/react-native-edot-wix-navigation`, `@inox/react-native-edot-expo-router`) that create OTel view spans on screen transitions
 - Add **ActiveViewContext** shared module in the core package so network and error spans automatically link to the active screen
-- Add **`@inox-edot/react-native-tracer-provider`** package exposing `getTracerProvider()`, `getMeterProvider()`, and `withSpanContext()` for custom spans, metrics, and async context propagation
+- Add **`@inox/react-native-edot-tracer-provider`** package exposing `getTracerProvider()`, `getMeterProvider()`, and `withSpanContext()` for custom spans, metrics, and async context propagation
 - Add **user interaction helpers**: `withEdotTracking()` HOC and `useEdotAction()` hook for tap/gesture tracking
 - Wire navigation plugins into existing network instrumentation (fetch/XHR) and error handler for view-to-network correlation
 

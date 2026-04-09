@@ -18,33 +18,33 @@ OpenTelemetry-compliant observability SDK for React Native. Wraps the native [ED
 
 | Package | Description |
 |---|---|
-| [`@inox-edot/react-native`](./packages/react-native) | Core SDK — config, native bridge, auto-instrumentation, public API |
-| [`@inox-edot/react-native-navigation`](./packages/react-native-navigation) | React Navigation integration |
-| [`@inox-edot/react-native-expo-router`](./packages/react-native-expo-router) | Expo Router integration |
-| [`@inox-edot/react-native-wix-navigation`](./packages/react-native-wix-navigation) | Wix react-native-navigation integration |
-| [`@inox-edot/react-native-tracer-provider`](./packages/react-native-tracer-provider) | Manual tracing and metrics API |
-| [`@inox-edot/cli`](./packages/cli) | Source map upload CLI |
-| [`@inox-edot/core`](./packages/core) | Shared internal state (not for direct use) |
+| [`@inox/react-native-edot-sdk`](./packages/react-native) | Core SDK — config, native bridge, auto-instrumentation, public API |
+| [`@inox/react-native-edot-navigation`](./packages/react-native-navigation) | React Navigation integration |
+| [`@inox/react-native-edot-expo-router`](./packages/react-native-expo-router) | Expo Router integration |
+| [`@inox/react-native-edot-wix-navigation`](./packages/react-native-wix-navigation) | Wix react-native-navigation integration |
+| [`@inox/react-native-edot-tracer-provider`](./packages/react-native-tracer-provider) | Manual tracing and metrics API |
+| [`@inox/react-native-edot-cli`](./packages/cli) | Source map upload CLI |
+| [`@inox/react-native-edot-shared`](./packages/shared) | Shared internal state (not for direct use) |
 
 ## Quick Start
 
 ### 1. Install
 
 ```bash
-yarn add @inox-edot/react-native
+yarn add @inox/react-native-edot-sdk
 ```
 
 For navigation tracking, add the plugin for your router:
 
 ```bash
 # React Navigation
-yarn add @inox-edot/react-native-navigation
+yarn add @inox/react-native-edot-navigation
 
 # Expo Router
-yarn add @inox-edot/react-native-expo-router
+yarn add @inox/react-native-edot-expo-router
 
 # Wix react-native-navigation
-yarn add @inox-edot/react-native-wix-navigation
+yarn add @inox/react-native-edot-wix-navigation
 ```
 
 ### 2. iOS Setup
@@ -56,7 +56,7 @@ cd ios && pod install
 ### 3. Initialize
 
 ```typescript
-import { EdotReactNative } from '@inox-edot/react-native';
+import { EdotReactNative } from '@inox/react-native-edot-sdk';
 
 await EdotReactNative.initialize({
   serverUrl: 'https://your-apm-server:8200',
@@ -71,7 +71,7 @@ All auto-instrumentation (network, errors, lifecycle, startup) is enabled by def
 ## Configuration
 
 ```typescript
-import { EdotReactNative } from '@inox-edot/react-native';
+import { EdotReactNative } from '@inox/react-native-edot-sdk';
 
 await EdotReactNative.initialize({
   // Required
@@ -113,7 +113,7 @@ await EdotReactNative.initialize({
 ### React Navigation
 
 ```typescript
-import { createEdotNavigationContainerRef } from '@inox-edot/react-native-navigation';
+import { createEdotNavigationContainerRef } from '@inox/react-native-edot-navigation';
 
 const { navigationRef, onStateChange, onReady, cleanup } =
   createEdotNavigationContainerRef({
@@ -138,7 +138,7 @@ function App() {
 ### Expo Router
 
 ```tsx
-import { EdotExpoNavigationProvider } from '@inox-edot/react-native-expo-router';
+import { EdotExpoNavigationProvider } from '@inox/react-native-edot-expo-router';
 
 export default function Layout() {
   return (
@@ -155,7 +155,7 @@ export default function Layout() {
 
 ```typescript
 import { Navigation } from 'react-native-navigation';
-import { registerEdotNavigationListener } from '@inox-edot/react-native-wix-navigation';
+import { registerEdotNavigationListener } from '@inox/react-native-edot-wix-navigation';
 
 const cleanup = registerEdotNavigationListener(Navigation, {
   screenNameMapper: (componentName) => componentName,
@@ -165,7 +165,7 @@ const cleanup = registerEdotNavigationListener(Navigation, {
 ## Error Boundary
 
 ```tsx
-import { EdotErrorBoundary } from '@inox-edot/react-native';
+import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
 
 <EdotErrorBoundary fallback={<Text>Something went wrong</Text>}>
   <MyApp />
@@ -177,7 +177,7 @@ import { EdotErrorBoundary } from '@inox-edot/react-native';
 ### HOC
 
 ```tsx
-import { withEdotTracking } from '@inox-edot/react-native';
+import { withEdotTracking } from '@inox/react-native-edot-sdk';
 import { TouchableOpacity } from 'react-native';
 
 const TrackedButton = withEdotTracking(TouchableOpacity, 'CheckoutButton');
@@ -186,7 +186,7 @@ const TrackedButton = withEdotTracking(TouchableOpacity, 'CheckoutButton');
 ### Hook
 
 ```typescript
-import { useEdotAction } from '@inox-edot/react-native';
+import { useEdotAction } from '@inox/react-native-edot-sdk';
 
 function CheckoutScreen() {
   const { trackAction } = useEdotAction();
@@ -204,7 +204,7 @@ import {
   getTracerProvider,
   getMeterProvider,
   SpanStatusCode,
-} from '@inox-edot/react-native-tracer-provider';
+} from '@inox/react-native-edot-tracer-provider';
 
 // Custom spans
 const tracer = getTracerProvider().getTracer('checkout');
@@ -222,7 +222,7 @@ counter.add(1, { region: 'us-east' });
 ## Session & User APIs
 
 ```typescript
-import { EdotReactNative } from '@inox-edot/react-native';
+import { EdotReactNative } from '@inox/react-native-edot-sdk';
 
 // User identity
 EdotReactNative.setUser({ id: 'user-123', email: 'user@example.com', name: 'Alice' });
@@ -247,7 +247,7 @@ EdotReactNative.log('info', 'Payment completed', { orderId: 'ord-456' });
 Upload source maps for server-side crash symbolication:
 
 ```bash
-npx @inox-edot/cli upload-sourcemap \
+npx @inox/react-native-edot-cli upload-sourcemap \
   --server-url https://your-apm-server:8200 \
   --service-name my-app \
   --service-version 1.0.0 \

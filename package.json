@@ -12,7 +12,7 @@
     "fmt": "oxfmt packages/",
     "typecheck": "tsc --build",
     "test": "jest",
-    "build": "yarn workspaces foreach -A --include '@inox-edot/*' run build"
+    "build": "yarn workspaces foreach -A --include '@inox/*' run build"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",

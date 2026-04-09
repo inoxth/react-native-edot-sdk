@@ -5,7 +5,7 @@ The EDOT React Native SDK needs its foundational layer before any auto-instrumen
 ## What Changes
 
 - Scaffold monorepo with Yarn/pnpm workspaces, TypeScript strict mode, react-native-builder-bob, and shared tooling (ESLint, Prettier, Jest)
-- Create `@inox-edot/react-native` core package with `EdotReactNative.initialize(config)` API
+- Create `@inox/react-native-edot-sdk` core package with `EdotReactNative.initialize(config)` API
 - Implement iOS native module (Swift) wrapping EDOT iOS SDK (apm-agent-ios v2.0.0 via SPM) initialization
 - Implement Android native module (Kotlin) using OpenTelemetry API with EDOT Android Gradle plugin (co.elastic.otel.android.agent v1.5.0)
 - Support optional native-side pre-initialization (`preInitialize`) for early crash capture
@@ -32,7 +32,7 @@ The EDOT React Native SDK needs its foundational layer before any auto-instrumen
 
 ## Impact
 
-- **New packages**: `@inox-edot/react-native` (core)
+- **New packages**: `@inox/react-native-edot-sdk` (core)
 - **Native dependencies**: ElasticApm v2.0.0 (iOS via SPM), `co.elastic.otel.android.agent` Gradle plugin v1.5.0 (Android, applied by consumer), `io.opentelemetry:opentelemetry-api:1.60.1` (Android library dep)
 - **Build tooling**: react-native-builder-bob for library builds, TypeScript project references
 - **CI**: GitHub Actions pipeline for lint, type-check, unit tests, and iOS/Android build verification

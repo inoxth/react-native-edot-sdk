@@ -98,7 +98,7 @@ Before OpenSpec specs, scaffold the empty monorepo so Claude Code has files to t
 npm init -y
 
 # Create workspace directories
-mkdir -p packages/core
+mkdir -p packages/shared
 mkdir -p packages/navigation
 mkdir -p packages/wix-navigation
 mkdir -p packages/expo-router
@@ -514,19 +514,19 @@ Open `openspec/changes/phase1-foundation/tasks.md` and verify it includes these 
 - [ ] 1.5 Add Changesets config for version management (`changeset init`)
 - [ ] 1.6 Create GitHub Actions CI workflow (lint, typecheck, build)
 
-## 2. Core Package — JS Layer (`packages/core`)
-- [ ] 2.1 Create `packages/core/package.json` with `@inox-edot/react-native` name and bob config
+## 2. Core Package — JS Layer (`packages/shared`)
+- [ ] 2.1 Create `packages/shared/package.json` with `@inox/react-native-edot-sdk` name and bob config
 - [ ] 2.2 Define `EdotConfig` TypeScript interface (all fields from PRD Section 3.1.3)
 - [ ] 2.3 Implement config validation with descriptive error messages
 - [ ] 2.4 Implement native module loader with TurboModule detection and no-op fallback
-  - File: `packages/core/src/nativeModule.ts`
+  - File: `packages/shared/src/nativeModule.ts`
 - [ ] 2.5 Implement `EdotReactNative.initialize()` that calls native module with validated config
-  - File: `packages/core/src/EdotReactNative.ts`
+  - File: `packages/shared/src/EdotReactNative.ts`
 - [ ] 2.6 Implement session API: `getCurrentSessionId()`, `setUser()`, `clearUser()`, `setSessionAttribute()`
 - [ ] 2.7 Implement global attribute API: `setGlobalAttribute()`, `removeGlobalAttribute()`
-- [ ] 2.8 Export all public types and APIs from `packages/core/src/index.ts`
+- [ ] 2.8 Export all public types and APIs from `packages/shared/src/index.ts`
 
-## 3. Core Package — iOS Native Module (`packages/core/ios`)
+## 3. Core Package — iOS Native Module (`packages/shared/ios`)
 - [ ] 3.1 Create `EdotReactNative.podspec` with dependency on `ElasticApm ~> 2.0` and `React-Core`
 - [ ] 3.2 Implement `EdotReactNative.swift` native module with all bridge methods (PRD Section 4.1.3)
 - [ ] 3.3 Implement `EdotReactNative.m` ObjC bridge header for Old Architecture
@@ -534,7 +534,7 @@ Open `openspec/changes/phase1-foundation/tasks.md` and verify it includes these 
 - [ ] 3.5 Implement `EdotBridgeHelpers.swift` for NSDictionary ↔ Swift type conversions
 - [ ] 3.6 Define TurboModule codegen spec (`EdotReactNativeSpec.h`) for New Architecture
 
-## 4. Core Package — Android Native Module (`packages/core/android`)
+## 4. Core Package — Android Native Module (`packages/shared/android`)
 - [ ] 4.1 Create `build.gradle.kts` with dependency on EDOT Android SDK and react-android
 - [ ] 4.2 Implement `EdotReactNativeModule.kt` with all bridge methods (PRD Section 4.2.3)
 - [ ] 4.3 Implement `EdotReactNativePackage.kt` for RN module registration
@@ -544,7 +544,7 @@ Open `openspec/changes/phase1-foundation/tasks.md` and verify it includes these 
 - [ ] 4.7 Create `AndroidManifest.xml` with required permissions
 
 ## 5. TurboModule Spec (Shared)
-- [ ] 5.1 Create `packages/core/src/NativeEdotReactNative.ts` TurboModule spec (PRD Section 4.3)
+- [ ] 5.1 Create `packages/shared/src/NativeEdotReactNative.ts` TurboModule spec (PRD Section 4.3)
 - [ ] 5.2 Verify codegen output compiles on both iOS and Android
 
 ## 6. Example App
@@ -629,21 +629,21 @@ Provide this context to Claude Code:
 # Phase 2: Auto-Instrumentation — Implementation Tasks
 
 ## 1. Network Instrumentation
-- [ ] 1.1 Implement fetch monkey-patch in `packages/core/src/instrumentation/fetchPatch.ts`
+- [ ] 1.1 Implement fetch monkey-patch in `packages/shared/src/instrumentation/fetchPatch.ts`
   - Save reference to `global.fetch`, replace with instrumented version
   - Create OTel spans with HTTP semantic convention attributes
   - Set `X-Edot-RN-Traced: 1` header for deduplication
-- [ ] 1.2 Implement XMLHttpRequest monkey-patch in `packages/core/src/instrumentation/xhrPatch.ts`
+- [ ] 1.2 Implement XMLHttpRequest monkey-patch in `packages/shared/src/instrumentation/xhrPatch.ts`
   - Intercept `open()`, `send()`, and response event listeners
   - Same span attributes as fetch
-- [ ] 1.3 Implement URL sanitizer in `packages/core/src/utils/urlSanitizer.ts`
+- [ ] 1.3 Implement URL sanitizer in `packages/shared/src/utils/urlSanitizer.ts`
   - Default: strip query parameters
   - Accept custom `urlSanitizer` callback from config
 - [ ] 1.4 Implement `ignoreUrls` matching logic
   - Support string and RegExp patterns
   - Always ignore the SDK's own serverUrl
 - [ ] 1.5 Implement W3C `traceparent` header injection for `tracePropagationTargets`
-  - File: `packages/core/src/instrumentation/traceContextPropagator.ts`
+  - File: `packages/shared/src/instrumentation/traceContextPropagator.ts`
 - [ ] 1.6 Implement GraphQL operation name extraction for `graphqlUrls`
   - Parse request body JSON, extract `operationName`
   - Override span name to `GraphQL: {operationName}`
@@ -651,19 +651,19 @@ Provide this context to Claude Code:
 - [ ] 1.8 Write unit tests for fetch patch, XHR patch, URL sanitizer, trace propagation, GraphQL extraction
 
 ## 2. Error Tracking
-- [ ] 2.1 Implement global JS error handler in `packages/core/src/instrumentation/errorHandler.ts`
+- [ ] 2.1 Implement global JS error handler in `packages/shared/src/instrumentation/errorHandler.ts`
   - Use `ErrorUtils.setGlobalHandler()` — chain with existing handler
 - [ ] 2.2 Implement promise rejection tracker
   - Hermes: `global.HermesInternal?.enablePromiseRejectionTracker()`
   - JSC fallback: `require('promise/setimmediate/rejection-tracking')`
 - [ ] 2.3 Implement `EdotErrorBoundary` React component
-  - File: `packages/core/src/components/EdotErrorBoundary.tsx`
+  - File: `packages/shared/src/components/EdotErrorBoundary.tsx`
   - Accept `fallback` prop, `onError` callback
 - [ ] 2.4 Implement `reportJsError()` internal function that creates span + forwards to native
 - [ ] 2.5 Write unit tests for error handler, promise tracker, ErrorBoundary
 
 ## 3. Lifecycle & Startup
-- [ ] 3.1 Implement AppState lifecycle tracker in `packages/core/src/instrumentation/lifecycleTracker.ts`
+- [ ] 3.1 Implement AppState lifecycle tracker in `packages/shared/src/instrumentation/lifecycleTracker.ts`
   - Listen to AppState changes, create spans for foreground/background/inactive
 - [ ] 3.2 Implement app startup tracing
   - Native side: record `nativeStartTimestamp` in preInitialize
@@ -673,7 +673,7 @@ Provide this context to Claude Code:
 - [ ] 3.4 Write unit tests for lifecycle tracker
 
 ## 4. Span Management
-- [ ] 4.1 Implement span registry in `packages/core/src/spans/SpanRegistry.ts`
+- [ ] 4.1 Implement span registry in `packages/shared/src/spans/SpanRegistry.ts`
   - JS-side Map<spanId, { startTime, span }>
 - [ ] 4.2 Implement orphaned span cleanup timer (60s interval, 5min timeout)
   - End expired spans with DEADLINE_EXCEEDED
@@ -813,7 +813,7 @@ APIs does this screen call?" queries in Kibana.
 # Phase 3: View-to-Network Span Correlation — Implementation Tasks
 
 ## 1. Active View Context Module
-- [ ] 1.1 Create `packages/core/src/context/ActiveViewContext.ts`
+- [ ] 1.1 Create `packages/shared/src/context/ActiveViewContext.ts`
   - Export: `setActiveView(spanContext, viewName)`, `clearActiveView()`, `getActiveViewContext()`, `getActiveViewName()`
   - Module-level variables (singleton pattern)
   - Atomic replacement on `setActiveView()` (no intermediate null state)
@@ -824,19 +824,19 @@ APIs does this screen call?" queries in Kibana.
   - Test: clearActiveView resets to null
 
 ## 2. Network Interceptor Integration
-- [ ] 2.1 Update `packages/core/src/instrumentation/fetchPatch.ts`
+- [ ] 2.1 Update `packages/shared/src/instrumentation/fetchPatch.ts`
   - Import `getActiveViewContext()` and `getActiveViewName()`
   - Add `view.name` and `view.id` attributes to every network span when available
   - Add span link to `activeViewContext` when available
   - Capture view context at span creation time (not at span end)
-- [ ] 2.2 Update `packages/core/src/instrumentation/xhrPatch.ts` with same enrichment
+- [ ] 2.2 Update `packages/shared/src/instrumentation/xhrPatch.ts` with same enrichment
 - [ ] 2.3 Write unit tests
   - Test: network span has view.name when active view exists
   - Test: network span has NO view.name when no active view
   - Test: view.name is captured at creation, not at response time (simulate navigation during request)
 
 ## 3. Error Handler Integration
-- [ ] 3.1 Update `packages/core/src/instrumentation/errorHandler.ts`
+- [ ] 3.1 Update `packages/shared/src/instrumentation/errorHandler.ts`
   - Add `view.name` attribute and span link to all error spans
 - [ ] 3.2 Update `EdotErrorBoundary` component to include view context on render errors
 - [ ] 3.3 Write unit tests for error-to-view correlation
@@ -852,7 +852,7 @@ APIs does this screen call?" queries in Kibana.
 
 ## 5. Contract for Navigation Plugins
 - [ ] 5.1 Export `setActiveView` and `getActiveViewContext` from core package's public API
-  - Add to `packages/core/src/index.ts` exports
+  - Add to `packages/shared/src/index.ts` exports
   - These are consumed by navigation plugin packages in Phase 4
 - [ ] 5.2 Document the contract in TSDoc comments:
   - Navigation plugins MUST call `setActiveView(spanContext, viewName)` when a new screen appears
@@ -910,7 +910,7 @@ Context for Claude Code:
 > manual instrumentation API (TracerProvider, custom spans/metrics/logs, withSpanContext),
 > and iOS background disk cache.
 > IMPORTANT: Each navigation plugin MUST call `setActiveView(spanContext, viewName)`
-> from `@inox-edot/react-native` core package when a new screen appears.
+> from `@inox/react-native-edot-sdk` core package when a new screen appears.
 > This enables the view-to-network correlation built in Phase 3.
 > Reference docs/PRD.md Sections 3.3, 3.6, 3.7, 3.10, 3.11, 3.14, 3.17.3, 3.19.
 
@@ -927,7 +927,7 @@ Context for Claude Code:
   - Create view spans on route change, end previous span
   - **Call `setActiveView(newViewSpanContext, routeName)` on every screen change**
 - [ ] 1.3 Implement `screenNameMapper` callback support
-- [ ] 1.4 Add `@react-navigation/native` and `@inox-edot/react-native` as peer dependencies
+- [ ] 1.4 Add `@react-navigation/native` and `@inox/react-native-edot-sdk` as peer dependencies
 - [ ] 1.5 Write unit tests with mocked navigation state
   - **Test: verify `setActiveView()` is called with correct spanContext and view name**
 
@@ -935,7 +935,7 @@ Context for Claude Code:
 - [ ] 2.1 Create package scaffolding
 - [ ] 2.2 Implement `registerEdotNavigationListener(Navigation)` using ComponentDidAppear events
   - **Call `setActiveView(spanContext, componentName)` on each ComponentDidAppear**
-- [ ] 2.3 Add `react-native-navigation` and `@inox-edot/react-native` as peer dependencies
+- [ ] 2.3 Add `react-native-navigation` and `@inox/react-native-edot-sdk` as peer dependencies
 - [ ] 2.4 Write unit tests with mocked Wix Navigation events
   - **Test: verify `setActiveView()` is called on ComponentDidAppear**
 
@@ -943,12 +943,12 @@ Context for Claude Code:
 - [ ] 3.1 Create package scaffolding
 - [ ] 3.2 Implement `<EdotExpoNavigationProvider>` using `usePathname()` / `useSegments()`
   - **Call `setActiveView(spanContext, pathname)` when pathname changes**
-- [ ] 3.3 Add `expo-router` and `@inox-edot/react-native` as peer dependencies
+- [ ] 3.3 Add `expo-router` and `@inox/react-native-edot-sdk` as peer dependencies
 - [ ] 3.4 Write unit tests with mocked Expo Router hooks
   - **Test: verify `setActiveView()` is called when pathname changes**
 
 ## 4. Tracking Consent
-- [ ] 4.1 Implement consent state machine in `packages/core/src/consent/ConsentManager.ts`
+- [ ] 4.1 Implement consent state machine in `packages/shared/src/consent/ConsentManager.ts`
   - States: granted, pending, not_granted
   - Buffer management: hold, flush, purge
 - [ ] 4.2 Implement `setTrackingConsent()` public API
@@ -1040,20 +1040,20 @@ Context:
 - [ ] 1.8 Write unit tests for CLI argument parsing and upload logic (mock HTTP)
 
 ## 2. Expo Config Plugin
-- [ ] 2.1 Create `plugin/` directory in `packages/core`
+- [ ] 2.1 Create `plugin/` directory in `packages/shared`
 - [ ] 2.2 Implement iOS config plugin: modify AppDelegate.swift, add ElasticApm pod
 - [ ] 2.3 Implement Android config plugin: add Gradle plugin, modify MainApplication.kt
 - [ ] 2.4 Test with `npx expo prebuild` on a fresh Expo project
 
 ## 3. Debug Tooling
-- [ ] 3.1 Implement debug console output formatter in `packages/core/src/debug/DebugLogger.ts`
+- [ ] 3.1 Implement debug console output formatter in `packages/shared/src/debug/DebugLogger.ts`
   - Format: `[EDOT] Span started: HTTP GET ... (spanId: abc123)`
 - [ ] 3.2 Implement `debugExportToConsole` — log OTLP payloads to console
 - [ ] 3.3 Wire debug logger into all instrumentation hooks
 
 ## 4. Documentation
 - [ ] 4.1 Write root `README.md` with quick start, installation, and configuration
-- [ ] 4.2 Write `packages/core/README.md` with full API reference
+- [ ] 4.2 Write `packages/shared/README.md` with full API reference
 - [ ] 4.3 Write `packages/navigation/README.md` with React Navigation setup guide
 - [ ] 4.4 Write `packages/wix-navigation/README.md`
 - [ ] 4.5 Write `packages/expo-router/README.md`
@@ -1106,7 +1106,7 @@ cd example && npx detox test --configuration ios.sim.release
 npx edot-rn-sourcemap-upload --dry-run --type sourcemap ...
 
 # Verify npm package contents
-cd packages/core && npm pack --dry-run
+cd packages/shared && npm pack --dry-run
 ```
 
 ```
@@ -1188,7 +1188,7 @@ openspec view   # interactive dashboard shows spec coverage
 - Android: Run `cd example/android && ./gradlew clean`
 
 **Issue: TurboModule codegen not generating**
-- Ensure `codegenConfig` is set in `packages/core/package.json`
+- Ensure `codegenConfig` is set in `packages/shared/package.json`
 - Run `cd example && npx react-native codegen`
 
 **Issue: Duplicate spans for the same network request**
@@ -1209,9 +1209,9 @@ Quick reference for where things live:
 | OpenSpec config | `openspec/config.yaml` |
 | Base specs | `openspec/specs/*.md` |
 | Change proposals | `openspec/changes/{phase-name}/` |
-| Core JS package | `packages/core/src/` |
-| iOS native module | `packages/core/ios/` |
-| Android native module | `packages/core/android/` |
+| Core JS package | `packages/shared/src/` |
+| iOS native module | `packages/shared/ios/` |
+| Android native module | `packages/shared/android/` |
 | React Nav plugin | `packages/navigation/src/` |
 | Wix Nav plugin | `packages/wix-navigation/src/` |
 | Expo Router plugin | `packages/expo-router/src/` |

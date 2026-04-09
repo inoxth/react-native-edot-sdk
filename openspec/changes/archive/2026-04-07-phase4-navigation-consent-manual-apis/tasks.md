@@ -1,7 +1,7 @@
 ## 1. ActiveViewContext (Core Package)
 
 - [x] 1.1 Create `packages/react-native/src/activeViewContext.ts` with `ActiveView` type, `setActiveView`, `getActiveView`, `clearActiveView`, and `addListener`
-- [x] 1.2 Add subpath export `@inox-edot/react-native/active-view-context` in package.json `exports` field
+- [x] 1.2 Add subpath export `@inox/react-native-edot-sdk/active-view-context` in package.json `exports` field
 - [x] 1.3 Write unit tests for ActiveViewContext (set/get/clear/listener/unsubscribe)
 
 ## 2. View Correlation (Core Package Modifications)

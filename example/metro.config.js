@@ -7,7 +7,7 @@ const config = {
   watchFolders: [root],
   resolver: {
     extraNodeModules: {
-      '@inox-edot/react-native': path.resolve(root, 'packages/react-native'),
+      '@inox/react-native-edot-sdk': path.resolve(root, 'packages/react-native'),
     },
   },
 };

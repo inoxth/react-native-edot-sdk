@@ -25,8 +25,8 @@ The module SHALL support `addListener(callback)` that fires when the active view
 - **THEN** the callback does NOT fire
 
 ### Requirement: Exported via subpath from core package
-The module SHALL be exported from `@inox-edot/react-native/active-view-context` so navigation plugins can import it without depending on internal paths.
+The module SHALL be exported from `@inox/react-native-edot-sdk/active-view-context` so navigation plugins can import it without depending on internal paths.
 
 #### Scenario: Import from subpath
-- **WHEN** a navigation plugin imports `{ ActiveViewContext } from '@inox-edot/react-native/active-view-context'`
+- **WHEN** a navigation plugin imports `{ ActiveViewContext } from '@inox/react-native-edot-sdk/active-view-context'`
 - **THEN** it resolves to the ActiveViewContext module

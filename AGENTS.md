@@ -2,7 +2,7 @@
 
 ## Overview
 
-EDOT React Native SDK — an OpenTelemetry-compliant observability SDK wrapping native EDOT iOS/Android agents. Auto-instruments network requests (fetch + XHR), JS errors, app lifecycle, startup, and navigation. Published under `@inox-edot/*` scope.
+EDOT React Native SDK — an OpenTelemetry-compliant observability SDK wrapping native EDOT iOS/Android agents. Auto-instruments network requests (fetch + XHR), JS errors, app lifecycle, startup, and navigation. Published under `@inox/*` scope.
 
 React Native 0.72+, supports both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric).
 
@@ -13,7 +13,7 @@ yarn typecheck                    # TypeScript check (tsc --build, composite)
 yarn test                         # Jest across all packages
 yarn lint                         # oxlint (NOT eslint)
 yarn fmt                          # oxfmt (NOT prettier)
-yarn build                        # bob build for all @inox-edot/* packages
+yarn build                        # bob build for all @inox/* packages
 
 # Single test file
 yarn jest packages/react-native/src/__tests__/errors.test.ts
@@ -27,13 +27,13 @@ cd example && npx detox test --configuration ios.sim.release
 
 ```
 packages/
-├── core/                          # @inox-edot/core
-├── react-native/                  # @inox-edot/react-native
-├── react-native-navigation/       # @inox-edot/react-native-navigation
-├── react-native-expo-router/      # @inox-edot/react-native-expo-router
-├── react-native-wix-navigation/   # @inox-edot/react-native-wix-navigation
-├── react-native-tracer-provider/  # @inox-edot/react-native-tracer-provider
-└── cli/                           # @inox-edot/cli
+├── shared/                        # @inox/react-native-edot-shared
+├── react-native/                  # @inox/react-native-edot-sdk
+├── react-native-navigation/       # @inox/react-native-edot-navigation
+├── react-native-expo-router/      # @inox/react-native-edot-expo-router
+├── react-native-wix-navigation/   # @inox/react-native-edot-wix-navigation
+├── react-native-tracer-provider/  # @inox/react-native-edot-tracer-provider
+└── cli/                           # @inox/react-native-edot-cli
 example/                           # Demo RN app with Detox E2E tests
 openspec/                          # OpenSpec specs and change tracking
 ```
@@ -42,13 +42,13 @@ openspec/                          # OpenSpec specs and change tracking
 
 | Package | Description |
 |---|---|
-| `@inox-edot/core` | Shared cross-package state (`ActiveViewContext` singleton). Pure JS/TS — no React Native dependency. All navigation plugins depend on this. |
-| `@inox-edot/react-native` | Main SDK. Config validation, native bridge (TurboModule + NativeModules + no-op fallback), auto-instrumentation (fetch, XHR, errors, lifecycle, startup, span cleanup), public API (`EdotReactNative.initialize()`, `setUser()`, `log()`), and React components (`EdotErrorBoundary`, `withEdotTracking`, `useEdotAction`). |
-| `@inox-edot/react-native-navigation` | React Navigation (`@react-navigation/native`) integration. Creates view spans on route changes via `createEdotNavigationContainerRef()`. |
-| `@inox-edot/react-native-expo-router` | Expo Router integration. Creates view spans on pathname changes via `<EdotExpoNavigationProvider>` wrapper component. |
-| `@inox-edot/react-native-wix-navigation` | Wix react-native-navigation integration. Creates view spans on `ComponentDidAppear` events via `registerEdotNavigationListener()`. |
-| `@inox-edot/react-native-tracer-provider` | Manual instrumentation API. Exposes `getTracerProvider()`, `getMeterProvider()`, `withSpanContext()` for custom spans and metrics. |
-| `@inox-edot/cli` | CLI tool for source map upload. `edot upload-sourcemap` POSTs bundle + map to EDOT server for server-side crash symbolication. |
+| `@inox/react-native-edot-shared` | Shared cross-package state (`ActiveViewContext` singleton). Pure JS/TS — no React Native dependency. All navigation plugins depend on this. |
+| `@inox/react-native-edot-sdk` | Main SDK. Config validation, native bridge (TurboModule + NativeModules + no-op fallback), auto-instrumentation (fetch, XHR, errors, lifecycle, startup, span cleanup), public API (`EdotReactNative.initialize()`, `setUser()`, `log()`), and React components (`EdotErrorBoundary`, `withEdotTracking`, `useEdotAction`). |
+| `@inox/react-native-edot-navigation` | React Navigation (`@react-navigation/native`) integration. Creates view spans on route changes via `createEdotNavigationContainerRef()`. |
+| `@inox/react-native-edot-expo-router` | Expo Router integration. Creates view spans on pathname changes via `<EdotExpoNavigationProvider>` wrapper component. |
+| `@inox/react-native-edot-wix-navigation` | Wix react-native-navigation integration. Creates view spans on `ComponentDidAppear` events via `registerEdotNavigationListener()`. |
+| `@inox/react-native-edot-tracer-provider` | Manual instrumentation API. Exposes `getTracerProvider()`, `getMeterProvider()`, `withSpanContext()` for custom spans and metrics. |
+| `@inox/react-native-edot-cli` | CLI tool for source map upload. `edot upload-sourcemap` POSTs bundle + map to EDOT server for server-side crash symbolication. |
 
 ## Architecture
 
@@ -67,7 +67,7 @@ openspec/                          # OpenSpec specs and change tracking
 
 ### ActiveViewContext
 
-Singleton in `@inox-edot/core` — navigation plugins write to it (`setActiveView`), instrumentation modules read from it (`getActiveView`). The main package re-exports at `@inox-edot/react-native/active-view-context` for backwards compat. Navigation plugins import from `@inox-edot/core` directly.
+Singleton in `@inox/react-native-edot-shared` — navigation plugins write to it (`setActiveView`), instrumentation modules read from it (`getActiveView`). The main package re-exports at `@inox/react-native-edot-sdk/active-view-context` for backwards compat. Navigation plugins import from `@inox/react-native-edot-shared` directly.
 
 ### Navigation Plugin Pattern
 
@@ -76,7 +76,7 @@ All three plugins (`react-native-navigation`, `react-native-expo-router`, `react
 2. End previous view span via `EdotNativeModule.endSpan()`
 3. Start new span via `EdotNativeModule.startSpan()` with `view.name`, `view.previous`, `view.transition_type` attributes
 4. Update `ActiveViewContext.setActiveView()`
-5. Lazy-require `@inox-edot/react-native/nativeModule` to avoid circular deps
+5. Lazy-require `@inox/react-native-edot-sdk/nativeModule` to avoid circular deps
 
 ### Network Instrumentation
 
@@ -95,7 +95,7 @@ Fetch and XHR are monkey-patched to create OTel spans. They capture `http.method
 | Native method signatures | `NativeEdotReactNative.ts` (TurboModule spec) |
 | Add new instrumentation | `packages/react-native/src/instrumentation/` — follow fetch.ts pattern |
 | Add navigation plugin | Copy `packages/react-native-navigation/` — same structure |
-| Shared cross-package types | `packages/core/src/` |
+| Shared cross-package types | `packages/shared/src/` |
 | Specs / requirements | `openspec/specs/` |
 
 ## Conventions
@@ -109,12 +109,12 @@ Fetch and XHR are monkey-patched to create OTel spans. They capture `http.method
 ### Testing
 - Jest with `react-native` preset for RN packages, `babel-jest` for the CLI package.
 - Each package has its own `jest.config.js`.
-- Cross-package imports resolved via `moduleNameMapper` pointing to sibling `src/` dirs (e.g., `'^@inox-edot/core$': '<rootDir>/../core/src/index.ts'`).
+- Cross-package imports resolved via `moduleNameMapper` pointing to sibling `src/` dirs (e.g., `'^@inox/react-native-edot-shared$': '<rootDir>/../core/src/index.ts'`).
 - E2E via Detox in `example/e2e/`. Elements use `testID` props.
 
 ### Example App
 - Uses `installConfig.hoistingLimits: "workspaces"` in `package.json` — required so `react-native` stays in `example/node_modules/` for iOS xcodebuild scripts.
-- Metro config adds root workspace as watch folder and maps `@inox-edot/react-native` to the local package.
+- Metro config adds root workspace as watch folder and maps `@inox/react-native-edot-sdk` to the local package.
 - Detox targets iPhone 17 Pro / iOS 26.4 simulator.
 
 ### OpenSpec Workflow
@@ -122,9 +122,9 @@ Changes tracked in `openspec/changes/` with proposal → design → specs → ta
 
 ## Anti-Patterns
 
-- **Don't import `ActiveViewContext` from `@inox-edot/react-native`** in navigation plugins — import from `@inox-edot/core` to avoid circular dependency.
-- **Don't eagerly import `@inox-edot/react-native/nativeModule`** at top level in nav plugins — use lazy `require()` inside a function to break the dependency cycle.
-- **Don't add React Native dependencies to `@inox-edot/core`** — it must stay pure JS/TS.
+- **Don't import `ActiveViewContext` from `@inox/react-native-edot-sdk`** in navigation plugins — import from `@inox/react-native-edot-shared` to avoid circular dependency.
+- **Don't eagerly import `@inox/react-native-edot-sdk/nativeModule`** at top level in nav plugins — use lazy `require()` inside a function to break the dependency cycle.
+- **Don't add React Native dependencies to `@inox/react-native-edot-shared`** — it must stay pure JS/TS.
 - **Don't use `Object` (capital O)** in TurboModule specs — use `object` (lowercase).
 - **Don't manually construct `node_modules` paths** — use yarn workspace resolution and `moduleNameMapper` in jest configs.
 - **Don't commit `lib/` or `src/**/*.js`** build artifacts — they're gitignored.

@@ -1853,9 +1853,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inox-edot/cli@workspace:packages/cli":
+"@inox/react-native-edot-cli@workspace:packages/cli":
   version: 0.0.0-use.local
-  resolution: "@inox-edot/cli@workspace:packages/cli"
+  resolution: "@inox/react-native-edot-cli@workspace:packages/cli"
   dependencies:
     "@types/node": "npm:^20.0.0"
     commander: "npm:^12.0.0"
@@ -1865,20 +1865,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@inox-edot/core@workspace:*, @inox-edot/core@workspace:packages/core":
+"@inox/react-native-edot-expo-router@workspace:packages/react-native-expo-router":
   version: 0.0.0-use.local
-  resolution: "@inox-edot/core@workspace:packages/core"
+  resolution: "@inox/react-native-edot-expo-router@workspace:packages/react-native-expo-router"
   dependencies:
-    typescript: "npm:~5.4.0"
-  languageName: unknown
-  linkType: soft
-
-"@inox-edot/react-native-expo-router@workspace:packages/react-native-expo-router":
-  version: 0.0.0-use.local
-  resolution: "@inox-edot/react-native-expo-router@workspace:packages/react-native-expo-router"
-  dependencies:
-    "@inox-edot/core": "workspace:*"
-    "@inox-edot/react-native": "workspace:*"
+    "@inox/react-native-edot-sdk": "workspace:*"
+    "@inox/react-native-edot-shared": "workspace:*"
     expo-router: "npm:^3.0.0"
     react: "npm:^18.2.0"
     react-native: "npm:^0.73.6"
@@ -1891,12 +1883,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@inox-edot/react-native-navigation@workspace:packages/react-native-navigation":
+"@inox/react-native-edot-navigation@workspace:packages/react-native-navigation":
   version: 0.0.0-use.local
-  resolution: "@inox-edot/react-native-navigation@workspace:packages/react-native-navigation"
+  resolution: "@inox/react-native-edot-navigation@workspace:packages/react-native-navigation"
   dependencies:
-    "@inox-edot/core": "workspace:*"
-    "@inox-edot/react-native": "workspace:*"
+    "@inox/react-native-edot-sdk": "workspace:*"
+    "@inox/react-native-edot-shared": "workspace:*"
     "@react-navigation/native": "npm:^6.0.0"
     react: "npm:^18.2.0"
     react-native: "npm:^0.73.6"
@@ -1908,11 +1900,34 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@inox-edot/react-native-tracer-provider@workspace:packages/react-native-tracer-provider":
+"@inox/react-native-edot-sdk@workspace:*, @inox/react-native-edot-sdk@workspace:packages/react-native":
   version: 0.0.0-use.local
-  resolution: "@inox-edot/react-native-tracer-provider@workspace:packages/react-native-tracer-provider"
+  resolution: "@inox/react-native-edot-sdk@workspace:packages/react-native"
   dependencies:
-    "@inox-edot/react-native": "workspace:*"
+    "@inox/react-native-edot-shared": "workspace:*"
+    react: "npm:^18.2.0"
+    react-native: "npm:^0.73.6"
+    react-test-renderer: "npm:^18.2.0"
+    typescript: "npm:~5.4.0"
+  peerDependencies:
+    react: ">=18.0.0"
+    react-native: ">=0.72.0"
+  languageName: unknown
+  linkType: soft
+
+"@inox/react-native-edot-shared@workspace:*, @inox/react-native-edot-shared@workspace:packages/shared":
+  version: 0.0.0-use.local
+  resolution: "@inox/react-native-edot-shared@workspace:packages/shared"
+  dependencies:
+    typescript: "npm:~5.4.0"
+  languageName: unknown
+  linkType: soft
+
+"@inox/react-native-edot-tracer-provider@workspace:packages/react-native-tracer-provider":
+  version: 0.0.0-use.local
+  resolution: "@inox/react-native-edot-tracer-provider@workspace:packages/react-native-tracer-provider"
+  dependencies:
+    "@inox/react-native-edot-sdk": "workspace:*"
     react: "npm:^18.2.0"
     react-native: "npm:^0.73.6"
     typescript: "npm:~5.4.0"
@@ -1922,12 +1937,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@inox-edot/react-native-wix-navigation@workspace:packages/react-native-wix-navigation":
+"@inox/react-native-edot-wix-navigation@workspace:packages/react-native-wix-navigation":
   version: 0.0.0-use.local
-  resolution: "@inox-edot/react-native-wix-navigation@workspace:packages/react-native-wix-navigation"
+  resolution: "@inox/react-native-edot-wix-navigation@workspace:packages/react-native-wix-navigation"
   dependencies:
-    "@inox-edot/core": "workspace:*"
-    "@inox-edot/react-native": "workspace:*"
+    "@inox/react-native-edot-sdk": "workspace:*"
+    "@inox/react-native-edot-shared": "workspace:*"
     react: "npm:^18.2.0"
     react-native: "npm:^0.73.6"
     react-native-navigation: "npm:^7.0.0"
@@ -1936,21 +1951,6 @@ __metadata:
     react: ">=18.0.0"
     react-native: ">=0.72.0"
     react-native-navigation: ">=7.0.0"
-  languageName: unknown
-  linkType: soft
-
-"@inox-edot/react-native@workspace:*, @inox-edot/react-native@workspace:packages/react-native":
-  version: 0.0.0-use.local
-  resolution: "@inox-edot/react-native@workspace:packages/react-native"
-  dependencies:
-    "@inox-edot/core": "workspace:*"
-    react: "npm:^18.2.0"
-    react-native: "npm:^0.73.6"
-    react-test-renderer: "npm:^18.2.0"
-    typescript: "npm:~5.4.0"
-  peerDependencies:
-    react: ">=18.0.0"
-    react-native: ">=0.72.0"
   languageName: unknown
   linkType: soft
 
@@ -5004,9 +5004,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001782":
-  version: 1.0.30001786
-  resolution: "caniuse-lite@npm:1.0.30001786"
-  checksum: 10c0/9895f0add1991eefb91cfae98e7baa9daffc6b862b0996c983d30e6be90ef679b6aef32dcb6eca312977fb67c2636ee575820f101213e69c1e0dbffd6ee8e09e
+  version: 1.0.30001787
+  resolution: "caniuse-lite@npm:1.0.30001787"
+  checksum: 10c0/93a6975afbf07f49c9077b348948bbc25b6a82596ccd07b4b6503e48f6f968e1a1e057cc25004db8a2d1d4f35f0c792739e33634edfcefc88ff184c9a2f7a036
   languageName: node
   linkType: hard
 
@@ -5750,7 +5750,7 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.24.0"
     "@babel/runtime": "npm:^7.24.0"
-    "@inox-edot/react-native": "workspace:*"
+    "@inox/react-native-edot-sdk": "workspace:*"
     "@react-native/babel-preset": "npm:^0.73.0"
     "@react-native/metro-config": "npm:^0.73.0"
     "@react-native/typescript-config": "npm:^0.73.0"
@@ -5772,9 +5772,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.328":
-  version: 1.5.331
-  resolution: "electron-to-chromium@npm:1.5.331"
-  checksum: 10c0/a7687f3bb4df4640bfeac08d1586531624917452bbbbeb67ccf2b07f111e584321e60945da080df664cbb57f272307d7867c8b93e279150ce8385f13d5178c96
+  version: 1.5.334
+  resolution: "electron-to-chromium@npm:1.5.334"
+  checksum: 10c0/4fa700f920d6f6a52f1a777f9cbbaf95ed7247fd6d89d9ff5d26255779c2c0297be5162e56e8e9a7ec40ff42d656d5e1b06ee6e7cf60dd8baec2e0d8f0f1bc77
   languageName: node
   linkType: hard
 
@@ -6272,9 +6272,9 @@ __metadata:
   linkType: hard
 
 "flow-parser@npm:0.*":
-  version: 0.308.0
-  resolution: "flow-parser@npm:0.308.0"
-  checksum: 10c0/e703fdacaea826c6c9ff2113df54d328cba0fdb8c076830f2a8910e8a015cd8077495f234a7ac9e247c6ab1ca1f0579f09a22a5dd393610fa2c971c7adf55a46
+  version: 0.309.0
+  resolution: "flow-parser@npm:0.309.0"
+  checksum: 10c0/2c0bb48365a0d78ad2d6571f1a403c133589b40f0f9fe1d9d5ee20e70d3d88bc834ff932023df0a48d96aa05c3dc81ae17d9d61e35a80234506cdb51f2a0572c
   languageName: node
   linkType: hard
 
@@ -8515,9 +8515,9 @@ __metadata:
   linkType: hard
 
 "lru-cache@npm:^11.0.0, lru-cache@npm:^11.1.0, lru-cache@npm:^11.2.1":
-  version: 11.3.2
-  resolution: "lru-cache@npm:11.3.2"
-  checksum: 10c0/1981baec397c1e7875ac7456ea123e1f8016b878bf3a88b083bbe3f791ba77212d0507751a069f3d4c12441d70ca255d150c2a1c489d3cbe5ed6b8c625bb1be2
+  version: 11.3.3
+  resolution: "lru-cache@npm:11.3.3"
+  checksum: 10c0/f0053c0d6f58caca93b62c0037c8c913dfc02d9bc63b6c90f34279116e301ce051197796640ed5e71d96404fe6cfa5e841f40594dab30b8938f1d4f0b52e1883
   languageName: node
   linkType: hard
 
@@ -9747,7 +9747,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"picomatch@npm:^4.0.3":
+"picomatch@npm:^4.0.3, picomatch@npm:^4.0.4":
   version: 4.0.4
   resolution: "picomatch@npm:4.0.4"
   checksum: 10c0/e2c6023372cc7b5764719a5ffb9da0f8e781212fa7ca4bd0562db929df8e117460f00dff3cb7509dacfc06b86de924b247f504d0ce1806a37fac4633081466b0
@@ -11289,12 +11289,12 @@ __metadata:
   linkType: hard
 
 "tinyglobby@npm:^0.2.12":
-  version: 0.2.15
-  resolution: "tinyglobby@npm:0.2.15"
+  version: 0.2.16
+  resolution: "tinyglobby@npm:0.2.16"
   dependencies:
     fdir: "npm:^6.5.0"
-    picomatch: "npm:^4.0.3"
-  checksum: 10c0/869c31490d0d88eedb8305d178d4c75e7463e820df5a9b9d388291daf93e8b1eb5de1dad1c1e139767e4269fe75f3b10d5009b2cc14db96ff98986920a186844
+    picomatch: "npm:^4.0.4"
+  checksum: 10c0/f2e09fd93dd95c41e522113b686ff6f7c13020962f8698a864a257f3d7737599afc47722b7ab726e12f8a813f779906187911ff8ee6701ede65072671a7e934b
   languageName: node
   linkType: hard
 

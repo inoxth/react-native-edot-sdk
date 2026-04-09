@@ -68,7 +68,7 @@
 ## 7. Example App
 
 - [x] 7.1 Create `example/` React Native app using `npx @react-native-community/cli init`
-- [x] 7.2 Add workspace dependency on `@inox-edot/react-native`
+- [x] 7.2 Add workspace dependency on `@inox/react-native-edot-sdk`
 - [x] 7.3 Configure iOS Podfile to include EDOT pod and link workspace package
 - [x] 7.4 Configure Android `build.gradle.kts` to include EDOT Gradle plugin
 - [x] 7.5 Create main screen with SDK init, session ID display, and buttons for core APIs

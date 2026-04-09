@@ -17,7 +17,7 @@
   },
   "exclude": ["example", "node_modules"],
   "references": [
-    { "path": "packages/core" },
+    { "path": "packages/shared" },
     { "path": "packages/react-native" },
     { "path": "packages/react-native-navigation" },
     { "path": "packages/react-native-wix-navigation" },

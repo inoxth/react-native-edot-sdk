@@ -1,16 +1,16 @@
 import { createEdotNavigationContainerRef, resetForTesting } from '../navigation-tracker';
-import { ActiveViewContext } from '@inox-edot/core';
+import { ActiveViewContext } from '@inox/react-native-edot-shared';
 
 const mockNativeModule = {
   startSpan: jest.fn().mockReturnValue('view-span-1'),
   endSpan: jest.fn(),
 };
 
-jest.mock('@inox-edot/react-native/nativeModule', () => ({
+jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
 }));
 
-jest.mock('@inox-edot/core', () => ({
+jest.mock('@inox/react-native-edot-shared', () => ({
   ActiveViewContext: {
     setActiveView: jest.fn(),
     clearActiveView: jest.fn(),

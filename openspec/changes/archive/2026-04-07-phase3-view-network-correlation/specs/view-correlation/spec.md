@@ -37,7 +37,7 @@ The SDK SHALL define a `SpanContext` interface with `traceId: string` and `spanI
 The SDK SHALL export `setActiveView`, `getActiveViewContext`, `getActiveViewName`, and `clearActiveView` from the core package's public API so navigation plugin packages can import and call them.
 
 #### Scenario: Navigation plugin sets active view
-- **WHEN** a navigation plugin imports `setActiveView` from `@inox-edot/react-native`
+- **WHEN** a navigation plugin imports `setActiveView` from `@inox/react-native-edot-sdk`
 - **WHEN** it calls `setActiveView(spanContext, 'ProductDetail')`
 - **THEN** subsequent network spans include `view.name: 'ProductDetail'`
 

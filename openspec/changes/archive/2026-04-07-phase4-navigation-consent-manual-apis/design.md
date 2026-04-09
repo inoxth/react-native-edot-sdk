@@ -28,7 +28,7 @@ Phase 4 adds navigation tracking (3 library plugins), an ActiveViewContext for v
 **Rationale:** Network instrumentation (fetch/XHR) and error handler already live in the core package and need to read the active view. Putting ActiveViewContext in a separate package would create a circular dependency. Navigation plugins write to it; core instrumentations read from it.
 
 **Alternatives considered:**
-- Separate `@inox-edot/active-view-context` package: Creates import complexity and potential circular deps since core needs to read it.
+- Separate `@inox/active-view-context` package: Creates import complexity and potential circular deps since core needs to read it.
 - Event emitter pattern: Over-engineering for a simple get/set state.
 
 ### 2. Navigation plugins as standalone workspace packages
@@ -39,7 +39,7 @@ Phase 4 adds navigation tracking (3 library plugins), an ActiveViewContext for v
 
 ### 3. TracerProvider wraps native bridge, not OTel JS SDK
 
-**Decision:** `@inox-edot/react-native-tracer-provider` provides an OTel-like API surface that delegates to `EdotNativeModule.startSpan`/`endSpan`/`recordMetric`. It does NOT depend on `@opentelemetry/api` or `@opentelemetry/sdk-trace-base`.
+**Decision:** `@inox/react-native-edot-tracer-provider` provides an OTel-like API surface that delegates to `EdotNativeModule.startSpan`/`endSpan`/`recordMetric`. It does NOT depend on `@opentelemetry/api` or `@opentelemetry/sdk-trace-base`.
 
 **Rationale:** The native SDKs handle span export, sampling, and batching. Bringing in the full OTel JS SDK would duplicate functionality, add ~200KB to the bundle, and create span lifecycle conflicts. The API surface matches OTel conventions so developers familiar with OTel feel at home.
 
@@ -55,7 +55,7 @@ Phase 4 adds navigation tracking (3 library plugins), an ActiveViewContext for v
 
 ### 5. Navigation plugins import ActiveViewContext from core via package export
 
-**Decision:** The core package (`@inox-edot/react-native`) exports `ActiveViewContext` from a subpath: `@inox-edot/react-native/active-view-context`. Navigation plugins import from this path to update the active view.
+**Decision:** The core package (`@inox/react-native-edot-sdk`) exports `ActiveViewContext` from a subpath: `@inox/react-native-edot-sdk/active-view-context`. Navigation plugins import from this path to update the active view.
 
 **Rationale:** Keeps ActiveViewContext internal to the SDK ecosystem while allowing navigation plugins to set it. The subpath export avoids polluting the main entry point.
 

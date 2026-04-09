@@ -23,7 +23,7 @@ Navigation plugins (React Navigation, Wix, Expo Router) will be implemented in P
 
 **Non-Goals:**
 - Navigation plugin implementation (Phase 4)
-- Custom span auto-linking via TracerProvider wrapper (Phase 4 — `@inox-edot/react-native-tracer-provider`)
+- Custom span auto-linking via TracerProvider wrapper (Phase 4 — `@inox/react-native-edot-tracer-provider`)
 - `autoLinkToActiveView` configuration option (Phase 4)
 - Native-side view tracking (EDOT native SDKs handle native views separately)
 

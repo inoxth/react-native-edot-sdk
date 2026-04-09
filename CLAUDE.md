@@ -9,7 +9,7 @@ yarn typecheck          # TypeScript check (composite build)
 yarn test               # Jest across all packages
 yarn lint               # oxlint (not eslint)
 yarn fmt                # oxfmt (not prettier)
-yarn build              # bob build for all @inox-edot/* packages
+yarn build              # bob build for all @inox/* packages
 ```
 
 ## Code Style

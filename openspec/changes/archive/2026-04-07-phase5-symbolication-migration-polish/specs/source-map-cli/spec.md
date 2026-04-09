@@ -1,10 +1,10 @@
 ## ADDED Requirements
 
-### Requirement: `@inox-edot/cli` package scaffold
-The monorepo SHALL include a `packages/cli` package named `@inox-edot/cli` with a `bin` entry pointing to the compiled CLI entry point. It SHALL be a plain Node.js package with no React Native runtime dependency.
+### Requirement: `@inox/react-native-edot-cli` package scaffold
+The monorepo SHALL include a `packages/cli` package named `@inox/react-native-edot-cli` with a `bin` entry pointing to the compiled CLI entry point. It SHALL be a plain Node.js package with no React Native runtime dependency.
 
 #### Scenario: CLI binary is executable after install
-- **WHEN** `@inox-edot/cli` is installed in a project
+- **WHEN** `@inox/react-native-edot-cli` is installed in a project
 - **THEN** `npx edot --help` prints available commands without error
 
 ### Requirement: `upload-sourcemap` command

@@ -1,4 +1,4 @@
-import { ActiveViewContext } from '@inox-edot/core';
+import { ActiveViewContext } from '@inox/react-native-edot-shared';
 import type { WixNavigation, EdotWixNavigationOptions, ComponentDidAppearEvent } from './types';
 
 interface NativeModule {
@@ -10,7 +10,7 @@ let nativeModule: NativeModule | null = null;
 
 function getNativeModule(): NativeModule {
   if (!nativeModule) {
-    const mod = require('@inox-edot/react-native/nativeModule') as {
+    const mod = require('@inox/react-native-edot-sdk/nativeModule') as {
       EdotNativeModule: NativeModule;
     };
     nativeModule = mod.EdotNativeModule;

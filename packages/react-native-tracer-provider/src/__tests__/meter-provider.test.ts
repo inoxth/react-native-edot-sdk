@@ -4,7 +4,7 @@ const mockNativeModule = {
   recordMetric: jest.fn(),
 };
 
-jest.mock('@inox-edot/react-native/nativeModule', () => ({
+jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
 }));
 

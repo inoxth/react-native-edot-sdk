@@ -9,14 +9,14 @@ Define the native module layer that bridges JavaScript to the EDOT iOS and Andro
 The SDK SHALL provide a Swift native module (`EdotReactNative`) that wraps the EDOT iOS SDK (ElasticApm v2.0.0 via SPM from `github.com/elastic/apm-agent-ios`). The module SHALL be distributed via CocoaPods with a podspec declaring `React-Core` as a dependency. The EDOT iOS SDK SHALL be added by the consumer app via Swift Package Manager. The minimum iOS deployment target SHALL be 16.0.
 
 #### Scenario: iOS native module is available after pod install
-- **WHEN** a React Native app adds `@inox-edot/react-native` and runs `pod install`
+- **WHEN** a React Native app adds `@inox/react-native-edot-sdk` and runs `pod install`
 - **THEN** the `EdotReactNative` native module is available via `NativeModules` or TurboModuleRegistry
 
 ### Requirement: Android native module wrapping EDOT Android SDK
 The SDK SHALL provide a Kotlin native module (`EdotReactNativeModule`) that uses the OpenTelemetry API (`io.opentelemetry:opentelemetry-api:1.60.1`) for spans, metrics, and logs. The EDOT Android agent (`co.elastic.otel.android.agent` Gradle plugin v1.5.0) SHALL be applied by the consumer app, which sets up `GlobalOpenTelemetry` at runtime. The module SHALL be distributed via Gradle with dependencies declared in `build.gradle.kts`. The module SHALL be registered via `EdotReactNativePackage`.
 
 #### Scenario: Android native module is available after Gradle sync
-- **WHEN** a React Native app adds `@inox-edot/react-native` and syncs Gradle
+- **WHEN** a React Native app adds `@inox/react-native-edot-sdk` and syncs Gradle
 - **THEN** the `EdotReactNative` native module is available via `NativeModules` or TurboModuleRegistry
 
 ### Requirement: TurboModule spec for New Architecture

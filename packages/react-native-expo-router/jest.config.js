@@ -3,10 +3,10 @@ module.exports = {
   modulePathIgnorePatterns: ['<rootDir>/lib/'],
   testPathIgnorePatterns: ['/node_modules/', '\\.d\\.ts$'],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-native-community|@inox-edot|expo-router)/)',
+    'node_modules/(?!(react-native|@react-native|@react-native-community|@inox|expo-router)/)',
   ],
   moduleNameMapper: {
-    '^@inox-edot/core$': '<rootDir>/../core/src/index.ts',
-    '^@inox-edot/react-native/nativeModule$': '<rootDir>/../react-native/src/nativeModule',
+    '^@inox/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts',
+    '^@inox/react-native-edot-sdk/nativeModule$': '<rootDir>/../react-native/src/nativeModule',
   },
 };
