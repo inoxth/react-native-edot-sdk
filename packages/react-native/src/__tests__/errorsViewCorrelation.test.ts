@@ -52,7 +52,7 @@ describe('error handler view correlation', () => {
   it('sets up global error handler', () => {
     const mockSetGlobal = jest.fn();
     const mockGetGlobal = jest.fn().mockReturnValue(() => {});
-    (global as Record<string, unknown>).ErrorUtils = {
+    global.ErrorUtils = {
       getGlobalHandler: mockGetGlobal,
       setGlobalHandler: mockSetGlobal,
     };

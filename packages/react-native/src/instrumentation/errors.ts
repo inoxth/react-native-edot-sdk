@@ -67,7 +67,7 @@ function setupPromiseRejectionHandler(debug: boolean): () => void {
     if (hermes?.enablePromiseRejectionTracker) {
       hermes.enablePromiseRejectionTracker({
         allRejections: true,
-        onUnhandled: (_id: number, rejection: Error | unknown) => {
+        onUnhandled: (_id: number, rejection: unknown) => {
           try {
             const error =
               rejection instanceof Error ? rejection : new Error(String(rejection));
@@ -83,7 +83,7 @@ function setupPromiseRejectionHandler(debug: boolean): () => void {
       const tracking = require('promise/setimmediate/rejection-tracking');
       tracking.enable({
         allRejections: true,
-        onUnhandled: (_id: number, rejection: Error | unknown) => {
+        onUnhandled: (_id: number, rejection: unknown) => {
           try {
             const error =
               rejection instanceof Error ? rejection : new Error(String(rejection));

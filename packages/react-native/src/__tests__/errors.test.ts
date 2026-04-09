@@ -27,7 +27,7 @@ describe('setupErrorHandler', () => {
 
   beforeEach(() => {
     previousHandler = jest.fn();
-    (global as Record<string, unknown>).ErrorUtils = {
+    global.ErrorUtils = {
       getGlobalHandler: jest.fn(() => previousHandler),
       setGlobalHandler: jest.fn(),
     };
@@ -35,7 +35,7 @@ describe('setupErrorHandler', () => {
   });
 
   afterEach(() => {
-    delete (global as Record<string, unknown>).ErrorUtils;
+    delete global.ErrorUtils;
   });
 
   it('installs global error handler', () => {
