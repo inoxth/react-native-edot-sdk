@@ -91,3 +91,5 @@ example/artifacts/
 
 # Claude Code
 .claude/tsc-cache/
+
+artifacts/
