@@ -41,13 +41,13 @@ export default function LogsDemo(): React.ReactElement {
           Emit structured log messages with different severity levels.
         </Text>
 
-        <TouchableOpacity style={styles.button} onPress={logInfo}>
+        <TouchableOpacity testID="logs-btn-info" style={styles.button} onPress={logInfo}>
           <Text style={styles.buttonText}>Log Info</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.warnButton]} onPress={logWarn}>
+        <TouchableOpacity testID="logs-btn-warn" style={[styles.button, styles.warnButton]} onPress={logWarn}>
           <Text style={styles.buttonText}>Log Warning</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.errorButton]} onPress={logError}>
+        <TouchableOpacity testID="logs-btn-error" style={[styles.button, styles.errorButton]} onPress={logError}>
           <Text style={styles.buttonText}>Log Error</Text>
         </TouchableOpacity>
 

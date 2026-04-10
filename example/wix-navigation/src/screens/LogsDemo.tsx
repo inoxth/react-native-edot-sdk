@@ -36,9 +36,9 @@ export function LogsDemo(): React.JSX.Element {
         <Text style={styles.title}>Structured Logs</Text>
 
         <View style={styles.buttons}>
-          <Button title="Info Log" onPress={handleInfoLog} />
-          <Button title="Warn Log" onPress={handleWarnLog} />
-          <Button title="Error Log" onPress={handleErrorLog} />
+          <Button testID="logs-btn-info" title="Info Log" onPress={handleInfoLog} />
+          <Button testID="logs-btn-warn" title="Warn Log" onPress={handleWarnLog} />
+          <Button testID="logs-btn-error" title="Error Log" onPress={handleErrorLog} />
         </View>
 
         <View style={styles.section}>
@@ -52,9 +52,9 @@ export function LogsDemo(): React.JSX.Element {
   );
 }
 
-function Button({ title, onPress }: { title: string; onPress: () => void }): React.JSX.Element {
+function Button({ testID, title, onPress }: { testID: string; title: string; onPress: () => void }): React.JSX.Element {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity testID={testID} style={styles.button} onPress={onPress}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

@@ -63,16 +63,16 @@ export function HomeScreen(): React.JSX.Element {
         <Text style={styles.title}>EDOT React Navigation</Text>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Status: {status}</Text>
-          <Text style={styles.label}>Session: {sessionId || 'N/A'}</Text>
+          <Text style={styles.label} testID="home-status">Status: {status}</Text>
+          <Text style={styles.label} testID="home-session">Session: {sessionId || 'N/A'}</Text>
         </View>
 
         <View style={styles.buttons}>
-          <Button title="Set User" onPress={handleSetUser} />
-          <Button title="Clear User" onPress={handleClearUser} />
-          <Button title="Set Session Attr" onPress={handleSetSessionAttr} />
-          <Button title="Set Global Attr" onPress={handleSetGlobalAttr} />
-          <Button title="Remove Global Attr" onPress={handleRemoveGlobalAttr} />
+          <Button title="Set User" onPress={handleSetUser} testID="home-btn-set-user" />
+          <Button title="Clear User" onPress={handleClearUser} testID="home-btn-clear-user" />
+          <Button title="Set Session Attr" onPress={handleSetSessionAttr} testID="home-btn-set-session-attr" />
+          <Button title="Set Global Attr" onPress={handleSetGlobalAttr} testID="home-btn-set-global-attr" />
+          <Button title="Remove Global Attr" onPress={handleRemoveGlobalAttr} testID="home-btn-remove-global-attr" />
         </View>
 
         <View style={styles.section}>
@@ -86,9 +86,9 @@ export function HomeScreen(): React.JSX.Element {
   );
 }
 
-function Button({ title, onPress }: { title: string; onPress: () => void }): React.JSX.Element {
+function Button({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }): React.JSX.Element {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

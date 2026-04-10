@@ -15,8 +15,8 @@ import {
 } from '@env';
 
 const CONFIG_ITEMS = [
-  { label: 'Server URL', value: EDOT_SERVER_URL },
-  { label: 'Service Name', value: EDOT_SERVICE_NAME },
+  { label: 'Server URL', value: EDOT_SERVER_URL, testID: 'settings-server-url' },
+  { label: 'Service Name', value: EDOT_SERVICE_NAME, testID: 'settings-service-name' },
   { label: 'Service Version', value: EDOT_SERVICE_VERSION },
   { label: 'Secret Token', value: EDOT_SECRET_TOKEN ? '****' : 'Not set' },
   { label: 'Environment', value: EDOT_DEPLOYMENT_ENVIRONMENT },
@@ -31,7 +31,7 @@ export function SettingsScreen(): React.JSX.Element {
 
         <View style={styles.section}>
           {CONFIG_ITEMS.map((item) => (
-            <View key={item.label} style={styles.row}>
+            <View key={item.label} style={styles.row} testID={item.testID}>
               <Text style={styles.label}>{item.label}</Text>
               <Text style={styles.value}>{item.value || 'Not set'}</Text>
             </View>

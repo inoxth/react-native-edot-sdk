@@ -66,16 +66,16 @@ export default function NetworkDemo(): React.ReactElement {
           All fetch/XHR requests are auto-instrumented by the SDK.
         </Text>
 
-        <TouchableOpacity style={styles.button} onPress={fetchData}>
+        <TouchableOpacity testID="network-btn-fetch" style={styles.button} onPress={fetchData}>
           <Text style={styles.buttonText}>Fetch Data</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={fetchError}>
+        <TouchableOpacity testID="network-btn-fetch-error" style={styles.button} onPress={fetchError}>
           <Text style={styles.buttonText}>Fetch Error (500)</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={fetchMultiple}>
+        <TouchableOpacity testID="network-btn-fetch-multiple" style={styles.button} onPress={fetchMultiple}>
           <Text style={styles.buttonText}>Fetch Multiple</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={xhrRequest}>
+        <TouchableOpacity testID="network-btn-xhr" style={styles.button} onPress={xhrRequest}>
           <Text style={styles.buttonText}>XHR Request</Text>
         </TouchableOpacity>
 

@@ -48,10 +48,10 @@ export function ErrorDemo(): React.JSX.Element {
         <Text style={styles.title}>Error Tracking</Text>
 
         <View style={styles.buttons}>
-          <Button title="Throw JS Error" onPress={handleJsError} />
-          <Button title="Reject Promise" onPress={handlePromiseRejection} />
-          <Button title="ErrorBoundary Crash" onPress={handleErrorBoundary} />
-          <Button title="Native Crash" onPress={handleNativeCrash} />
+          <Button testID="errors-btn-js-error" title="Throw JS Error" onPress={handleJsError} />
+          <Button testID="errors-btn-promise-reject" title="Reject Promise" onPress={handlePromiseRejection} />
+          <Button testID="errors-btn-error-boundary" title="ErrorBoundary Crash" onPress={handleErrorBoundary} />
+          <Button testID="errors-btn-native-crash" title="Native Crash" onPress={handleNativeCrash} />
         </View>
 
         {showCrashy && (
@@ -83,9 +83,9 @@ export function ErrorDemo(): React.JSX.Element {
   );
 }
 
-function Button({ title, onPress }: { title: string; onPress: () => void }): React.JSX.Element {
+function Button({ testID, title, onPress }: { testID: string; title: string; onPress: () => void }): React.JSX.Element {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity testID={testID} style={styles.button} onPress={onPress}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

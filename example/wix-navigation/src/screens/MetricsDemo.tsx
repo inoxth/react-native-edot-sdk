@@ -44,9 +44,9 @@ export function MetricsDemo(): React.JSX.Element {
         <Text style={styles.title}>Metrics</Text>
 
         <View style={styles.buttons}>
-          <Button title="Counter +1" onPress={handleCounter} />
-          <Button title="Histogram Record" onPress={handleHistogram} />
-          <Button title="UpDownCounter" onPress={handleUpDownCounter} />
+          <Button testID="metrics-btn-counter" title="Counter +1" onPress={handleCounter} />
+          <Button testID="metrics-btn-histogram" title="Histogram Record" onPress={handleHistogram} />
+          <Button testID="metrics-btn-updown" title="UpDownCounter" onPress={handleUpDownCounter} />
         </View>
 
         <View style={styles.section}>
@@ -60,9 +60,9 @@ export function MetricsDemo(): React.JSX.Element {
   );
 }
 
-function Button({ title, onPress }: { title: string; onPress: () => void }): React.JSX.Element {
+function Button({ testID, title, onPress }: { testID: string; title: string; onPress: () => void }): React.JSX.Element {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity testID={testID} style={styles.button} onPress={onPress}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

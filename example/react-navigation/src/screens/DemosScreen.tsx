@@ -18,12 +18,12 @@ type DemosStackParamList = {
   ErrorDemo: undefined;
 };
 
-const DEMO_SCREENS: Array<{ name: keyof DemosStackParamList; label: string }> = [
-  { name: 'NetworkDemo', label: 'Network Requests' },
-  { name: 'TracingDemo', label: 'Manual Tracing' },
-  { name: 'MetricsDemo', label: 'Metrics' },
-  { name: 'LogsDemo', label: 'Structured Logs' },
-  { name: 'ErrorDemo', label: 'Error Handling' },
+const DEMO_SCREENS: Array<{ name: keyof DemosStackParamList; label: string; testID: string }> = [
+  { name: 'NetworkDemo', label: 'Network Requests', testID: 'demos-btn-network' },
+  { name: 'TracingDemo', label: 'Manual Tracing', testID: 'demos-btn-tracing' },
+  { name: 'MetricsDemo', label: 'Metrics', testID: 'demos-btn-metrics' },
+  { name: 'LogsDemo', label: 'Structured Logs', testID: 'demos-btn-logs' },
+  { name: 'ErrorDemo', label: 'Error Handling', testID: 'demos-btn-errors' },
 ];
 
 export function DemosScreen(): React.JSX.Element {
@@ -37,6 +37,7 @@ export function DemosScreen(): React.JSX.Element {
           <TouchableOpacity
             key={screen.name}
             style={styles.row}
+            testID={screen.testID}
             onPress={() => navigation.navigate(screen.name)}
           >
             <Text style={styles.rowText}>{screen.label}</Text>

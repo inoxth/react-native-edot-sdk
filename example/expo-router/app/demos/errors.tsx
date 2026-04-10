@@ -39,18 +39,18 @@ export default function ErrorsDemo(): React.ReactElement {
           Trigger various error types to test SDK error tracking.
         </Text>
 
-        <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={throwJsError}>
+        <TouchableOpacity testID="errors-btn-js-error" style={[styles.button, styles.dangerButton]} onPress={throwJsError}>
           <Text style={styles.buttonText}>Throw JS Error</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={rejectPromise}>
+        <TouchableOpacity testID="errors-btn-promise-reject" style={[styles.button, styles.dangerButton]} onPress={rejectPromise}>
           <Text style={styles.buttonText}>Reject Promise</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={toggleErrorBoundary}>
+        <TouchableOpacity testID="errors-btn-error-boundary" style={[styles.button, styles.dangerButton]} onPress={toggleErrorBoundary}>
           <Text style={styles.buttonText}>
             {showCrashy ? 'Hide' : 'Show'} ErrorBoundary Demo
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.disabledButton]} onPress={nativeCrash}>
+        <TouchableOpacity testID="errors-btn-native-crash" style={[styles.button, styles.disabledButton]} onPress={nativeCrash}>
           <Text style={styles.buttonText}>Native Crash (placeholder)</Text>
         </TouchableOpacity>
 

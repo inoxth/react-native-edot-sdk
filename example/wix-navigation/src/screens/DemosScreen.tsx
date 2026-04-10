@@ -13,11 +13,11 @@ interface Props {
 }
 
 const DEMOS = [
-  { name: 'NetworkDemo', label: 'Network Requests' },
-  { name: 'TracingDemo', label: 'Manual Tracing' },
-  { name: 'MetricsDemo', label: 'Metrics' },
-  { name: 'LogsDemo', label: 'Structured Logs' },
-  { name: 'ErrorDemo', label: 'Error Tracking' },
+  { name: 'NetworkDemo', label: 'Network Requests', testID: 'demos-btn-network' },
+  { name: 'TracingDemo', label: 'Manual Tracing', testID: 'demos-btn-tracing' },
+  { name: 'MetricsDemo', label: 'Metrics', testID: 'demos-btn-metrics' },
+  { name: 'LogsDemo', label: 'Structured Logs', testID: 'demos-btn-logs' },
+  { name: 'ErrorDemo', label: 'Error Tracking', testID: 'demos-btn-errors' },
 ] as const;
 
 export function DemosScreen({ componentId }: Props): React.JSX.Element {
@@ -37,6 +37,7 @@ export function DemosScreen({ componentId }: Props): React.JSX.Element {
         {DEMOS.map((demo) => (
           <TouchableOpacity
             key={demo.name}
+            testID={demo.testID}
             style={styles.row}
             onPress={() => navigateTo(demo.name, demo.label)}
           >

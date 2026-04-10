@@ -2,11 +2,11 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Link } from 'expo-router';
 
 const DEMO_SCREENS = [
-  { href: '/demos/network', title: 'Network Requests', description: 'Auto-instrumented fetch and XHR' },
-  { href: '/demos/tracing', title: 'Manual Tracing', description: 'Custom spans and nested spans' },
-  { href: '/demos/metrics', title: 'Metrics', description: 'Counter, Histogram, UpDownCounter' },
-  { href: '/demos/logs', title: 'Logs', description: 'Structured log messages' },
-  { href: '/demos/errors', title: 'Errors', description: 'Error tracking and boundaries' },
+  { href: '/demos/network', title: 'Network Requests', description: 'Auto-instrumented fetch and XHR', testID: 'demos-btn-network' },
+  { href: '/demos/tracing', title: 'Manual Tracing', description: 'Custom spans and nested spans', testID: 'demos-btn-tracing' },
+  { href: '/demos/metrics', title: 'Metrics', description: 'Counter, Histogram, UpDownCounter', testID: 'demos-btn-metrics' },
+  { href: '/demos/logs', title: 'Logs', description: 'Structured log messages', testID: 'demos-btn-logs' },
+  { href: '/demos/errors', title: 'Errors', description: 'Error tracking and boundaries', testID: 'demos-btn-errors' },
 ] as const;
 
 export default function DemosScreen(): React.ReactElement {
@@ -14,7 +14,7 @@ export default function DemosScreen(): React.ReactElement {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Demo Screens</Text>
       {DEMO_SCREENS.map((demo) => (
-        <Link key={demo.href} href={demo.href} style={styles.card}>
+        <Link key={demo.href} href={demo.href} testID={demo.testID} style={styles.card}>
           <View>
             <Text style={styles.cardTitle}>{demo.title}</Text>
             <Text style={styles.cardDescription}>{demo.description}</Text>

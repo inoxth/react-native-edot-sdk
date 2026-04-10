@@ -36,13 +36,13 @@ export default function MetricsDemo(): React.ReactElement {
           Record Counter, Histogram, and UpDownCounter metrics.
         </Text>
 
-        <TouchableOpacity style={styles.button} onPress={recordCounter}>
+        <TouchableOpacity testID="metrics-btn-counter" style={styles.button} onPress={recordCounter}>
           <Text style={styles.buttonText}>Increment Counter</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={recordHistogram}>
+        <TouchableOpacity testID="metrics-btn-histogram" style={styles.button} onPress={recordHistogram}>
           <Text style={styles.buttonText}>Record Histogram</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={recordUpDownCounter}>
+        <TouchableOpacity testID="metrics-btn-updown" style={styles.button} onPress={recordUpDownCounter}>
           <Text style={styles.buttonText}>UpDownCounter +/-</Text>
         </TouchableOpacity>
 

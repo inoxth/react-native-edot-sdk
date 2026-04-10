@@ -73,13 +73,13 @@ export function NetworkDemo(): React.JSX.Element {
         <Text style={styles.subtitle}>All requests are auto-instrumented by the SDK</Text>
 
         <View style={styles.buttons}>
-          <Button title="Fetch Data" onPress={handleFetchData} />
-          <Button title="Fetch Error" onPress={handleFetchError} />
-          <Button title="Fetch Multiple (3)" onPress={handleFetchMultiple} />
-          <Button title="XHR Request" onPress={handleXhr} />
+          <Button title="Fetch Data" onPress={handleFetchData} testID="network-btn-fetch" />
+          <Button title="Fetch Error" onPress={handleFetchError} testID="network-btn-fetch-error" />
+          <Button title="Fetch Multiple (3)" onPress={handleFetchMultiple} testID="network-btn-fetch-multiple" />
+          <Button title="XHR Request" onPress={handleXhr} testID="network-btn-xhr" />
         </View>
 
-        <View style={styles.section}>
+        <View style={styles.section} testID="network-result">
           <Text style={styles.label}>Log:</Text>
           {log.map((entry, i) => (
             <Text key={i} style={styles.logEntry}>{entry}</Text>
@@ -90,9 +90,9 @@ export function NetworkDemo(): React.JSX.Element {
   );
 }
 
-function Button({ title, onPress }: { title: string; onPress: () => void }): React.JSX.Element {
+function Button({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }): React.JSX.Element {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

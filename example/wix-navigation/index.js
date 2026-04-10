@@ -62,19 +62,19 @@ Navigation.events().registerAppLaunchedListener(async () => {
           {
             stack: {
               children: [{ component: { name: 'HomeScreen' } }],
-              options: { bottomTab: { text: 'Home' } },
+              options: { bottomTab: { text: 'Home', testID: 'tab-home' } },
             },
           },
           {
             stack: {
               children: [{ component: { name: 'DemosScreen' } }],
-              options: { bottomTab: { text: 'Demos' } },
+              options: { bottomTab: { text: 'Demos', testID: 'tab-demos' } },
             },
           },
           {
             stack: {
               children: [{ component: { name: 'SettingsScreen' } }],
-              options: { bottomTab: { text: 'Settings' } },
+              options: { bottomTab: { text: 'Settings', testID: 'tab-settings' } },
             },
           },
         ],

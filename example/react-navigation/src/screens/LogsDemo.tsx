@@ -37,9 +37,9 @@ export function LogsDemo(): React.JSX.Element {
         <Text style={styles.title}>Logs Demos</Text>
 
         <View style={styles.buttons}>
-          <Button title="Log Info" onPress={handleLogInfo} color="#34C759" />
-          <Button title="Log Warn" onPress={handleLogWarn} color="#FF9500" />
-          <Button title="Log Error" onPress={handleLogError} color="#FF3B30" />
+          <Button title="Log Info" onPress={handleLogInfo} color="#34C759" testID="logs-btn-info" />
+          <Button title="Log Warn" onPress={handleLogWarn} color="#FF9500" testID="logs-btn-warn" />
+          <Button title="Log Error" onPress={handleLogError} color="#FF3B30" testID="logs-btn-error" />
         </View>
 
         <View style={styles.section}>
@@ -53,9 +53,9 @@ export function LogsDemo(): React.JSX.Element {
   );
 }
 
-function Button({ title, onPress, color }: { title: string; onPress: () => void; color?: string }): React.JSX.Element {
+function Button({ title, onPress, color, testID }: { title: string; onPress: () => void; color?: string; testID?: string }): React.JSX.Element {
   return (
-    <TouchableOpacity style={[styles.button, color ? { backgroundColor: color } : undefined]} onPress={onPress}>
+    <TouchableOpacity style={[styles.button, color ? { backgroundColor: color } : undefined]} onPress={onPress} testID={testID}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

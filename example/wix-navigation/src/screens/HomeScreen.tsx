@@ -65,16 +65,16 @@ export function HomeScreen(): React.JSX.Element {
         <Text style={styles.title}>EDOT Wix Navigation</Text>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Status: {status}</Text>
-          <Text style={styles.label}>Session: {sessionId || 'N/A'}</Text>
+          <Text testID="home-status" style={styles.label}>Status: {status}</Text>
+          <Text testID="home-session" style={styles.label}>Session: {sessionId || 'N/A'}</Text>
         </View>
 
         <View style={styles.buttons}>
-          <Button title="Set User" onPress={handleSetUser} />
-          <Button title="Clear User" onPress={handleClearUser} />
-          <Button title="Set Session Attr" onPress={handleSetSessionAttribute} />
-          <Button title="Set Global Attr" onPress={handleSetGlobalAttribute} />
-          <Button title="Remove Global Attr" onPress={handleRemoveGlobalAttribute} />
+          <Button testID="home-btn-set-user" title="Set User" onPress={handleSetUser} />
+          <Button testID="home-btn-clear-user" title="Clear User" onPress={handleClearUser} />
+          <Button testID="home-btn-set-session-attr" title="Set Session Attr" onPress={handleSetSessionAttribute} />
+          <Button testID="home-btn-set-global-attr" title="Set Global Attr" onPress={handleSetGlobalAttribute} />
+          <Button testID="home-btn-remove-global-attr" title="Remove Global Attr" onPress={handleRemoveGlobalAttribute} />
         </View>
 
         <View style={styles.section}>
@@ -88,9 +88,9 @@ export function HomeScreen(): React.JSX.Element {
   );
 }
 
-function Button({ title, onPress }: { title: string; onPress: () => void }): React.JSX.Element {
+function Button({ testID, title, onPress }: { testID: string; title: string; onPress: () => void }): React.JSX.Element {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity testID={testID} style={styles.button} onPress={onPress}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

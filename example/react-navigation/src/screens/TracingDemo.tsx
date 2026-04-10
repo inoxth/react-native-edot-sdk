@@ -60,8 +60,8 @@ export function TracingDemo(): React.JSX.Element {
         <Text style={styles.title}>Tracing Demos</Text>
 
         <View style={styles.buttons}>
-          <Button title="Create Span" onPress={handleCreateSpan} />
-          <Button title="Nested Spans" onPress={handleNestedSpans} />
+          <Button title="Create Span" onPress={handleCreateSpan} testID="tracing-btn-create-span" />
+          <Button title="Nested Spans" onPress={handleNestedSpans} testID="tracing-btn-nested-spans" />
         </View>
 
         <View style={styles.section}>
@@ -75,9 +75,9 @@ export function TracingDemo(): React.JSX.Element {
   );
 }
 
-function Button({ title, onPress }: { title: string; onPress: () => void }): React.JSX.Element {
+function Button({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }): React.JSX.Element {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

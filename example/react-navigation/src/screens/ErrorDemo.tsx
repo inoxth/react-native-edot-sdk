@@ -54,10 +54,10 @@ export function ErrorDemo(): React.JSX.Element {
         <Text style={styles.subtitle}>These will trigger real errors captured by the SDK</Text>
 
         <View style={styles.buttons}>
-          <Button title="Throw JS Error" onPress={handleJsError} color="#FF3B30" />
-          <Button title="Reject Promise" onPress={handlePromiseReject} color="#FF3B30" />
-          <Button title="Trigger ErrorBoundary" onPress={handleErrorBoundary} color="#FF3B30" />
-          <Button title="Native Crash" onPress={handleNativeCrash} color="#FF9500" />
+          <Button title="Throw JS Error" onPress={handleJsError} color="#FF3B30" testID="errors-btn-js-error" />
+          <Button title="Reject Promise" onPress={handlePromiseReject} color="#FF3B30" testID="errors-btn-promise-reject" />
+          <Button title="Trigger ErrorBoundary" onPress={handleErrorBoundary} color="#FF3B30" testID="errors-btn-error-boundary" />
+          <Button title="Native Crash" onPress={handleNativeCrash} color="#FF9500" testID="errors-btn-native-crash" />
         </View>
 
         <EdotErrorBoundary
@@ -87,9 +87,9 @@ export function ErrorDemo(): React.JSX.Element {
   );
 }
 
-function Button({ title, onPress, color }: { title: string; onPress: () => void; color?: string }): React.JSX.Element {
+function Button({ title, onPress, color, testID }: { title: string; onPress: () => void; color?: string; testID?: string }): React.JSX.Element {
   return (
-    <TouchableOpacity style={[styles.button, color ? { backgroundColor: color } : undefined]} onPress={onPress}>
+    <TouchableOpacity style={[styles.button, color ? { backgroundColor: color } : undefined]} onPress={onPress} testID={testID}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

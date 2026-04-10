@@ -72,7 +72,7 @@ function ErrorBoundaryDemo({
     return (
       <EdotErrorBoundary
         fallback={
-          <View style={styles.errorFallback}>
+          <View testID="error-boundary-fallback" style={styles.errorFallback}>
             <Text style={styles.errorFallbackText}>
               Caught by EdotErrorBoundary
             </Text>
@@ -378,6 +378,7 @@ export function App(): React.JSX.Element {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
         <ScrollView
+          testID="scroll-view"
           contentInsetAdjustmentBehavior="automatic"
           style={styles.scroll}
         >

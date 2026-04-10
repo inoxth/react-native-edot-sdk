@@ -69,10 +69,10 @@ export function NetworkDemo(): React.JSX.Element {
         <Text style={styles.title}>Network Requests</Text>
 
         <View style={styles.buttons}>
-          <Button title="Fetch Data" onPress={handleFetchData} />
-          <Button title="Fetch Error" onPress={handleFetchError} />
-          <Button title="Fetch Multiple" onPress={handleFetchMultiple} />
-          <Button title="XHR Request" onPress={handleXhrRequest} />
+          <Button testID="network-btn-fetch" title="Fetch Data" onPress={handleFetchData} />
+          <Button testID="network-btn-fetch-error" title="Fetch Error" onPress={handleFetchError} />
+          <Button testID="network-btn-fetch-multiple" title="Fetch Multiple" onPress={handleFetchMultiple} />
+          <Button testID="network-btn-xhr" title="XHR Request" onPress={handleXhrRequest} />
         </View>
 
         <View style={styles.section}>
@@ -86,9 +86,9 @@ export function NetworkDemo(): React.JSX.Element {
   );
 }
 
-function Button({ title, onPress }: { title: string; onPress: () => void }): React.JSX.Element {
+function Button({ testID, title, onPress }: { testID: string; title: string; onPress: () => void }): React.JSX.Element {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity testID={testID} style={styles.button} onPress={onPress}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

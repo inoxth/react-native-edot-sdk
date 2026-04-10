@@ -12,6 +12,7 @@ export default function TabLayout(): React.ReactElement {
         name="index"
         options={{
           title: 'Home',
+          tabBarTestID: 'tab-home',
           tabBarIcon: () => <TabIcon label="H" />,
         }}
       />
@@ -19,6 +20,7 @@ export default function TabLayout(): React.ReactElement {
         name="demos"
         options={{
           title: 'Demos',
+          tabBarTestID: 'tab-demos',
           tabBarIcon: () => <TabIcon label="D" />,
         }}
       />
@@ -26,6 +28,7 @@ export default function TabLayout(): React.ReactElement {
         name="settings"
         options={{
           title: 'Settings',
+          tabBarTestID: 'tab-settings',
           tabBarIcon: () => <TabIcon label="S" />,
         }}
       />

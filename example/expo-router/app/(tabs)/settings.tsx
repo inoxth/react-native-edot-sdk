@@ -8,8 +8,8 @@ import {
 } from '@env';
 
 const CONFIG_ITEMS = [
-  { label: 'Server URL', value: EDOT_SERVER_URL },
-  { label: 'Service Name', value: EDOT_SERVICE_NAME },
+  { label: 'Server URL', value: EDOT_SERVER_URL, testID: 'settings-server-url' },
+  { label: 'Service Name', value: EDOT_SERVICE_NAME, testID: 'settings-service-name' },
   { label: 'Service Version', value: EDOT_SERVICE_VERSION },
   { label: 'Secret Token', value: EDOT_SECRET_TOKEN ? '***' : '(not set)' },
   { label: 'Environment', value: EDOT_DEPLOYMENT_ENVIRONMENT },
@@ -23,7 +23,7 @@ export default function SettingsScreen(): React.ReactElement {
       {CONFIG_ITEMS.map((item) => (
         <View key={item.label} style={styles.row}>
           <Text style={styles.label}>{item.label}</Text>
-          <Text style={styles.value}>{item.value || '(not set)'}</Text>
+          <Text testID={item.testID} style={styles.value}>{item.value || '(not set)'}</Text>
         </View>
       ))}
     </ScrollView>

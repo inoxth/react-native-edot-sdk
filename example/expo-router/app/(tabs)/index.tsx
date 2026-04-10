@@ -45,35 +45,35 @@ export default function HomeScreen(): React.ReactElement {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>EDOT Expo Router Example</Text>
-      <Text style={styles.status}>Status: {status}</Text>
-      {sessionId ? <Text style={styles.sessionId}>Session: {sessionId}</Text> : null}
+      <Text testID="home-status" style={styles.status}>Status: {status}</Text>
+      {sessionId ? <Text testID="home-session" style={styles.sessionId}>Session: {sessionId}</Text> : null}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Session</Text>
-        <TouchableOpacity style={styles.button} onPress={fetchSessionId}>
+        <TouchableOpacity testID="home-btn-get-session" style={styles.button} onPress={fetchSessionId}>
           <Text style={styles.buttonText}>Get Session ID</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>User</Text>
-        <TouchableOpacity style={styles.button} onPress={setUser}>
+        <TouchableOpacity testID="home-btn-set-user" style={styles.button} onPress={setUser}>
           <Text style={styles.buttonText}>Set User</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={clearUser}>
+        <TouchableOpacity testID="home-btn-clear-user" style={styles.button} onPress={clearUser}>
           <Text style={styles.buttonText}>Clear User</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Attributes</Text>
-        <TouchableOpacity style={styles.button} onPress={setSessionAttr}>
+        <TouchableOpacity testID="home-btn-set-session-attr" style={styles.button} onPress={setSessionAttr}>
           <Text style={styles.buttonText}>Set Session Attribute</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={setGlobalAttr}>
+        <TouchableOpacity testID="home-btn-set-global-attr" style={styles.button} onPress={setGlobalAttr}>
           <Text style={styles.buttonText}>Set Global Attribute</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={removeGlobalAttr}>
+        <TouchableOpacity testID="home-btn-remove-global-attr" style={styles.button} onPress={removeGlobalAttr}>
           <Text style={styles.buttonText}>Remove Global Attribute</Text>
         </TouchableOpacity>
       </View>

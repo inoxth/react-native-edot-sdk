@@ -54,10 +54,10 @@ export default function TracingDemo(): React.ReactElement {
           Create custom spans using getTracerProvider and withSpanContext.
         </Text>
 
-        <TouchableOpacity style={styles.button} onPress={createSpan}>
+        <TouchableOpacity testID="tracing-btn-create-span" style={styles.button} onPress={createSpan}>
           <Text style={styles.buttonText}>Create Span</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={createNestedSpans}>
+        <TouchableOpacity testID="tracing-btn-nested-spans" style={styles.button} onPress={createNestedSpans}>
           <Text style={styles.buttonText}>Nested Spans</Text>
         </TouchableOpacity>
 
