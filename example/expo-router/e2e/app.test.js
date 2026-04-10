@@ -1,4 +1,12 @@
-const { device, element, by, expect } = require('detox');
+const { device, element, by, expect, waitFor } = require('detox');
+
+async function navigateBack() {
+  if (device.getPlatform() === 'ios') {
+    await element(by.type('_UIButtonBarButton')).atIndex(0).tap();
+  } else {
+    await device.pressBack();
+  }
+}
 
 describe('EDOT Expo Router Example', () => {
   beforeAll(async () => {
@@ -12,17 +20,17 @@ describe('EDOT Expo Router Example', () => {
 
     it('should navigate to Demos tab', async () => {
       await element(by.id('tab-demos')).tap();
-      await expect(element(by.text('Demo Screens'))).toBeVisible();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should navigate to Settings tab', async () => {
       await element(by.id('tab-settings')).tap();
-      await expect(element(by.id('settings-server-url'))).toBeVisible();
+      await waitFor(element(by.id('settings-server-url'))).toBeVisible().withTimeout(3000);
     });
 
     it('should navigate back to Home tab', async () => {
       await element(by.id('tab-home')).tap();
-      await expect(element(by.id('home-status'))).toBeVisible();
+      await waitFor(element(by.id('home-status'))).toBeVisible().withTimeout(3000);
     });
   });
 
@@ -60,47 +68,56 @@ describe('EDOT Expo Router Example', () => {
   describe('Demo Screen Navigation', () => {
     beforeAll(async () => {
       await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should open Network demo and go back', async () => {
       await element(by.id('demos-btn-network')).tap();
-      await expect(element(by.id('network-btn-fetch'))).toBeVisible();
-      await device.pressBack();
+      await waitFor(element(by.id('network-btn-fetch'))).toBeVisible().withTimeout(3000);
+      await navigateBack();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should open Tracing demo and go back', async () => {
       await element(by.id('demos-btn-tracing')).tap();
-      await expect(element(by.id('tracing-btn-create-span'))).toBeVisible();
-      await device.pressBack();
+      await waitFor(element(by.id('tracing-btn-create-span'))).toBeVisible().withTimeout(3000);
+      await navigateBack();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should open Metrics demo and go back', async () => {
       await element(by.id('demos-btn-metrics')).tap();
-      await expect(element(by.id('metrics-btn-counter'))).toBeVisible();
-      await device.pressBack();
+      await waitFor(element(by.id('metrics-btn-counter'))).toBeVisible().withTimeout(3000);
+      await navigateBack();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should open Logs demo and go back', async () => {
       await element(by.id('demos-btn-logs')).tap();
-      await expect(element(by.id('logs-btn-info'))).toBeVisible();
-      await device.pressBack();
+      await waitFor(element(by.id('logs-btn-info'))).toBeVisible().withTimeout(3000);
+      await navigateBack();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should open Errors demo and go back', async () => {
       await element(by.id('demos-btn-errors')).tap();
-      await expect(element(by.id('errors-btn-js-error'))).toBeVisible();
-      await device.pressBack();
+      await waitFor(element(by.id('errors-btn-js-error'))).toBeVisible().withTimeout(3000);
+      await navigateBack();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
   });
 
   describe('Network Demo', () => {
     beforeAll(async () => {
       await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-network'))).toBeVisible().withTimeout(3000);
       await element(by.id('demos-btn-network')).tap();
+      await waitFor(element(by.id('network-btn-fetch'))).toBeVisible().withTimeout(3000);
     });
 
     afterAll(async () => {
-      await device.pressBack();
+      await navigateBack();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should tap Fetch Data button', async () => {
@@ -127,11 +144,14 @@ describe('EDOT Expo Router Example', () => {
   describe('Tracing Demo', () => {
     beforeAll(async () => {
       await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-tracing'))).toBeVisible().withTimeout(3000);
       await element(by.id('demos-btn-tracing')).tap();
+      await waitFor(element(by.id('tracing-btn-create-span'))).toBeVisible().withTimeout(3000);
     });
 
     afterAll(async () => {
-      await device.pressBack();
+      await navigateBack();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should tap Create Span button', async () => {
@@ -148,11 +168,14 @@ describe('EDOT Expo Router Example', () => {
   describe('Metrics Demo', () => {
     beforeAll(async () => {
       await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-metrics'))).toBeVisible().withTimeout(3000);
       await element(by.id('demos-btn-metrics')).tap();
+      await waitFor(element(by.id('metrics-btn-counter'))).toBeVisible().withTimeout(3000);
     });
 
     afterAll(async () => {
-      await device.pressBack();
+      await navigateBack();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should tap Counter button', async () => {
@@ -174,11 +197,14 @@ describe('EDOT Expo Router Example', () => {
   describe('Logs Demo', () => {
     beforeAll(async () => {
       await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-logs'))).toBeVisible().withTimeout(3000);
       await element(by.id('demos-btn-logs')).tap();
+      await waitFor(element(by.id('logs-btn-info'))).toBeVisible().withTimeout(3000);
     });
 
     afterAll(async () => {
-      await device.pressBack();
+      await navigateBack();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should tap Info log button', async () => {
@@ -200,11 +226,14 @@ describe('EDOT Expo Router Example', () => {
   describe('Errors Demo', () => {
     beforeAll(async () => {
       await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-errors'))).toBeVisible().withTimeout(3000);
       await element(by.id('demos-btn-errors')).tap();
+      await waitFor(element(by.id('errors-btn-promise-reject'))).toBeVisible().withTimeout(3000);
     });
 
     afterAll(async () => {
-      await device.pressBack();
+      await navigateBack();
+      await waitFor(element(by.text('Demo Screens'))).toBeVisible().withTimeout(3000);
     });
 
     it('should tap Promise Reject button', async () => {
