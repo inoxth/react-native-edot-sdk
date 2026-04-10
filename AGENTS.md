@@ -34,7 +34,7 @@ packages/
 ├── react-native-wix-navigation/   # @inox/react-native-edot-wix-navigation
 ├── react-native-tracer-provider/  # @inox/react-native-edot-tracer-provider
 └── cli/                           # @inox/react-native-edot-cli
-example/                           # Demo RN app with Detox E2E tests
+example/                           # 4 demo apps with Detox E2E tests (see example/AGENTS.md)
 openspec/                          # OpenSpec specs and change tracking
 ```
 
@@ -128,7 +128,7 @@ cli (standalone Node.js, depends: commander only)
 - Each package has its own `jest.config.js`.
 - Cross-package imports resolved via `moduleNameMapper` pointing to sibling `src/` dirs (e.g., `'^@inox/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts'`).
 - Mocking pattern: `jest.mock()` for native module, `jest.clearAllMocks()` in `beforeEach()`. All trackers/providers export `resetForTesting()` functions for test isolation.
-- E2E via Detox in `example/basic/e2e/`. Elements use `testID` props.
+- E2E via Detox — all 4 example apps have `e2e/` suites. Elements use `testID` props. See [example/AGENTS.md](./example/AGENTS.md) for patterns.
 
 ### Example Apps
 Four example apps under `example/`, each a yarn workspace member:
