@@ -8,7 +8,9 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start"
+    "start": "react-native start",
+    "e2e:build": "detox build --configuration ios.sim.release",
+    "e2e:test": "detox test --configuration ios.sim.release"
   },
   "dependencies": {
     "@inox/react-native-edot-sdk": "workspace:*",

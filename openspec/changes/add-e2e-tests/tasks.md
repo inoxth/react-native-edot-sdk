@@ -3,8 +3,8 @@
 - [x] 1.1 Create `.detoxrc.js` in `example/basic/` with `ios.sim.release` (workspace: EdotExample) and `android.emu.release` (Gradle assembleRelease) configs
 - [x] 1.2 Add `testID` props to new demo sections in `example/basic/src/App.tsx` (tracing, metrics, logs, network, errors, interactions buttons)
 - [x] 1.3 Update `example/basic/e2e/app.test.js` with tests for all demo sections (tracing, metrics, logs, network, error tracing, user interactions)
-- [ ] 1.4 Verify `npx detox build --configuration ios.sim.release` succeeds
-- [ ] 1.5 Verify `npx detox test --configuration ios.sim.release` passes
+- [x] 1.4 Verify `npx detox build --configuration ios.sim.release` succeeds
+- [x] 1.5 Verify `npx detox test --configuration ios.sim.release` passes
 
 ## 2. React Navigation example E2E
 

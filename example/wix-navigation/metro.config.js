@@ -26,6 +26,15 @@ const config = {
       if (subpathMap[moduleName]) {
         return { filePath: subpathMap[moduleName], type: 'sourceFile' };
       }
+      // Force React singletons to resolve from the app's node_modules.
+      // Prevents dual-React instance crashes when SDK packages have their own node_modules/react.
+      if (moduleName === 'react' || moduleName === 'react-native' || moduleName.startsWith('react/') || moduleName.startsWith('react-native/')) {
+        return context.resolveRequest(
+          { ...context, originModulePath: __filename },
+          moduleName,
+          platform,
+        );
+      }
       return context.resolveRequest(context, moduleName, platform);
     },
   },
