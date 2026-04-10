@@ -1,4 +1,12 @@
-const { device, element, by, expect } = require('detox');
+const { device, element, by, expect, waitFor } = require('detox');
+
+async function navigateBack() {
+  if (device.getPlatform() === 'ios') {
+    await element(by.type('_UIButtonBarButton')).atIndex(0).tap();
+  } else {
+    await device.pressBack();
+  }
+}
 
 describe('EDOT Wix Navigation Example', () => {
   beforeAll(async () => {
@@ -12,17 +20,17 @@ describe('EDOT Wix Navigation Example', () => {
 
     it('should navigate to Demos tab', async () => {
       await element(by.id('tab-demos')).tap();
-      await expect(element(by.id('demos-btn-network'))).toBeVisible();
+      await waitFor(element(by.id('demos-btn-network'))).toBeVisible().withTimeout(3000);
     });
 
     it('should navigate to Settings tab', async () => {
       await element(by.id('tab-settings')).tap();
-      await expect(element(by.id('settings-server-url'))).toBeVisible();
+      await waitFor(element(by.id('settings-server-url'))).toBeVisible().withTimeout(3000);
     });
 
     it('should navigate back to Home tab', async () => {
       await element(by.id('tab-home')).tap();
-      await expect(element(by.id('home-status'))).toBeVisible();
+      await waitFor(element(by.id('home-status'))).toBeVisible().withTimeout(3000);
     });
   });
 
@@ -60,11 +68,14 @@ describe('EDOT Wix Navigation Example', () => {
   describe('Network demo', () => {
     beforeAll(async () => {
       await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-network'))).toBeVisible().withTimeout(3000);
       await element(by.id('demos-btn-network')).tap();
+      await waitFor(element(by.id('network-btn-fetch'))).toBeVisible().withTimeout(3000);
     });
 
     afterAll(async () => {
-      await device.pressBack();
+      await navigateBack();
+      await waitFor(element(by.id('demos-btn-network'))).toBeVisible().withTimeout(3000);
     });
 
     it('should tap Fetch Data', async () => {
@@ -86,11 +97,14 @@ describe('EDOT Wix Navigation Example', () => {
 
   describe('Tracing demo', () => {
     beforeAll(async () => {
+      await waitFor(element(by.id('demos-btn-tracing'))).toBeVisible().withTimeout(3000);
       await element(by.id('demos-btn-tracing')).tap();
+      await waitFor(element(by.id('tracing-btn-create-span'))).toBeVisible().withTimeout(3000);
     });
 
     afterAll(async () => {
-      await device.pressBack();
+      await navigateBack();
+      await waitFor(element(by.id('demos-btn-tracing'))).toBeVisible().withTimeout(3000);
     });
 
     it('should tap Create Span', async () => {
@@ -104,11 +118,14 @@ describe('EDOT Wix Navigation Example', () => {
 
   describe('Metrics demo', () => {
     beforeAll(async () => {
+      await waitFor(element(by.id('demos-btn-metrics'))).toBeVisible().withTimeout(3000);
       await element(by.id('demos-btn-metrics')).tap();
+      await waitFor(element(by.id('metrics-btn-counter'))).toBeVisible().withTimeout(3000);
     });
 
     afterAll(async () => {
-      await device.pressBack();
+      await navigateBack();
+      await waitFor(element(by.id('demos-btn-metrics'))).toBeVisible().withTimeout(3000);
     });
 
     it('should tap Counter', async () => {
@@ -126,11 +143,14 @@ describe('EDOT Wix Navigation Example', () => {
 
   describe('Logs demo', () => {
     beforeAll(async () => {
+      await waitFor(element(by.id('demos-btn-logs'))).toBeVisible().withTimeout(3000);
       await element(by.id('demos-btn-logs')).tap();
+      await waitFor(element(by.id('logs-btn-info'))).toBeVisible().withTimeout(3000);
     });
 
     afterAll(async () => {
-      await device.pressBack();
+      await navigateBack();
+      await waitFor(element(by.id('demos-btn-logs'))).toBeVisible().withTimeout(3000);
     });
 
     it('should tap Info Log', async () => {
@@ -148,11 +168,14 @@ describe('EDOT Wix Navigation Example', () => {
 
   describe('Error demo', () => {
     beforeAll(async () => {
+      await waitFor(element(by.id('demos-btn-errors'))).toBeVisible().withTimeout(3000);
       await element(by.id('demos-btn-errors')).tap();
+      await waitFor(element(by.id('errors-btn-error-boundary'))).toBeVisible().withTimeout(3000);
     });
 
     afterAll(async () => {
-      await device.pressBack();
+      await navigateBack();
+      await waitFor(element(by.id('demos-btn-errors'))).toBeVisible().withTimeout(3000);
     });
 
     it('should tap Error Boundary', async () => {

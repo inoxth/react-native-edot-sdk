@@ -451,7 +451,7 @@
 					"-lc++",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.edot.wixnavexample";
+				PRODUCT_BUNDLE_IDENTIFIER = com.edot.wixnavexample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EdotWixNavExample.app/EdotWixNavExample";
 			};
@@ -475,7 +475,7 @@
 					"-lc++",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.edot.wixnavexample";
+				PRODUCT_BUNDLE_IDENTIFIER = com.edot.wixnavexample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EdotWixNavExample.app/EdotWixNavExample";
 			};
@@ -500,7 +500,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.edot.wixnavexample";
+				PRODUCT_BUNDLE_IDENTIFIER = com.edot.wixnavexample;
 				PRODUCT_NAME = EdotWixNavExample;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ELASTIC_APM_AVAILABLE";
 				SWIFT_OBJC_BRIDGING_HEADER = "../../../packages/react-native/ios/EdotReactNative-Bridging-Header.h";
@@ -528,7 +528,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.edot.wixnavexample";
+				PRODUCT_BUNDLE_IDENTIFIER = com.edot.wixnavexample;
 				PRODUCT_NAME = EdotWixNavExample;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ELASTIC_APM_AVAILABLE";
 				SWIFT_OBJC_BRIDGING_HEADER = "../../../packages/react-native/ios/EdotReactNative-Bridging-Header.h";
