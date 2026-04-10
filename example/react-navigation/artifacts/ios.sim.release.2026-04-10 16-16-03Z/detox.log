@@ -1,0 +1,834 @@
+23:16:03.300 detox[62134] [90mB[39m node_modules/detox/local-cli/cli.js test --configuration ios.sim.release
+  data: {
+    "id": "b0dd1a41-cfd8-afc9-887b-8630eef881bc",
+    "detoxConfig": {
+      "configurationName": "ios.sim.release",
+      "apps": {
+        "default": {
+          "type": "ios.app",
+          "binaryPath": "ios/build/Build/Products/Release-iphonesimulator/EdotReactNavExample.app",
+          "build": "xcodebuild -workspace ios/EdotReactNavExample.xcworkspace -scheme EdotReactNavExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.4' -derivedDataPath ios/build"
+        }
+      },
+      "artifacts": {
+        "rootDir": "artifacts/ios.sim.release.2026-04-10 16-16-03Z",
+        "plugins": {
+          "log": {
+            "enabled": true,
+            "keepOnlyFailedTestsArtifacts": false
+          },
+          "screenshot": {
+            "enabled": true,
+            "shouldTakeAutomaticSnapshots": true,
+            "keepOnlyFailedTestsArtifacts": true
+          },
+          "video": {
+            "enabled": true,
+            "keepOnlyFailedTestsArtifacts": true
+          },
+          "instruments": {
+            "enabled": false,
+            "keepOnlyFailedTestsArtifacts": false
+          },
+          "uiHierarchy": {
+            "enabled": false,
+            "keepOnlyFailedTestsArtifacts": false
+          }
+        }
+      },
+      "behavior": {
+        "init": {
+          "keepLockFile": false,
+          "reinstallApp": true,
+          "exposeGlobals": true
+        },
+        "cleanup": {
+          "shutdownDevice": false
+        },
+        "launchApp": "auto"
+      },
+      "cli": {
+        "configuration": "ios.sim.release",
+        "start": true
+      },
+      "commands": [
+        {
+          "appName": "default",
+          "build": "xcodebuild -workspace ios/EdotReactNavExample.xcworkspace -scheme EdotReactNavExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.4' -derivedDataPath ios/build"
+        }
+      ],
+      "device": {
+        "type": "ios.simulator",
+        "device": {
+          "type": "iPhone 17 Pro"
+        }
+      },
+      "logger": {
+        "level": "info",
+        "overrideConsole": true,
+        "options": {
+          "showLoggerName": true,
+          "showPid": true,
+          "showLevel": false,
+          "showMetadata": false,
+          "basepath": "/Users/nonth/Projects/playground/react-native/edot-react-native-sdk/example/react-navigation/node_modules/detox/src",
+          "prefixers": {},
+          "stringifiers": {}
+        }
+      },
+      "testRunner": {
+        "retries": 0,
+        "forwardEnv": false,
+        "detached": false,
+        "bail": false,
+        "noRetryArgs": [
+          "shard"
+        ],
+        "jest": {
+          "setupTimeout": 300000,
+          "teardownTimeout": 30000,
+          "retryAfterCircusRetries": false,
+          "reportWorkerAssign": true
+        },
+        "args": {
+          "$0": "jest",
+          "_": [
+            "e2e"
+          ],
+          "config": "e2e/jest.config.js",
+          "--": []
+        },
+        "$0": "jest"
+      },
+      "session": {
+        "autoStart": true,
+        "debugSynchronization": 10000
+      }
+    },
+    "detoxIPCServer": "primary-62134",
+    "testResults": [],
+    "testSessionIndex": 0,
+    "workersCount": 0
+  }
+23:16:03.303 detox[62134] [90mi[39m Server path not specified, so defaulting to ipc.config.socketRoot + ipc.config.appspace + ipc.config.id /tmp/detox.primary-62134
+23:16:03.303 detox[62134] [90mi[39m starting server on  /tmp/detox.primary-62134 
+23:16:03.303 detox[62134] [90mi[39m starting TLS server false
+23:16:03.303 detox[62134] [90mi[39m starting server as Unix || Windows Socket
+23:16:03.304 detox[62134] [90mi[39m Detox server listening on localhost:53280...
+23:16:03.306 detox[62134] [90mi[39m Serialized the session state at: /private/var/folders/nd/_cs61jn95mx_wzcmldgt15p00000gn/T/b0dd1a41-cfd8-afc9-887b-8630eef881bc.detox.json
+23:16:03.307 detox[62134] [90mB[39m jest --config e2e/jest.config.js e2e
+23:16:03.309 detox[62134] [90mi[39m (node:62134) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+23:16:03.912 detox[62135] [90mi[39m Service path not specified, so defaulting to ipc.config.socketRoot + ipc.config.appspace + id 
+23:16:03.913 detox[62135] [90mi[39m requested connection to  primary-62134 /tmp/detox.primary-62134
+23:16:03.913 detox[62135] [90mi[39m Connecting client on Unix Socket : /tmp/detox.primary-62134
+23:16:03.914 detox[62134] [90mi[39m ## socket connection to server detected ##
+23:16:03.915 detox[62135] [90mi[39m retrying reset
+23:16:03.915 detox[62135] [90mi[39m dispatching event to  primary-62134 /tmp/detox.primary-62134  :  registerContext , { id: 'secondary-62135' }
+23:16:03.916 detox[62134] [90mi[39m received event of :  registerContext { id: 'secondary-62135' }
+23:16:03.916 detox[62134] [90mi[39m dispatching event to socket  :  registerContextDone {
+  testResults: [],
+  testSessionIndex: 0,
+  unsafe_earlyTeardown: undefined
+}
+23:16:03.916 detox[62135] [90mi[39m ## received events ##
+23:16:03.916 detox[62135] [90mi[39m detected event registerContextDone { testResults: [], testSessionIndex: 0 }
+23:16:03.958 detox[62135] [90mB[39m e2e/app.test.js
+23:16:03.967 detox[62135] [90mB[39m set up environment
+23:16:03.968 detox[62134] [90mi[39m received event of :  registerWorker { workerId: 'w1' }
+23:16:03.968 detox[62134] [90mi[39m dispatching event to socket  :  registerWorkerDone { workersCount: 1 }
+23:16:03.968 detox[62134] [90mi[39m broadcasting event to all known sockets listening to  /tmp/detox.primary-62134  :   sessionStateUpdate { workersCount: 1 }
+23:16:03.968 detox[62135] [90mi[39m dispatching event to  primary-62134 /tmp/detox.primary-62134  :  registerWorker , { workerId: 'w1' }
+23:16:03.968 detox[62135] [90mi[39m ## received events ##
+23:16:03.968 detox[62135] [90mi[39m detected event registerWorkerDone { workersCount: 1 }
+23:16:04.047 detox[62135] [90mi[39m ## received events ##
+23:16:04.047 detox[62135] [90mi[39m detected event sessionStateUpdate { workersCount: 1 }
+23:16:04.050 detox[62134] [90mB[39m connection :53280<->:53281
+23:16:04.050 detox[62135] [90mi[39m opened web socket to: ws://localhost:53280
+23:16:04.051 detox[62135] [90mi[39m send message
+  data: {"type":"login","params":{"sessionId":"f257298d-ed17-9fa6-0a40-3b29b76feb7a","role":"tester"},"messageId":0}
+23:16:04.053 detox[62134] [90mi[39m get
+  data: {"type":"login","params":{"sessionId":"f257298d-ed17-9fa6-0a40-3b29b76feb7a","role":"tester"},"messageId":0}
+23:16:04.053 detox[62134] [90mi[39m created session f257298d-ed17-9fa6-0a40-3b29b76feb7a
+23:16:04.053 detox[62134] [90mi[39m send
+  data: {
+    "type": "loginSuccess",
+    "params": {
+      "testerConnected": true,
+      "appConnected": false
+    },
+    "messageId": 0
+  }
+23:16:04.054 detox[62134] [90mi[39m tester joined session f257298d-ed17-9fa6-0a40-3b29b76feb7a
+23:16:04.054 detox[62135] [90mi[39m get message
+  data: {"type":"loginSuccess","params":{"testerConnected":true,"appConnected":false},"messageId":0}
+   
+23:16:04.150 detox[62135] [90mi[39m dispatching event to  primary-62134 /tmp/detox.primary-62134  :  allocateDevice , {
+  deviceConfig: { type: 'ios.simulator', device: { type: 'iPhone 17 Pro' } }
+}
+23:16:04.151 detox[62134] [90mi[39m received event of :  allocateDevice {
+  deviceConfig: { type: 'ios.simulator', device: { type: 'iPhone 17 Pro' } }
+}
+23:16:04.153 detox[62134] [90mB[39m init
+  args: ()
+23:16:04.154 detox[62134] [90mE[39m init
+23:16:04.155 detox[62134] [90mB[39m allocate
+  data: {
+    "type": "ios.simulator",
+    "device": {
+      "type": "iPhone 17 Pro"
+    }
+  }
+23:16:04.163 detox[62134] [90mi[39m applesimutils --list --byType "iPhone 17 Pro" --fields udid,name,deviceType,os,identifier
+23:16:04.164 detox[62134] [90mi[39m Searching for device by type = "iPhone 17 Pro" ...
+23:16:04.336 detox[62134] [90mi[39m [
+  {
+    "os" : {
+      "name" : "iOS 26.4",
+      "identifier" : "com.apple.CoreSimulator.SimRuntime.iOS-26-4"
+    },
+    "name" : "iPhone 17 Pro",
+    "udid" : "B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E",
+    "deviceType" : {
+      "name" : "iPhone 17 Pro",
+      "identifier" : "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro"
+    }
+  }
+]
+
+23:16:04.336 detox[62134] [90mi[39m settled on B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E
+  data: {
+    "id": "B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E",
+    "udid": "B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E"
+  }
+23:16:04.336 detox[62134] [90mE[39m allocate
+23:16:04.336 detox[62134] [90mB[39m post-allocate: B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E
+  data: {
+    "id": "B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E",
+    "udid": "B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E"
+  }
+23:16:04.336 detox[62134] [90mi[39m applesimutils --list --byId B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E --maxResults 1 --fields udid,os,version,state
+23:16:04.502 detox[62134] [90mi[39m [
+  {
+    "state" : "Booted",
+    "os" : {
+      "version" : "26.4"
+    },
+    "udid" : "B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E"
+  }
+]
+
+23:16:04.502 detox[62134] [90mE[39m post-allocate: B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E
+23:16:04.502 detox[62134] [90mi[39m dispatching event to socket  :  allocateDeviceDone {
+  deviceCookie: {
+    id: 'B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E',
+    udid: 'B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E',
+    type: 'ios.simulator',
+    bootArgs: undefined,
+    headless: undefined
+  }
+}
+23:16:04.502 detox[62135] [90mi[39m ## received events ##
+23:16:04.502 detox[62135] [90mi[39m detected event allocateDeviceDone {
+  deviceCookie: {
+    id: 'B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E',
+    udid: 'B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E',
+    type: 'ios.simulator'
+  }
+}
+23:16:04.508 detox[62135] [90mB[39m onBootDevice
+  args: ({"deviceId":"B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E"})
+23:16:04.508 detox[62135] [90mE[39m onBootDevice
+23:16:04.508 detox[62135] [90mB[39m installUtilBinaries
+  args: ()
+23:16:04.508 detox[62135] [90mE[39m installUtilBinaries
+23:16:04.508 detox[62135] [90mB[39m selectApp
+  args: ("default")
+23:16:04.515 detox[62135] [90mE[39m selectApp
+23:16:04.515 detox[62135] [90mB[39m uninstallApp
+  args: ()
+23:16:04.515 detox[62135] [90mB[39m onBeforeUninstallApp
+  args: ({"deviceId":"B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E","bundleId":"com.edot.reactnavexample"})
+23:16:04.515 detox[62135] [90mE[39m onBeforeUninstallApp
+23:16:04.515 detox[62135] [90mi[39m /usr/bin/xcrun simctl uninstall B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample
+23:16:04.516 detox[62135] [90mi[39m Uninstalling com.edot.reactnavexample...
+23:16:04.711 detox[62135] [90mi[39m com.edot.reactnavexample uninstalled
+23:16:04.713 detox[62135] [90mE[39m uninstallApp
+23:16:04.713 detox[62135] [90mB[39m selectApp
+  args: ("default")
+23:16:04.714 detox[62135] [90mB[39m terminateApp
+  args: ()
+23:16:04.714 detox[62135] [90mB[39m onBeforeTerminateApp
+  args: ({"deviceId":"B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E","bundleId":"com.edot.reactnavexample"})
+23:16:04.714 detox[62135] [90mE[39m onBeforeTerminateApp
+23:16:04.714 detox[62135] [90mi[39m /usr/bin/xcrun simctl terminate B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample
+23:16:04.714 detox[62135] [90mi[39m Terminating com.edot.reactnavexample...
+23:16:05.876 detox[62135] [90mi[39m An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=3):
+Simulator device failed to terminate com.edot.reactnavexample.
+found nothing to terminate
+Underlying error (domain=NSPOSIXErrorDomain, code=3):
+	The request to terminate "com.edot.reactnavexample" failed. found nothing to terminate
+	found nothing to terminate
+
+23:16:05.877 detox[62135] [90mi[39m Terminating com.edot.reactnavexample...
+23:16:06.083 detox[62135] [90mi[39m "/usr/bin/xcrun simctl terminate B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample" failed with error = Error: Command failed: /usr/bin/xcrun simctl terminate B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample
+An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=3):
+Simulator device failed to terminate com.edot.reactnavexample.
+found nothing to terminate
+Underlying error (domain=NSPOSIXErrorDomain, code=3):
+	The request to terminate "com.edot.reactnavexample" failed. found nothing to terminate
+	found nothing to terminate
+ (code=3), stdout and stderr:
+
+23:16:06.083 detox[62135] [90mi[39m 
+23:16:06.083 detox[62135] [90mi[39m An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=3):
+Simulator device failed to terminate com.edot.reactnavexample.
+found nothing to terminate
+Underlying error (domain=NSPOSIXErrorDomain, code=3):
+	The request to terminate "com.edot.reactnavexample" failed. found nothing to terminate
+	found nothing to terminate
+
+23:16:06.083 detox[62135] [90mB[39m onTerminateApp
+  args: ({"deviceId":"B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E","bundleId":"com.edot.reactnavexample"})
+23:16:06.083 detox[62135] [90mE[39m onTerminateApp
+23:16:06.083 detox[62135] [90mE[39m terminateApp
+23:16:06.083 detox[62135] [90mE[39m selectApp
+23:16:06.083 detox[62135] [90mB[39m installApp
+  args: ()
+23:16:06.083 detox[62135] [90mi[39m /usr/bin/xcrun simctl install B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E "/Users/nonth/Projects/playground/react-native/edot-react-native-sdk/example/react-navigation/ios/build/Build/Products/Release-iphonesimulator/EdotReactNavExample.app"
+23:16:06.083 detox[62135] [90mi[39m Installing /Users/nonth/Projects/playground/react-native/edot-react-native-sdk/example/react-navigation/ios/build/Build/Products/Release-iphonesimulator/EdotReactNavExample.app...
+23:16:06.475 detox[62135] [90mi[39m /Users/nonth/Projects/playground/react-native/edot-react-native-sdk/example/react-navigation/ios/build/Build/Products/Release-iphonesimulator/EdotReactNavExample.app installed
+23:16:06.475 detox[62135] [90mE[39m installApp
+23:16:06.475 detox[62135] [90mB[39m selectApp
+  args: ("default")
+23:16:06.475 detox[62135] [90mB[39m terminateApp
+  args: ()
+23:16:06.475 detox[62135] [90mB[39m onBeforeTerminateApp
+  args: ({"deviceId":"B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E","bundleId":"com.edot.reactnavexample"})
+23:16:06.475 detox[62135] [90mE[39m onBeforeTerminateApp
+23:16:06.475 detox[62135] [90mi[39m /usr/bin/xcrun simctl terminate B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample
+23:16:06.475 detox[62135] [90mi[39m Terminating com.edot.reactnavexample...
+23:16:07.631 detox[62135] [90mi[39m An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=3):
+Simulator device failed to terminate com.edot.reactnavexample.
+found nothing to terminate
+Underlying error (domain=NSPOSIXErrorDomain, code=3):
+	The request to terminate "com.edot.reactnavexample" failed. found nothing to terminate
+	found nothing to terminate
+
+23:16:07.632 detox[62135] [90mi[39m Terminating com.edot.reactnavexample...
+23:16:07.839 detox[62135] [90mi[39m "/usr/bin/xcrun simctl terminate B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample" failed with error = Error: Command failed: /usr/bin/xcrun simctl terminate B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample
+An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=3):
+Simulator device failed to terminate com.edot.reactnavexample.
+found nothing to terminate
+Underlying error (domain=NSPOSIXErrorDomain, code=3):
+	The request to terminate "com.edot.reactnavexample" failed. found nothing to terminate
+	found nothing to terminate
+ (code=3), stdout and stderr:
+
+23:16:07.839 detox[62135] [90mi[39m 
+23:16:07.839 detox[62135] [90mi[39m An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=3):
+Simulator device failed to terminate com.edot.reactnavexample.
+found nothing to terminate
+Underlying error (domain=NSPOSIXErrorDomain, code=3):
+	The request to terminate "com.edot.reactnavexample" failed. found nothing to terminate
+	found nothing to terminate
+
+23:16:07.839 detox[62135] [90mB[39m onTerminateApp
+  args: ({"deviceId":"B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E","bundleId":"com.edot.reactnavexample"})
+23:16:07.839 detox[62135] [90mE[39m onTerminateApp
+23:16:07.839 detox[62135] [90mE[39m terminateApp
+23:16:07.839 detox[62135] [90mE[39m selectApp
+23:16:07.839 detox[62135] [90mE[39m set up environment
+23:16:07.936 detox[62135] [90mi[39m app.test.js is assigned to B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E (iPhone 17 Pro)
+23:16:07.936 detox[62135] [90mB[39m run the tests
+23:16:07.936 detox[62135] [90mB[39m onRunDescribeStart
+  args: ({"name":"ROOT_DESCRIBE_BLOCK"})
+23:16:07.937 detox[62135] [90mE[39m onRunDescribeStart
+23:16:07.937 detox[62135] [90mB[39m React Navigation Example
+23:16:07.937 detox[62135] [90mB[39m onRunDescribeStart
+  args: ({"name":"React Navigation Example"})
+23:16:07.937 detox[62135] [90mE[39m onRunDescribeStart
+23:16:07.937 detox[62135] [90mB[39m beforeAll
+23:16:07.940 detox[62135] [90mB[39m launchApp
+  args: ({"newInstance":true})
+23:16:07.941 detox[62135] [90mB[39m terminateApp
+  args: ("com.edot.reactnavexample")
+23:16:07.941 detox[62135] [90mB[39m onBeforeTerminateApp
+  args: ({"deviceId":"B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E","bundleId":"com.edot.reactnavexample"})
+23:16:07.941 detox[62135] [90mE[39m onBeforeTerminateApp
+23:16:07.941 detox[62135] [90mi[39m /usr/bin/xcrun simctl terminate B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample
+23:16:07.941 detox[62135] [90mi[39m Terminating com.edot.reactnavexample...
+23:16:09.077 detox[62135] [90mi[39m An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=3):
+Simulator device failed to terminate com.edot.reactnavexample.
+found nothing to terminate
+Underlying error (domain=NSPOSIXErrorDomain, code=3):
+	The request to terminate "com.edot.reactnavexample" failed. found nothing to terminate
+	found nothing to terminate
+
+23:16:09.077 detox[62135] [90mi[39m Terminating com.edot.reactnavexample...
+23:16:09.294 detox[62135] [90mi[39m "/usr/bin/xcrun simctl terminate B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample" failed with error = Error: Command failed: /usr/bin/xcrun simctl terminate B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample
+An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=3):
+Simulator device failed to terminate com.edot.reactnavexample.
+found nothing to terminate
+Underlying error (domain=NSPOSIXErrorDomain, code=3):
+	The request to terminate "com.edot.reactnavexample" failed. found nothing to terminate
+	found nothing to terminate
+ (code=3), stdout and stderr:
+
+23:16:09.294 detox[62135] [90mi[39m 
+23:16:09.294 detox[62135] [90mi[39m An error was encountered processing the command (domain=NSPOSIXErrorDomain, code=3):
+Simulator device failed to terminate com.edot.reactnavexample.
+found nothing to terminate
+Underlying error (domain=NSPOSIXErrorDomain, code=3):
+	The request to terminate "com.edot.reactnavexample" failed. found nothing to terminate
+	found nothing to terminate
+
+23:16:09.294 detox[62135] [90mB[39m onTerminateApp
+  args: ({"deviceId":"B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E","bundleId":"com.edot.reactnavexample"})
+23:16:09.294 detox[62135] [90mE[39m onTerminateApp
+23:16:09.294 detox[62135] [90mE[39m terminateApp
+23:16:09.294 detox[62135] [90mB[39m onBeforeLaunchApp
+  args: ({"bundleId":"com.edot.reactnavexample","deviceId":"B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E","launchArgs":{"detoxServer":"ws://localhost:53280","detoxSessionId":"f257298d-ed17-9fa6-0a40-3b29b76feb7a"}})
+23:16:09.295 detox[62135] [90mi[39m starting SimulatorLogRecording {
+  udid: 'B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E',
+  bundleId: 'com.edot.reactnavexample'
+}
+23:16:09.296 detox[62135] [90mi[39m /usr/bin/xcrun simctl get_app_container B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample
+23:16:09.455 detox[62135] [90mi[39m /Users/nonth/Library/Developer/CoreSimulator/Devices/B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E/data/Containers/Bundle/Application/3CD4221D-93B6-482B-A525-320CF30A8C91/EdotReactNavExample.app
+
+23:16:09.456 detox[62135] [90mi[39m /usr/bin/xcrun simctl spawn B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E log stream --level debug --style compact --predicate "processImagePath beginsWith \"/Users/nonth/Library/Developer/CoreSimulator/Devices/B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E/data/Containers/Bundle/Application/3CD4221D-93B6-482B-A525-320CF30A8C91/EdotReactNavExample.app\""
+23:16:09.507 detox[62135] [90mE[39m onBeforeLaunchApp
+23:16:09.508 detox[62135] [90mi[39m SIMCTL_CHILD_GULGeneratedClassDisposeDisabled=YES SIMCTL_CHILD_DYLD_INSERT_LIBRARIES="/Users/nonth/Library/Detox/ios/framework/85bef8b40f077a4ae6cc1c8766fac177a9481e11/Detox.framework/Detox" /usr/bin/xcrun simctl launch B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample --args -detoxServer ws://localhost:53280 -detoxSessionId f257298d-ed17-9fa6-0a40-3b29b76feb7a -detoxDebugVisibility YES -detoxDisableHierarchyDump YES
+23:16:09.508 detox[62135] [90mi[39m Launching com.edot.reactnavexample...
+23:16:09.844 detox[62135] [90mi[39m com.edot.reactnavexample: 62217
+
+23:16:09.844 detox[62135] [90mi[39m /usr/bin/xcrun simctl get_app_container B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E com.edot.reactnavexample
+23:16:10.013 detox[62135] [90mi[39m /Users/nonth/Library/Developer/CoreSimulator/Devices/B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E/data/Containers/Bundle/Application/3CD4221D-93B6-482B-A525-320CF30A8C91/EdotReactNavExample.app
+
+23:16:10.020 detox[62135] [90mi[39m com.edot.reactnavexample launched. To watch simulator logs, run:
+        /usr/bin/xcrun simctl spawn B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E log stream --level debug --style compact --predicate 'process == "EdotReactNavExample"'
+23:16:10.020 detox[62135] [90mB[39m onLaunchApp
+  args: ({"bundleId":"com.edot.reactnavexample","deviceId":"B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E","launchArgs":{"detoxServer":"ws://localhost:53280","detoxSessionId":"f257298d-ed17-9fa6-0a40-3b29b76feb7a","detoxDebugVisibility":"YES","detoxDisableHierarchyDump":"YES"},"pid":62217})
+23:16:10.020 detox[62135] [90mE[39m onLaunchApp
+23:16:10.248 detox[62134] [90mB[39m connection :53280<->:53282
+23:16:10.689 detox[62134] [90mi[39m get
+  data: {"type":"login","messageId":0,"params":{"sessionId":"f257298d-ed17-9fa6-0a40-3b29b76feb7a","role":"app"}}
+23:16:10.690 detox[62134] [90mi[39m send
+  data: {
+    "type": "loginSuccess",
+    "messageId": 0,
+    "params": {
+      "testerConnected": true,
+      "appConnected": true
+    }
+  }
+23:16:10.690 detox[62134] [90mi[39m app joined session f257298d-ed17-9fa6-0a40-3b29b76feb7a
+23:16:10.690 detox[62134] [90mi[39m send
+  data: {
+    "type": "appConnected"
+  }
+23:16:10.690 detox[62135] [90mi[39m get message
+  data: {"type":"appConnected"}
+   
+23:16:10.691 detox[62134] [90mi[39m get
+  data: {"type":"isReady","params":{},"messageId":-1000}
+23:16:10.691 detox[62134] [90mi[39m send
+  data: {
+    "type": "isReady",
+    "params": {},
+    "messageId": -1000
+  }
+23:16:10.691 detox[62135] [90mi[39m send message
+  data: {"type":"isReady","params":{},"messageId":-1000}
+23:16:10.772 detox[62134] [90mi[39m get
+  data: {"params":{"errorDetails":"RCTFatalException: Unhandled JS Exception: Invariant Violation: \"EdotExample\" has not been registered. This can happen if:\n* Metro (the local dev server) is run from the wrong folder. Check if Metro is running, stop it and restart it in the current project.\n* A module failed to load due to an error and `AppRegistry.registerComponent` wasn't called., js engine: hermes\nUnhandled JS Exception: Invariant Violation: \"EdotExample\" has not been registered. This can happen if:\n* Metro (the local dev server) is run from the wrong folder. Check if M..., stack:\ninvariant@2058:25\nrunApplication@16755:29\n__callFunction@2561:37\nanonymous@2368:30\n__guard@2494:14\ncallFunctionReturnFlushedQueue@2367:20\n\n(\n\t0   CoreFoundation                      0x00000001804c180c __exceptionPreprocess + 160\n\t1   libobjc.A.dylib                     0x0000000180063438 objc_exception_throw + 72\n\t2   EdotReactNavExample                 0x0000000102b8a2b0 RCTFormatError + 0\n\t3   EdotReactNavExample                 0x0000000102bfa8e0 -[RCTExceptionsManager reportFatal:stack:exceptionId:extraDataAsJSON:] + 476\n\t4   EdotReactNavExample                 0x0000000102bfb0e4 -[RCTExceptionsManager reportException:] + 1288\n\t5   CoreFoundation                      0x00000001804c80c0 __invoking___ + 144\n\t6   CoreFoundation                      0x00000001804c5320 -[NSInvocation invoke] + 276\n\t7   CoreFoundation                      0x00000001804c55a4 -[NSInvocation invokeWithTarget:] + 60\n\t8   EdotReactNavExample                 0x0000000102bbad10 -[RCTModuleMethod invokeWithBridge:module:arguments:] + 372\n\t9   EdotReactNavExample                 0x0000000102bbcec8 facebook::react::invokeInner(RCTBridge*, RCTModuleData*, unsigned int, folly::dynamic const&, int, (anonymous namespace)::SchedulingContext) + 444\n\t10  EdotReactNavExample                 0x0000000102bbcb2c invocation function for block in facebook::react::RCTNativeModule::invoke(unsigned int, folly::dynamic&&, int) + 108\n\t11  DetoxSync                           0x0000000104dc079c ____detox_sync_dispatch_wrapper_block_invoke + 44\n\t12  libdispatch.dylib                   0x00000001801856a0 _dispatch_call_block_and_release + 24\n\t13  libdispatch.dylib                   0x000000018019fe98 _dispatch_client_callout + 12\n\t14  libdispatch.dylib                   0x000000018018e724 _dispatch_lane_serial_drain + 984\n\t15  libdispatch.dylib                   0x000000018018f1e8 _dispatch_lane_invoke + 396\n\t16  libdispatch.dylib                   0x0000000180199ec0 _dispatch_root_queue_drain_deferred_wlh + 288\n\t17  libdispatch.dylib                   0x0000000180199608 _dispatch_workloop_worker_thread + 692\n\t18  libsystem_pthread.dylib             0x0000000104896b8c _pthread_wqthread + 288\n\t19  libsystem_pthread.dylib             0x000000010489598c start_wqthread + 8\n)","queueName":"com.facebook.react.ExceptionsManagerQueue","threadNumber":9},"type":"AppWillTerminateWithError","messageId":-10000}
+23:16:10.773 detox[62134] [90mi[39m send
+  data: {
+    "params": {
+      "errorDetails": "RCTFatalException: Unhandled JS Exception: Invariant Violation: \"EdotExample\" has not been registered. This can happen if:\n* Metro (the local dev server) is run from the wrong folder. Check if Metro is running, stop it and restart it in the current project.\n* A module failed to load due to an error and `AppRegistry.registerComponent` wasn't called., js engine: hermes\nUnhandled JS Exception: Invariant Violation: \"EdotExample\" has not been registered. This can happen if:\n* Metro (the local dev server) is run from the wrong folder. Check if M..., stack:\ninvariant@2058:25\nrunApplication@16755:29\n__callFunction@2561:37\nanonymous@2368:30\n__guard@2494:14\ncallFunctionReturnFlushedQueue@2367:20\n\n(\n\t0   CoreFoundation                      0x00000001804c180c __exceptionPreprocess + 160\n\t1   libobjc.A.dylib                     0x0000000180063438 objc_exception_throw + 72\n\t2   EdotReactNavExample                 0x0000000102b8a2b0 RCTFormatError + 0\n\t3   EdotReactNavExample                 0x0000000102bfa8e0 -[RCTExceptionsManager reportFatal:stack:exceptionId:extraDataAsJSON:] + 476\n\t4   EdotReactNavExample                 0x0000000102bfb0e4 -[RCTExceptionsManager reportException:] + 1288\n\t5   CoreFoundation                      0x00000001804c80c0 __invoking___ + 144\n\t6   CoreFoundation                      0x00000001804c5320 -[NSInvocation invoke] + 276\n\t7   CoreFoundation                      0x00000001804c55a4 -[NSInvocation invokeWithTarget:] + 60\n\t8   EdotReactNavExample                 0x0000000102bbad10 -[RCTModuleMethod invokeWithBridge:module:arguments:] + 372\n\t9   EdotReactNavExample                 0x0000000102bbcec8 facebook::react::invokeInner(RCTBridge*, RCTModuleData*, unsigned int, folly::dynamic const&, int, (anonymous namespace)::SchedulingContext) + 444\n\t10  EdotReactNavExample                 0x0000000102bbcb2c invocation function for block in facebook::react::RCTNativeModule::invoke(unsigned int, folly::dynamic&&, int) + 108\n\t11  DetoxSync                           0x0000000104dc079c ____detox_sync_dispatch_wrapper_block_invoke + 44\n\t12  libdispatch.dylib                   0x00000001801856a0 _dispatch_call_block_and_release + 24\n\t13  libdispatch.dylib                   0x000000018019fe98 _dispatch_client_callout + 12\n\t14  libdispatch.dylib                   0x000000018018e724 _dispatch_lane_serial_drain + 984\n\t15  libdispatch.dylib                   0x000000018018f1e8 _dispatch_lane_invoke + 396\n\t16  libdispatch.dylib                   0x0000000180199ec0 _dispatch_root_queue_drain_deferred_wlh + 288\n\t17  libdispatch.dylib                   0x0000000180199608 _dispatch_workloop_worker_thread + 692\n\t18  libsystem_pthread.dylib             0x0000000104896b8c _pthread_wqthread + 288\n\t19  libsystem_pthread.dylib             0x000000010489598c start_wqthread + 8\n)",
+      "queueName": "com.facebook.react.ExceptionsManagerQueue",
+      "threadNumber": 9
+    },
+    "type": "AppWillTerminateWithError",
+    "messageId": -10000
+  }
+23:16:10.784 detox[62134] [90mi[39m get
+  data: {"type":"AppWillTerminateWithError","params":{"threadNumber":9,"queueName":"com.facebook.react.ExceptionsManagerQueue","errorDetails":"Signal 6 raised\n(\n\t0   Detox                               0x0000000104fd22a8 +[NSThread(DetoxUtils) dtx_demangledCallStackSymbols] + 36\n\t1   Detox                               0x0000000104fd5c8c __DTXHandleCrash + 568\n\t2   Detox                               0x0000000104fd6288 __DTXHandleSignal + 72\n\t3   libsystem_platform.dylib            0x00000001048fb700 _sigtramp + 52\n\t4   libsystem_pthread.dylib             0x000000010489a2a8 pthread_kill + 264\n\t5   libsystem_c.dylib                   0x000000018017a88c abort + 116\n\t6   libc++abi.dylib                     0x00000001802d07d0 __cxxabiv1::__shim_type_info::~__shim_type_info() + 0\n\t7   libc++abi.dylib                     0x00000001802bd134 std::set_unexpected(void (*)()) + 0\n\t8   libobjc.A.dylib                     0x000000018003f19c _objc_terminate() + 124\n\t9   Detox                               0x0000000104fd6720 __dtx_terminate() + 176\n\t10  libc++abi.dylib                     0x00000001802cc790 std::__terminate(void (*)()) + 12\n\t11  libc++abi.dylib                     0x00000001802cf8ec __cxa_rethrow + 128\n\t12  libobjc.A.dylib                     0x00000001800635cc objc_exception_rethrow + 40\n\t13  EdotReactNavExample                 0x0000000102bbd110 facebook::react::invokeInner(RCTBridge*, RCTModuleData*, unsigned int, folly::dynamic const&, int, (anonymous namespace)::SchedulingContext) + 1028\n\t14  EdotReactNavExample                 0x0000000102bbcb2c invocation function for block in facebook::react::RCTNativeModule::invoke(unsigned int, folly::dynamic&&, int) + 108\n\t15  DetoxSync                           0x0000000104dc079c ____detox_sync_dispatch_wrapper_block_invoke + 44\n\t16  libdispatch.dylib                   0x00000001801856a0 _dispatch_call_block_and_release + 24\n\t17  libdispatch.dylib                   0x000000018019fe98 _dispatch_client_callout + 12\n\t18  libdispatch.dylib                   0x000000018018e724 _dispatch_lane_serial_drain + 984\n\t19  libdispatch.dylib                   0x000000018018f1e8 _dispatch_lane_invoke + 396\n\t20  libdispatch.dylib                   0x0000000180199ec0 _dispatch_root_queue_drain_deferred_wlh + 288\n\t21  libdispatch.dylib                   0x0000000180199608 _dispatch_workloop_worker_thread + 692\n\t22  libsystem_pthread.dylib             0x0000000104896b8c _pthread_wqthread + 288\n\t23  libsystem_pthread.dylib             0x000000010489598c start_wqthread + 8\n)"},"messageId":-10000}
+23:16:10.784 detox[62134] [90mi[39m send
+  data: {
+    "type": "AppWillTerminateWithError",
+    "params": {
+      "threadNumber": 9,
+      "queueName": "com.facebook.react.ExceptionsManagerQueue",
+      "errorDetails": "Signal 6 raised\n(\n\t0   Detox                               0x0000000104fd22a8 +[NSThread(DetoxUtils) dtx_demangledCallStackSymbols] + 36\n\t1   Detox                               0x0000000104fd5c8c __DTXHandleCrash + 568\n\t2   Detox                               0x0000000104fd6288 __DTXHandleSignal + 72\n\t3   libsystem_platform.dylib            0x00000001048fb700 _sigtramp + 52\n\t4   libsystem_pthread.dylib             0x000000010489a2a8 pthread_kill + 264\n\t5   libsystem_c.dylib                   0x000000018017a88c abort + 116\n\t6   libc++abi.dylib                     0x00000001802d07d0 __cxxabiv1::__shim_type_info::~__shim_type_info() + 0\n\t7   libc++abi.dylib                     0x00000001802bd134 std::set_unexpected(void (*)()) + 0\n\t8   libobjc.A.dylib                     0x000000018003f19c _objc_terminate() + 124\n\t9   Detox                               0x0000000104fd6720 __dtx_terminate() + 176\n\t10  libc++abi.dylib                     0x00000001802cc790 std::__terminate(void (*)()) + 12\n\t11  libc++abi.dylib                     0x00000001802cf8ec __cxa_rethrow + 128\n\t12  libobjc.A.dylib                     0x00000001800635cc objc_exception_rethrow + 40\n\t13  EdotReactNavExample                 0x0000000102bbd110 facebook::react::invokeInner(RCTBridge*, RCTModuleData*, unsigned int, folly::dynamic const&, int, (anonymous namespace)::SchedulingContext) + 1028\n\t14  EdotReactNavExample                 0x0000000102bbcb2c invocation function for block in facebook::react::RCTNativeModule::invoke(unsigned int, folly::dynamic&&, int) + 108\n\t15  DetoxSync                           0x0000000104dc079c ____detox_sync_dispatch_wrapper_block_invoke + 44\n\t16  libdispatch.dylib                   0x00000001801856a0 _dispatch_call_block_and_release + 24\n\t17  libdispatch.dylib                   0x000000018019fe98 _dispatch_client_callout + 12\n\t18  libdispatch.dylib                   0x000000018018e724 _dispatch_lane_serial_drain + 984\n\t19  libdispatch.dylib                   0x000000018018f1e8 _dispatch_lane_invoke + 396\n\t20  libdispatch.dylib                   0x0000000180199ec0 _dispatch_root_queue_drain_deferred_wlh + 288\n\t21  libdispatch.dylib                   0x0000000180199608 _dispatch_workloop_worker_thread + 692\n\t22  libsystem_pthread.dylib             0x0000000104896b8c _pthread_wqthread + 288\n\t23  libsystem_pthread.dylib             0x000000010489598c start_wqthread + 8\n)"
+    },
+    "messageId": -10000
+  }
+23:16:10.784 detox[62134] [90mi[39m app exited session f257298d-ed17-9fa6-0a40-3b29b76feb7a
+23:16:10.784 detox[62134] [90mi[39m send
+  data: {
+    "type": "appDisconnected"
+  }
+23:16:10.785 detox[62134] [90mE[39m connection :53280<->:53282
+23:16:10.785 detox[62135] [90mi[39m get message
+  data: {"params":{"errorDetails":"RCTFatalException: Unhandled JS Exception: Invariant Violation: \"EdotExample\" has not been registered. This can happen if:\n* Metro (the local dev server) is run from the wrong folder. Check if Metro is running, stop it and restart it in the current project.\n* A module failed to load due to an error and `AppRegistry.registerComponent` wasn't called., js engine: hermes\nUnhandled JS Exception: Invariant Violation: \"EdotExample\" has not been registered. This can happen if:\n* Metro (the local dev server) is run from the wrong folder. Check if M..., stack:\ninvariant@2058:25\nrunApplication@16755:29\n__callFunction@2561:37\nanonymous@2368:30\n__guard@2494:14\ncallFunctionReturnFlushedQueue@2367:20\n\n(\n\t0   CoreFoundation                      0x00000001804c180c __exceptionPreprocess + 160\n\t1   libobjc.A.dylib                     0x0000000180063438 objc_exception_throw + 72\n\t2   EdotReactNavExample                 0x0000000102b8a2b0 RCTFormatError + 0\n\t3   EdotReactNavExample                 0x0000000102bfa8e0 -[RCTExceptionsManager reportFatal:stack:exceptionId:extraDataAsJSON:] + 476\n\t4   EdotReactNavExample                 0x0000000102bfb0e4 -[RCTExceptionsManager reportException:] + 1288\n\t5   CoreFoundation                      0x00000001804c80c0 __invoking___ + 144\n\t6   CoreFoundation                      0x00000001804c5320 -[NSInvocation invoke] + 276\n\t7   CoreFoundation                      0x00000001804c55a4 -[NSInvocation invokeWithTarget:] + 60\n\t8   EdotReactNavExample                 0x0000000102bbad10 -[RCTModuleMethod invokeWithBridge:module:arguments:] + 372\n\t9   EdotReactNavExample                 0x0000000102bbcec8 facebook::react::invokeInner(RCTBridge*, RCTModuleData*, unsigned int, folly::dynamic const&, int, (anonymous namespace)::SchedulingContext) + 444\n\t10  EdotReactNavExample                 0x0000000102bbcb2c invocation function for block in facebook::react::RCTNativeModule::invoke(unsigned int, folly::dynamic&&, int) + 108\n\t11  DetoxSync                           0x0000000104dc079c ____detox_sync_dispatch_wrapper_block_invoke + 44\n\t12  libdispatch.dylib                   0x00000001801856a0 _dispatch_call_block_and_release + 24\n\t13  libdispatch.dylib                   0x000000018019fe98 _dispatch_client_callout + 12\n\t14  libdispatch.dylib                   0x000000018018e724 _dispatch_lane_serial_drain + 984\n\t15  libdispatch.dylib                   0x000000018018f1e8 _dispatch_lane_invoke + 396\n\t16  libdispatch.dylib                   0x0000000180199ec0 _dispatch_root_queue_drain_deferred_wlh + 288\n\t17  libdispatch.dylib                   0x0000000180199608 _dispatch_workloop_worker_thread + 692\n\t18  libsystem_pthread.dylib             0x0000000104896b8c _pthread_wqthread + 288\n\t19  libsystem_pthread.dylib             0x000000010489598c start_wqthread + 8\n)","queueName":"com.facebook.react.ExceptionsManagerQueue","threadNumber":9},"type":"AppWillTerminateWithError","messageId":-10000}
+   
+23:16:10.785 detox[62135] [90mi[39m get message
+  data: {"type":"AppWillTerminateWithError","params":{"threadNumber":9,"queueName":"com.facebook.react.ExceptionsManagerQueue","errorDetails":"Signal 6 raised\n(\n\t0   Detox                               0x0000000104fd22a8 +[NSThread(DetoxUtils) dtx_demangledCallStackSymbols] + 36\n\t1   Detox                               0x0000000104fd5c8c __DTXHandleCrash + 568\n\t2   Detox                               0x0000000104fd6288 __DTXHandleSignal + 72\n\t3   libsystem_platform.dylib            0x00000001048fb700 _sigtramp + 52\n\t4   libsystem_pthread.dylib             0x000000010489a2a8 pthread_kill + 264\n\t5   libsystem_c.dylib                   0x000000018017a88c abort + 116\n\t6   libc++abi.dylib                     0x00000001802d07d0 __cxxabiv1::__shim_type_info::~__shim_type_info() + 0\n\t7   libc++abi.dylib                     0x00000001802bd134 std::set_unexpected(void (*)()) + 0\n\t8   libobjc.A.dylib                     0x000000018003f19c _objc_terminate() + 124\n\t9   Detox                               0x0000000104fd6720 __dtx_terminate() + 176\n\t10  libc++abi.dylib                     0x00000001802cc790 std::__terminate(void (*)()) + 12\n\t11  libc++abi.dylib                     0x00000001802cf8ec __cxa_rethrow + 128\n\t12  libobjc.A.dylib                     0x00000001800635cc objc_exception_rethrow + 40\n\t13  EdotReactNavExample                 0x0000000102bbd110 facebook::react::invokeInner(RCTBridge*, RCTModuleData*, unsigned int, folly::dynamic const&, int, (anonymous namespace)::SchedulingContext) + 1028\n\t14  EdotReactNavExample                 0x0000000102bbcb2c invocation function for block in facebook::react::RCTNativeModule::invoke(unsigned int, folly::dynamic&&, int) + 108\n\t15  DetoxSync                           0x0000000104dc079c ____detox_sync_dispatch_wrapper_block_invoke + 44\n\t16  libdispatch.dylib                   0x00000001801856a0 _dispatch_call_block_and_release + 24\n\t17  libdispatch.dylib                   0x000000018019fe98 _dispatch_client_callout + 12\n\t18  libdispatch.dylib                   0x000000018018e724 _dispatch_lane_serial_drain + 984\n\t19  libdispatch.dylib                   0x000000018018f1e8 _dispatch_lane_invoke + 396\n\t20  libdispatch.dylib                   0x0000000180199ec0 _dispatch_root_queue_drain_deferred_wlh + 288\n\t21  libdispatch.dylib                   0x0000000180199608 _dispatch_workloop_worker_thread + 692\n\t22  libsystem_pthread.dylib             0x0000000104896b8c _pthread_wqthread + 288\n\t23  libsystem_pthread.dylib             0x000000010489598c start_wqthread + 8\n)"},"messageId":-10000}
+   
+23:16:10.785 detox[62135] [90mi[39m get message
+  data: {"type":"appDisconnected"}
+   
+23:16:10.785 detox[62135] [90mE[39m launchApp
+  error: The pending request #-1000 ("isReady") has been rejected due to the following error:
+  
+  The app has crashed, see the details below:
+  
+  RCTFatalException: Unhandled JS Exception: Invariant Violation: "EdotExample" has not been registered. This can happen if:
+  * Metro (the local dev server) is run from the wrong folder. Check if Metro is running, stop it and restart it in the current project.
+  * A module failed to load due to an error and `AppRegistry.registerComponent` wasn't called., js engine: hermes
+  Unhandled JS Exception: Invariant Violation: "EdotExample" has not been registered. This can happen if:
+  * Metro (the local dev server) is run from the wrong folder. Check if M..., stack:
+  invariant@2058:25
+  runApplication@16755:29
+  __callFunction@2561:37
+  anonymous@2368:30
+  __guard@2494:14
+  callFunctionReturnFlushedQueue@2367:20
+  
+  (
+  	0   CoreFoundation                      0x00000001804c180c __exceptionPreprocess + 160
+  	1   libobjc.A.dylib                     0x0000000180063438 objc_exception_throw + 72
+  	2   EdotReactNavExample                 0x0000000102b8a2b0 RCTFormatError + 0
+  	3   EdotReactNavExample                 0x0000000102bfa8e0 -[RCTExceptionsManager reportFatal:stack:exceptionId:extraDataAsJSON:] + 476
+  	4   EdotReactNavExample                 0x0000000102bfb0e4 -[RCTExceptionsManager reportException:] + 1288
+  	5   CoreFoundation                      0x00000001804c80c0 __invoking___ + 144
+  	6   CoreFoundation                      0x00000001804c5320 -[NSInvocation invoke] + 276
+  	7   CoreFoundation                      0x00000001804c55a4 -[NSInvocation invokeWithTarget:] + 60
+  	8   EdotReactNavExample                 0x0000000102bbad10 -[RCTModuleMethod invokeWithBridge:module:arguments:] + 372
+  	9   EdotReactNavExample                 0x0000000102bbcec8 facebook::react::invokeInner(RCTBridge*, RCTModuleData*, unsigned int, folly::dynamic const&, int, (anonymous namespace)::SchedulingContext) + 444
+  	10  EdotReactNavExample                 0x0000000102bbcb2c invocation function for block in facebook::react::RCTNativeModule::invoke(unsigned int, folly::dynamic&&, int) + 108
+  	11  DetoxSync                           0x0000000104dc079c ____detox_sync_dispatch_wrapper_block_invoke + 44
+  	12  libdispatch.dylib                   0x00000001801856a0 _dispatch_call_block_and_release + 24
+  	13  libdispatch.dylib                   0x000000018019fe98 _dispatch_client_callout + 12
+  	14  libdispatch.dylib                   0x000000018018e724 _dispatch_lane_serial_drain + 984
+  	15  libdispatch.dylib                   0x000000018018f1e8 _dispatch_lane_invoke + 396
+  	16  libdispatch.dylib                   0x0000000180199ec0 _dispatch_root_queue_drain_deferred_wlh + 288
+  	17  libdispatch.dylib                   0x0000000180199608 _dispatch_workloop_worker_thread + 692
+  	18  libsystem_pthread.dylib             0x0000000104896b8c _pthread_wqthread + 288
+  	19  libsystem_pthread.dylib             0x000000010489598c start_wqthread + 8
+  )
+23:16:10.786 detox[62135] [90mB[39m onHookFailure
+  args: ({"error":{"name":"DetoxRuntimeError"},"hook":"beforeAll"})
+23:16:10.786 detox[62135] [90mi[39m starting SimulatorScreenshot
+23:16:10.786 detox[62135] [90mi[39m /usr/bin/xcrun simctl io B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E screenshot "/private/var/folders/nd/_cs61jn95mx_wzcmldgt15p00000gn/T/detox-62135-98ba9q.detox.png"
+23:16:11.070 detox[62135] [90mi[39m Detected file type from extension: PNG
+Note: No display specified. Defaulting to display: 1CF89121-203F-41F0-8702-803F5499D5AE (screenID: 1, name: LCD)
+Wrote screenshot to: /private/var/folders/nd/_cs61jn95mx_wzcmldgt15p00000gn/T/detox-62135-98ba9q.detox.png
+
+23:16:11.070 detox[62135] [90mi[39m stopping SimulatorScreenshot
+23:16:11.070 detox[62135] [90mE[39m onHookFailure
+23:16:11.070 detox[62135] [90mE[39m beforeAll
+  error: The pending request #-1000 ("isReady") has been rejected due to the following error:
+  
+  The app has crashed, see the details below:
+  
+  RCTFatalException: Unhandled JS Exception: Invariant Violation: "EdotExample" has not been registered. This can happen if:
+  * Metro (the local dev server) is run from the wrong folder. Check if Metro is running, stop it and restart it in the current project.
+  * A module failed to load due to an error and `AppRegistry.registerComponent` wasn't called., js engine: hermes
+  Unhandled JS Exception: Invariant Violation: "EdotExample" has not been registered. This can happen if:
+  * Metro (the local dev server) is run from the wrong folder. Check if M..., stack:
+  invariant@2058:25
+  runApplication@16755:29
+  __callFunction@2561:37
+  anonymous@2368:30
+  __guard@2494:14
+  callFunctionReturnFlushedQueue@2367:20
+  
+  (
+  	0   CoreFoundation                      0x00000001804c180c __exceptionPreprocess + 160
+  	1   libobjc.A.dylib                     0x0000000180063438 objc_exception_throw + 72
+  	2   EdotReactNavExample                 0x0000000102b8a2b0 RCTFormatError + 0
+  	3   EdotReactNavExample                 0x0000000102bfa8e0 -[RCTExceptionsManager reportFatal:stack:exceptionId:extraDataAsJSON:] + 476
+  	4   EdotReactNavExample                 0x0000000102bfb0e4 -[RCTExceptionsManager reportException:] + 1288
+  	5   CoreFoundation                      0x00000001804c80c0 __invoking___ + 144
+  	6   CoreFoundation                      0x00000001804c5320 -[NSInvocation invoke] + 276
+  	7   CoreFoundation                      0x00000001804c55a4 -[NSInvocation invokeWithTarget:] + 60
+  	8   EdotReactNavExample                 0x0000000102bbad10 -[RCTModuleMethod invokeWithBridge:module:arguments:] + 372
+  	9   EdotReactNavExample                 0x0000000102bbcec8 facebook::react::invokeInner(RCTBridge*, RCTModuleData*, unsigned int, folly::dynamic const&, int, (anonymous namespace)::SchedulingContext) + 444
+  	10  EdotReactNavExample                 0x0000000102bbcb2c invocation function for block in facebook::react::RCTNativeModule::invoke(unsigned int, folly::dynamic&&, int) + 108
+  	11  DetoxSync                           0x0000000104dc079c ____detox_sync_dispatch_wrapper_block_invoke + 44
+  	12  libdispatch.dylib                   0x00000001801856a0 _dispatch_call_block_and_release + 24
+  	13  libdispatch.dylib                   0x000000018019fe98 _dispatch_client_callout + 12
+  	14  libdispatch.dylib                   0x000000018018e724 _dispatch_lane_serial_drain + 984
+  	15  libdispatch.dylib                   0x000000018018f1e8 _dispatch_lane_invoke + 396
+  	16  libdispatch.dylib                   0x0000000180199ec0 _dispatch_root_queue_drain_deferred_wlh + 288
+  	17  libdispatch.dylib                   0x0000000180199608 _dispatch_workloop_worker_thread + 692
+  	18  libsystem_pthread.dylib             0x0000000104896b8c _pthread_wqthread + 288
+  	19  libsystem_pthread.dylib             0x000000010489598c start_wqthread + 8
+  )
+23:16:11.071 detox[62135] [90mB[39m Tab Navigation
+23:16:11.071 detox[62135] [90mB[39m onRunDescribeStart
+  args: ({"name":"Tab Navigation"})
+23:16:11.071 detox[62135] [90mE[39m onRunDescribeStart
+23:16:11.071 detox[62135] [90mB[39m shows bottom tabs
+23:16:11.071 detox[62135] [90mi[39m React Navigation Example > Tab Navigation: shows bottom tabs
+23:16:11.072 detox[62135] [90mE[39m shows bottom tabs
+23:16:11.072 detox[62135] [90mi[39m React Navigation Example > Tab Navigation: shows bottom tabs [FAIL]
+23:16:11.073 detox[62135] [90mB[39m switches to Demos tab
+23:16:11.073 detox[62135] [90mi[39m React Navigation Example > Tab Navigation: switches to Demos tab
+23:16:11.073 detox[62135] [90mE[39m switches to Demos tab
+23:16:11.073 detox[62135] [90mi[39m React Navigation Example > Tab Navigation: switches to Demos tab [FAIL]
+23:16:11.074 detox[62135] [90mB[39m switches to Settings tab
+23:16:11.074 detox[62135] [90mi[39m React Navigation Example > Tab Navigation: switches to Settings tab
+23:16:11.074 detox[62135] [90mE[39m switches to Settings tab
+23:16:11.074 detox[62135] [90mi[39m React Navigation Example > Tab Navigation: switches to Settings tab [FAIL]
+23:16:11.074 detox[62135] [90mB[39m switches back to Home tab
+23:16:11.074 detox[62135] [90mi[39m React Navigation Example > Tab Navigation: switches back to Home tab
+23:16:11.074 detox[62135] [90mE[39m switches back to Home tab
+23:16:11.074 detox[62135] [90mi[39m React Navigation Example > Tab Navigation: switches back to Home tab [FAIL]
+23:16:11.075 detox[62135] [90mB[39m onRunDescribeFinish
+  args: ({"name":"Tab Navigation"})
+23:16:11.075 detox[62135] [90mE[39m onRunDescribeFinish
+23:16:11.075 detox[62135] [90mE[39m Tab Navigation
+23:16:11.075 detox[62135] [90mB[39m Home Screen
+23:16:11.075 detox[62135] [90mB[39m onRunDescribeStart
+  args: ({"name":"Home Screen"})
+23:16:11.075 detox[62135] [90mE[39m onRunDescribeStart
+23:16:11.075 detox[62135] [90mB[39m shows SDK status and session
+23:16:11.075 detox[62135] [90mi[39m React Navigation Example > Home Screen: shows SDK status and session
+23:16:11.075 detox[62135] [90mE[39m shows SDK status and session
+23:16:11.075 detox[62135] [90mi[39m React Navigation Example > Home Screen: shows SDK status and session [FAIL]
+23:16:11.075 detox[62135] [90mB[39m taps user and attribute buttons
+23:16:11.075 detox[62135] [90mi[39m React Navigation Example > Home Screen: taps user and attribute buttons
+23:16:11.075 detox[62135] [90mE[39m taps user and attribute buttons
+23:16:11.075 detox[62135] [90mi[39m React Navigation Example > Home Screen: taps user and attribute buttons [FAIL]
+23:16:11.076 detox[62135] [90mB[39m onRunDescribeFinish
+  args: ({"name":"Home Screen"})
+23:16:11.076 detox[62135] [90mE[39m onRunDescribeFinish
+23:16:11.076 detox[62135] [90mE[39m Home Screen
+23:16:11.076 detox[62135] [90mB[39m Demo Screens
+23:16:11.076 detox[62135] [90mB[39m onRunDescribeStart
+  args: ({"name":"Demo Screens"})
+23:16:11.076 detox[62135] [90mE[39m onRunDescribeStart
+23:16:11.076 detox[62135] [90mB[39m beforeAll
+23:16:11.077 detox[62135] [90mB[39m tap
+  data: {
+    "type": "action",
+    "action": "tap",
+    "predicate": {
+      "type": "id",
+      "value": "tab-demos",
+      "isRegex": false
+    }
+  }
+23:16:11.077 detox[62135] [90mE[39m tap
+  error: The app has crashed, see the details below:
+  
+  RCTFatalException: Unhandled JS Exception: Invariant Violation: "EdotExample" has not been registered. This can happen if:
+  * Metro (the local dev server) is run from the wrong folder. Check if Metro is running, stop it and restart it in the current project.
+  * A module failed to load due to an error and `AppRegistry.registerComponent` wasn't called., js engine: hermes
+  Unhandled JS Exception: Invariant Violation: "EdotExample" has not been registered. This can happen if:
+  * Metro (the local dev server) is run from the wrong folder. Check if M..., stack:
+  invariant@2058:25
+  runApplication@16755:29
+  __callFunction@2561:37
+  anonymous@2368:30
+  __guard@2494:14
+  callFunctionReturnFlushedQueue@2367:20
+  
+  (
+  	0   CoreFoundation                      0x00000001804c180c __exceptionPreprocess + 160
+  	1   libobjc.A.dylib                     0x0000000180063438 objc_exception_throw + 72
+  	2   EdotReactNavExample                 0x0000000102b8a2b0 RCTFormatError + 0
+  	3   EdotReactNavExample                 0x0000000102bfa8e0 -[RCTExceptionsManager reportFatal:stack:exceptionId:extraDataAsJSON:] + 476
+  	4   EdotReactNavExample                 0x0000000102bfb0e4 -[RCTExceptionsManager reportException:] + 1288
+  	5   CoreFoundation                      0x00000001804c80c0 __invoking___ + 144
+  	6   CoreFoundation                      0x00000001804c5320 -[NSInvocation invoke] + 276
+  	7   CoreFoundation                      0x00000001804c55a4 -[NSInvocation invokeWithTarget:] + 60
+  	8   EdotReactNavExample                 0x0000000102bbad10 -[RCTModuleMethod invokeWithBridge:module:arguments:] + 372
+  	9   EdotReactNavExample                 0x0000000102bbcec8 facebook::react::invokeInner(RCTBridge*, RCTModuleData*, unsigned int, folly::dynamic const&, int, (anonymous namespace)::SchedulingContext) + 444
+  	10  EdotReactNavExample                 0x0000000102bbcb2c invocation function for block in facebook::react::RCTNativeModule::invoke(unsigned int, folly::dynamic&&, int) + 108
+  	11  DetoxSync                           0x0000000104dc079c ____detox_sync_dispatch_wrapper_block_invoke + 44
+  	12  libdispatch.dylib                   0x00000001801856a0 _dispatch_call_block_and_release + 24
+  	13  libdispatch.dylib                   0x000000018019fe98 _dispatch_client_callout + 12
+  	14  libdispatch.dylib                   0x000000018018e724 _dispatch_lane_serial_drain + 984
+  	15  libdispatch.dylib                   0x000000018018f1e8 _dispatch_lane_invoke + 396
+  	16  libdispatch.dylib                   0x0000000180199ec0 _dispatch_root_queue_drain_deferred_wlh + 288
+  	17  libdispatch.dylib                   0x0000000180199608 _dispatch_workloop_worker_thread + 692
+  	18  libsystem_pthread.dylib             0x0000000104896b8c _pthread_wqthread + 288
+  	19  libsystem_pthread.dylib             0x000000010489598c start_wqthread + 8
+  )
+23:16:11.077 detox[62135] [90mB[39m onHookFailure
+  args: ({"error":{"name":"DetoxRuntimeError"},"hook":"beforeAll"})
+23:16:11.077 detox[62135] [90mi[39m starting SimulatorScreenshot
+23:16:11.077 detox[62135] [90mi[39m /usr/bin/xcrun simctl io B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E screenshot "/private/var/folders/nd/_cs61jn95mx_wzcmldgt15p00000gn/T/detox-62135-3idQlo.detox.png"
+23:16:11.591 detox[62135] [90mi[39m Detected file type from extension: PNG
+Note: No display specified. Defaulting to display: 1CF89121-203F-41F0-8702-803F5499D5AE (screenID: 1, name: LCD)
+Wrote screenshot to: /private/var/folders/nd/_cs61jn95mx_wzcmldgt15p00000gn/T/detox-62135-3idQlo.detox.png
+
+23:16:11.591 detox[62135] [90mi[39m stopping SimulatorScreenshot
+23:16:11.591 detox[62135] [90mE[39m onHookFailure
+23:16:11.591 detox[62135] [90mE[39m beforeAll
+  error: The app has crashed, see the details below:
+  
+  RCTFatalException: Unhandled JS Exception: Invariant Violation: "EdotExample" has not been registered. This can happen if:
+  * Metro (the local dev server) is run from the wrong folder. Check if Metro is running, stop it and restart it in the current project.
+  * A module failed to load due to an error and `AppRegistry.registerComponent` wasn't called., js engine: hermes
+  Unhandled JS Exception: Invariant Violation: "EdotExample" has not been registered. This can happen if:
+  * Metro (the local dev server) is run from the wrong folder. Check if M..., stack:
+  invariant@2058:25
+  runApplication@16755:29
+  __callFunction@2561:37
+  anonymous@2368:30
+  __guard@2494:14
+  callFunctionReturnFlushedQueue@2367:20
+  
+  (
+  	0   CoreFoundation                      0x00000001804c180c __exceptionPreprocess + 160
+  	1   libobjc.A.dylib                     0x0000000180063438 objc_exception_throw + 72
+  	2   EdotReactNavExample                 0x0000000102b8a2b0 RCTFormatError + 0
+  	3   EdotReactNavExample                 0x0000000102bfa8e0 -[RCTExceptionsManager reportFatal:stack:exceptionId:extraDataAsJSON:] + 476
+  	4   EdotReactNavExample                 0x0000000102bfb0e4 -[RCTExceptionsManager reportException:] + 1288
+  	5   CoreFoundation                      0x00000001804c80c0 __invoking___ + 144
+  	6   CoreFoundation                      0x00000001804c5320 -[NSInvocation invoke] + 276
+  	7   CoreFoundation                      0x00000001804c55a4 -[NSInvocation invokeWithTarget:] + 60
+  	8   EdotReactNavExample                 0x0000000102bbad10 -[RCTModuleMethod invokeWithBridge:module:arguments:] + 372
+  	9   EdotReactNavExample                 0x0000000102bbcec8 facebook::react::invokeInner(RCTBridge*, RCTModuleData*, unsigned int, folly::dynamic const&, int, (anonymous namespace)::SchedulingContext) + 444
+  	10  EdotReactNavExample                 0x0000000102bbcb2c invocation function for block in facebook::react::RCTNativeModule::invoke(unsigned int, folly::dynamic&&, int) + 108
+  	11  DetoxSync                           0x0000000104dc079c ____detox_sync_dispatch_wrapper_block_invoke + 44
+  	12  libdispatch.dylib                   0x00000001801856a0 _dispatch_call_block_and_release + 24
+  	13  libdispatch.dylib                   0x000000018019fe98 _dispatch_client_callout + 12
+  	14  libdispatch.dylib                   0x000000018018e724 _dispatch_lane_serial_drain + 984
+  	15  libdispatch.dylib                   0x000000018018f1e8 _dispatch_lane_invoke + 396
+  	16  libdispatch.dylib                   0x0000000180199ec0 _dispatch_root_queue_drain_deferred_wlh + 288
+  	17  libdispatch.dylib                   0x0000000180199608 _dispatch_workloop_worker_thread + 692
+  	18  libsystem_pthread.dylib             0x0000000104896b8c _pthread_wqthread + 288
+  	19  libsystem_pthread.dylib             0x000000010489598c start_wqthread + 8
+  )
+23:16:11.593 detox[62135] [90mB[39m navigates to Network demo and interacts
+23:16:11.593 detox[62135] [90mi[39m React Navigation Example > Demo Screens: navigates to Network demo and interacts
+23:16:11.597 detox[62135] [90mE[39m navigates to Network demo and interacts
+23:16:11.597 detox[62135] [90mi[39m React Navigation Example > Demo Screens: navigates to Network demo and interacts [FAIL]
+23:16:11.598 detox[62135] [90mB[39m navigates to Tracing demo and interacts
+23:16:11.598 detox[62135] [90mi[39m React Navigation Example > Demo Screens: navigates to Tracing demo and interacts
+23:16:11.599 detox[62135] [90mE[39m navigates to Tracing demo and interacts
+23:16:11.599 detox[62135] [90mi[39m React Navigation Example > Demo Screens: navigates to Tracing demo and interacts [FAIL]
+23:16:11.600 detox[62135] [90mB[39m navigates to Metrics demo and interacts
+23:16:11.600 detox[62135] [90mi[39m React Navigation Example > Demo Screens: navigates to Metrics demo and interacts
+23:16:11.601 detox[62135] [90mE[39m navigates to Metrics demo and interacts
+23:16:11.601 detox[62135] [90mi[39m React Navigation Example > Demo Screens: navigates to Metrics demo and interacts [FAIL]
+23:16:11.602 detox[62135] [90mB[39m navigates to Logs demo and interacts
+23:16:11.602 detox[62135] [90mi[39m React Navigation Example > Demo Screens: navigates to Logs demo and interacts
+23:16:11.603 detox[62135] [90mE[39m navigates to Logs demo and interacts
+23:16:11.603 detox[62135] [90mi[39m React Navigation Example > Demo Screens: navigates to Logs demo and interacts [FAIL]
+23:16:11.604 detox[62135] [90mB[39m navigates to Error demo and interacts
+23:16:11.604 detox[62135] [90mi[39m React Navigation Example > Demo Screens: navigates to Error demo and interacts
+23:16:11.604 detox[62135] [90mE[39m navigates to Error demo and interacts
+23:16:11.604 detox[62135] [90mi[39m React Navigation Example > Demo Screens: navigates to Error demo and interacts [FAIL]
+23:16:11.605 detox[62135] [90mB[39m onRunDescribeFinish
+  args: ({"name":"Demo Screens"})
+23:16:11.605 detox[62135] [90mE[39m onRunDescribeFinish
+23:16:11.605 detox[62135] [90mE[39m Demo Screens
+23:16:11.605 detox[62135] [90mB[39m onRunDescribeFinish
+  args: ({"name":"React Navigation Example"})
+23:16:11.605 detox[62135] [90mE[39m onRunDescribeFinish
+23:16:11.605 detox[62135] [90mE[39m React Navigation Example
+23:16:11.606 detox[62135] [90mB[39m onRunDescribeFinish
+  args: ({"name":"ROOT_DESCRIBE_BLOCK"})
+23:16:11.606 detox[62135] [90mE[39m onRunDescribeFinish
+23:16:11.606 detox[62135] [90mE[39m run the tests
+23:16:11.646 detox[62135] [90mB[39m tear down environment
+23:16:11.646 detox[62135] [90mB[39m onBeforeCleanup
+  args: ()
+23:16:11.647 detox[62135] [90mi[39m saving SimulatorScreenshot to: artifacts/ios.sim.release.2026-04-10 16-16-03Z/beforeAllFailure.png
+23:16:11.647 detox[62135] [90mi[39m moving "/private/var/folders/nd/_cs61jn95mx_wzcmldgt15p00000gn/T/detox-62135-3idQlo.detox.png" to artifacts/ios.sim.release.2026-04-10 16-16-03Z/beforeAllFailure.png
+23:16:11.648 detox[62135] [90mi[39m saving SimulatorLogRecording to: artifacts/ios.sim.release.2026-04-10 16-16-03Z/B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E 2026-04-10 16-16-11Z.startup.log
+23:16:11.648 detox[62135] [90mi[39m stopping SimulatorLogRecording
+23:16:11.701 detox[62135] [90mi[39m sending SIGINT to: /usr/bin/xcrun simctl spawn B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E log stream --level debug --style compact --predicate processImagePath beginsWith "/Users/nonth/Library/Developer/CoreSimulator/Devices/B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E/data/Containers/Bundle/Application/3CD4221D-93B6-482B-A525-320CF30A8C91/EdotReactNavExample.app"
+23:16:11.709 detox[62135] [90mi[39m /usr/bin/xcrun simctl spawn B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E log stream --level debug --style compact --predicate "processImagePath beginsWith \"/Users/nonth/Library/Developer/CoreSimulator/Devices/B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E/data/Containers/Bundle/Application/3CD4221D-93B6-482B-A525-320CF30A8C91/EdotReactNavExample.app\"" exited with code #0
+23:16:11.710 detox[62135] [90mi[39m moving "/private/var/folders/nd/_cs61jn95mx_wzcmldgt15p00000gn/T/detox-62135-VULihg.detox.log" to artifacts/ios.sim.release.2026-04-10 16-16-03Z/B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E 2026-04-10 16-16-11Z.startup.log
+23:16:11.711 detox[62135] [90mi[39m saving FileArtifact to: artifacts/ios.sim.release.2026-04-10 16-16-03Z/detox_pid_62135.json.log { append: true }
+23:16:11.711 detox[62135] [90mi[39m saving FileArtifact to: artifacts/ios.sim.release.2026-04-10 16-16-03Z/detox_pid_62135.log { append: true }
+23:16:11.711 detox[62135] [90mE[39m onBeforeCleanup
+23:16:11.713 detox[62134] [90mi[39m tester exited session f257298d-ed17-9fa6-0a40-3b29b76feb7a
+23:16:11.713 detox[62134] [90mE[39m connection :53280<->:53281
+23:16:11.713 detox[62134] [90mi[39m received event of :  deallocateDevice {
+  deviceCookie: {
+    id: 'B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E',
+    udid: 'B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E',
+    type: 'ios.simulator'
+  }
+}
+23:16:11.713 detox[62134] [90mB[39m free: B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E
+  data: {}
+23:16:11.713 detox[62135] [90mi[39m dispatching event to  primary-62134 /tmp/detox.primary-62134  :  deallocateDevice , {
+  deviceCookie: {
+    id: 'B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E',
+    udid: 'B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E',
+    type: 'ios.simulator'
+  }
+}
+23:16:11.714 detox[62134] [90mE[39m free: B7E9BAD6-0C0D-41EE-BE0C-D49BF485382E
+23:16:11.714 detox[62134] [90mi[39m dispatching event to socket  :  deallocateDeviceDone {}
+23:16:11.715 detox[62135] [90mi[39m ## received events ##
+23:16:11.715 detox[62135] [90mi[39m detected event deallocateDeviceDone {}
+23:16:11.715 detox[62135] [90mE[39m tear down environment
+23:16:11.715 detox[62135] [90mE[39m e2e/app.test.js
+23:16:11.723 detox[62134] [90mi[39m received event of :  reportTestResults {
+  testResults: [
+    {
+      success: false,
+      testFilePath: '/Users/nonth/Projects/playground/react-native/edot-react-native-sdk/example/react-navigation/e2e/app.test.js',
+      isPermanentFailure: false
+    }
+  ]
+}
+23:16:11.723 detox[62134] [90mi[39m dispatching event to socket  :  reportTestResultsDone {
+  testResults: [
+    {
+      success: false,
+      testFilePath: '/Users/nonth/Projects/playground/react-native/edot-react-native-sdk/example/react-navigation/e2e/app.test.js',
+      isPermanentFailure: false
+    }
+  ]
+}
+23:16:11.723 detox[62135] [90mi[39m dispatching event to  primary-62134 /tmp/detox.primary-62134  :  reportTestResults , {
+  testResults: [
+    {
+      success: false,
+      testFilePath: '/Users/nonth/Projects/playground/react-native/edot-react-native-sdk/example/react-navigation/e2e/app.test.js',
+      testExecError: undefined,
+      isPermanentFailure: false
+    }
+  ]
+}
+23:16:11.724 detox[62134] [90mi[39m broadcasting event to all known sockets listening to  /tmp/detox.primary-62134  :   sessionStateUpdate {
+  testResults: [
+    {
+      success: false,
+      testFilePath: '/Users/nonth/Projects/playground/react-native/edot-react-native-sdk/example/react-navigation/e2e/app.test.js',
+      isPermanentFailure: false
+    }
+  ]
+}
+23:16:11.724 detox[62135] [90mi[39m ## received events ##
+23:16:11.724 detox[62135] [90mi[39m detected event reportTestResultsDone {
+  testResults: [
+    {
+      success: false,
+      testFilePath: '/Users/nonth/Projects/playground/react-native/edot-react-native-sdk/example/react-navigation/e2e/app.test.js',
+      isPermanentFailure: false
+    }
+  ]
+}
+23:16:11.725 detox[62134] [90mi[39m socket disconnected secondary-62135
+23:16:11.725 detox[62135] [90mi[39m connection closed primary-62134 /tmp/detox.primary-62134 0 tries remaining of 0
+23:16:11.725 detox[62135] [90mi[39m secondary-62135 exceeded connection rety amount of  or stopRetrying flag set.
+23:16:11.833 detox[62134] [90mE[39m Command failed with exit code = 1:
+jest --config e2e/jest.config.js e2e
+23:16:11.834 detox[62134] [90mB[39m cleanup
+  args: ()
+23:16:11.836 detox[62134] [90mE[39m cleanup
+23:16:11.837 detox[62134] [90mi[39m Detox server has been closed gracefully
+23:16:11.838 detox[62134] [90mE[39m node_modules/detox/local-cli/cli.js test --configuration ios.sim.release

@@ -1,4 +1,4 @@
-const { device, element, by, expect } = require('detox');
+const { device, element, by, expect, waitFor } = require('detox');
 
 describe('React Navigation Example', () => {
   beforeAll(async () => { await device.launchApp({ newInstance: true }); });
@@ -38,44 +38,56 @@ describe('React Navigation Example', () => {
   });
 
   describe('Demo Screens', () => {
-    beforeAll(async () => { await element(by.id('tab-demos')).tap(); });
+    beforeAll(async () => {
+      await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-network'))).toBeVisible().withTimeout(3000);
+    });
 
     it('navigates to Network demo and interacts', async () => {
       await element(by.id('demos-btn-network')).tap();
-      await expect(element(by.id('network-btn-fetch'))).toBeVisible();
+      await waitFor(element(by.id('network-btn-fetch'))).toBeVisible().withTimeout(3000);
       await element(by.id('network-btn-fetch')).tap();
       await element(by.id('network-btn-fetch-error')).tap();
       await element(by.id('network-btn-xhr')).tap();
-      await device.pressBack();
+      await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-network'))).toBeVisible().withTimeout(3000);
     });
 
     it('navigates to Tracing demo and interacts', async () => {
       await element(by.id('demos-btn-tracing')).tap();
+      await waitFor(element(by.id('tracing-btn-create-span'))).toBeVisible().withTimeout(3000);
       await element(by.id('tracing-btn-create-span')).tap();
       await element(by.id('tracing-btn-nested-spans')).tap();
-      await device.pressBack();
+      await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-tracing'))).toBeVisible().withTimeout(3000);
     });
 
     it('navigates to Metrics demo and interacts', async () => {
       await element(by.id('demos-btn-metrics')).tap();
+      await waitFor(element(by.id('metrics-btn-counter'))).toBeVisible().withTimeout(3000);
       await element(by.id('metrics-btn-counter')).tap();
       await element(by.id('metrics-btn-histogram')).tap();
       await element(by.id('metrics-btn-updown')).tap();
-      await device.pressBack();
+      await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-metrics'))).toBeVisible().withTimeout(3000);
     });
 
     it('navigates to Logs demo and interacts', async () => {
       await element(by.id('demos-btn-logs')).tap();
+      await waitFor(element(by.id('logs-btn-info'))).toBeVisible().withTimeout(3000);
       await element(by.id('logs-btn-info')).tap();
       await element(by.id('logs-btn-warn')).tap();
       await element(by.id('logs-btn-error')).tap();
-      await device.pressBack();
+      await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-logs'))).toBeVisible().withTimeout(3000);
     });
 
     it('navigates to Error demo and interacts', async () => {
       await element(by.id('demos-btn-errors')).tap();
+      await waitFor(element(by.id('errors-btn-error-boundary'))).toBeVisible().withTimeout(3000);
       await element(by.id('errors-btn-error-boundary')).tap();
-      await device.pressBack();
+      await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-errors'))).toBeVisible().withTimeout(3000);
     });
   });
 });
