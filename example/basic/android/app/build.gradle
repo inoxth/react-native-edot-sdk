@@ -11,9 +11,9 @@ apply plugin: "com.facebook.react"
 react {
     /* Folders — paths adjusted for monorepo (node_modules hoisted to root) */
     root = file("../../")
-    reactNativeDir = file("../../../node_modules/react-native")
-    codegenDir = file("../../../node_modules/@react-native/codegen")
-    cliFile = file("../../../node_modules/react-native/cli.js")
+    reactNativeDir = file("../../node_modules/react-native")
+    codegenDir = file("../../node_modules/@react-native/codegen")
+    cliFile = file("../../node_modules/react-native/cli.js")
 
     /* Variants */
     //   The list of variants to that are debuggable. For those we're going to
@@ -79,6 +79,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        missingDimensionStrategy 'detox', 'full'
     }
     signingConfigs {
         debug {
@@ -103,6 +105,8 @@ android {
 }
 
 dependencies {
+    androidTestImplementation(project(path: ":detox"))
+
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
     implementation("com.facebook.react:flipper-integration")
@@ -114,4 +118,4 @@ dependencies {
     }
 }
 
-apply from: file("../../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
