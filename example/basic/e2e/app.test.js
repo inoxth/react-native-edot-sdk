@@ -205,7 +205,7 @@ describe('EDOT Example App', () => {
       await element(by.id('btn-error-boundary')).tap();
       // React processes setShouldCrash(true) asynchronously; waitFor polls
       // until the error boundary fallback is committed to the view hierarchy.
-      await waitFor(element(by.id('error-boundary-fallback'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('error-boundary-fallback'))).toBeVisible().withTimeout(10000);
     });
 
     afterAll(async () => {

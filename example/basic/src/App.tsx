@@ -67,38 +67,45 @@ function ErrorBoundaryDemo({
   addLog: (msg: string) => void;
 }): React.JSX.Element {
   const [shouldCrash, setShouldCrash] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
 
-  if (shouldCrash) {
-    return (
-      <EdotErrorBoundary
-        fallback={
-          <View testID="error-boundary-fallback" style={styles.errorFallback}>
-            <Text style={styles.errorFallbackText}>
-              Caught by EdotErrorBoundary
-            </Text>
-            <Button
-              title="Reset"
-              onPress={() => setShouldCrash(false)}
-              color="#999"
-            />
-          </View>
-        }
-      >
-        <CrashingComponent />
-      </EdotErrorBoundary>
-    );
-  }
-
+  // Keep EdotErrorBoundary always mounted so it is a committed boundary
+  // when CrashingComponent throws. If it were conditionally mounted in
+  // the same render that causes the throw, React 18 concurrent mode may
+  // route the error to the outer boundary instead.
   return (
-    <Button
-      testID="btn-error-boundary"
-      title="Error Boundary"
-      color="#FF3B30"
-      onPress={() => {
-        addLog('Triggering ErrorBoundary crash');
-        setShouldCrash(true);
-      }}
-    />
+    <EdotErrorBoundary
+      key={resetKey}
+      fallback={
+        <View testID="error-boundary-fallback" style={styles.errorFallback}>
+          <Text style={styles.errorFallbackText}>
+            Caught by EdotErrorBoundary
+          </Text>
+          <Button
+            title="Reset"
+            onPress={() => {
+              setShouldCrash(false);
+              setResetKey((k) => k + 1);
+            }}
+            color="#999"
+          />
+        </View>
+      }
+    >
+      {shouldCrash ? (
+        <CrashingComponent />
+      ) : (
+        <Button
+          testID="btn-error-boundary"
+          title="Error Boundary"
+          color="#FF3B30"
+          onPress={() => {
+            addLog('Triggering ErrorBoundary crash');
+            setShouldCrash(true);
+          }}
+        />
+      )}
+    </EdotErrorBoundary>
   );
 }
 
