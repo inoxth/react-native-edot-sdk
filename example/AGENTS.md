@@ -31,9 +31,11 @@ Each app has:
 - `.detoxrc.js` — App-specific Detox config (iOS simulator, iPhone 17 Pro, iOS 26.4)
 
 ```bash
-# From inside each app directory:
-yarn e2e:build    # xcodebuild Release iphonesimulator
-yarn e2e:test     # detox test --configuration ios.sim.release
+# From inside each app directory (e.g. example/basic/):
+yarn e2e:build:ios      # xcodebuild Release iphonesimulator
+yarn e2e:test:ios       # detox test --configuration ios.sim.release
+yarn e2e:build:android  # gradlew assembleRelease assembleAndroidTest
+yarn e2e:test:android   # detox test --configuration android.emu.release (requires Pixel_7_API_34 AVD)
 ```
 
 ### E2E Patterns (iOS Simulator)

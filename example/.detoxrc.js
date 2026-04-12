@@ -1,4 +1,4 @@
-/** @type {Detox.DetoxConfig} */
+/** @type {import('detox').DetoxConfig} */
 module.exports = {
   logger: {
     level: process.env.CI ? 'debug' : 'info',
@@ -29,11 +29,21 @@ module.exports = {
       binaryPath: 'ios/build/Build/Products/Release-iphonesimulator/EdotExample.app',
       build: "xcodebuild -workspace ios/EdotExample.xcworkspace -scheme EdotExample -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.4' -derivedDataPath ios/build",
     },
+    'android.debug': {
+      type: 'android.apk',
+      binaryPath: 'android/app/build/outputs/apk/debug/app-debug.apk',
+      testBinaryPath: 'android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk',
+      build: 'cd android && ./gradlew assembleDebug assembleDebugAndroidTest && cd ..',
+    },
   },
   devices: {
     simulator: {
       type: 'ios.simulator',
       device: { type: 'iPhone 17 Pro' },
+    },
+    emulator: {
+      type: 'android.emulator',
+      device: { avdName: 'Pixel_XL_API_32' },
     },
   },
   configurations: {
@@ -44,6 +54,10 @@ module.exports = {
     'ios.sim.release': {
       device: 'simulator',
       app: 'ios.sim.release',
+    },
+    'android.emu.debug': {
+      device: 'emulator',
+      app: 'android.debug',
     },
   },
 };

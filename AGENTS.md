@@ -18,9 +18,11 @@ yarn build                        # bob build for all @inox/* packages
 # Single test file
 yarn jest packages/react-native/src/__tests__/errors.test.ts
 
-# E2E (run from example/)
-cd example && npx detox build --configuration ios.sim.release
-cd example && npx detox test --configuration ios.sim.release
+# E2E (run from each example app directory, e.g. example/basic/)
+yarn e2e:build:ios     # build for iOS simulator
+yarn e2e:test:ios      # run tests on iOS simulator
+yarn e2e:build:android # build for Android emulator
+yarn e2e:test:android  # run tests on Android emulator (requires Pixel_7_API_34 AVD)
 ```
 
 ## Project Structure
