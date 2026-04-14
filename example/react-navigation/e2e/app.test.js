@@ -1,7 +1,11 @@
 const { device, element, by, expect, waitFor } = require('detox');
 
 describe('React Navigation Example', () => {
-  beforeAll(async () => { await device.launchApp({ newInstance: true }); });
+  beforeAll(async () => {
+    await device.launchApp({ newInstance: true });
+    await device.disableSynchronization();
+    await waitFor(element(by.id('tab-home'))).toBeVisible().withTimeout(10000);
+  });
 
   describe('Tab Navigation', () => {
     it('shows bottom tabs', async () => {

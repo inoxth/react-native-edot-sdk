@@ -11,6 +11,8 @@ async function navigateBack() {
 describe('EDOT Wix Navigation Example', () => {
   beforeAll(async () => {
     await device.launchApp({ newInstance: true });
+    await device.disableSynchronization();
+    await waitFor(element(by.id('home-status'))).toBeVisible().withTimeout(10000);
   });
 
   describe('Tab navigation', () => {
