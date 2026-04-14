@@ -54,17 +54,15 @@ export default function ErrorsDemo(): React.ReactElement {
           <Text style={styles.buttonText}>Native Crash (placeholder)</Text>
         </TouchableOpacity>
 
-        {showCrashy ? (
-          <EdotErrorBoundary
-            fallback={
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>Caught by EdotErrorBoundary</Text>
-              </View>
-            }
-          >
-            <CrashyComponent />
-          </EdotErrorBoundary>
-        ) : null}
+        <EdotErrorBoundary
+          fallback={
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>Caught by EdotErrorBoundary</Text>
+            </View>
+          }
+        >
+          {showCrashy ? <CrashyComponent /> : null}
+        </EdotErrorBoundary>
 
         {result ? <Text style={styles.result}>{result}</Text> : null}
       </ScrollView>

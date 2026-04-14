@@ -54,23 +54,21 @@ export function ErrorDemo(): React.JSX.Element {
           <Button testID="errors-btn-native-crash" title="Native Crash" onPress={handleNativeCrash} />
         </View>
 
-        {showCrashy && (
-          <EdotErrorBoundary
-            fallback={
-              <View style={styles.section}>
-                <Text style={styles.errorText}>ErrorBoundary caught the crash</Text>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => setShowCrashy(false)}
-                >
-                  <Text style={styles.buttonText}>Reset</Text>
-                </TouchableOpacity>
-              </View>
-            }
-          >
-            <CrashyComponent />
-          </EdotErrorBoundary>
-        )}
+        <EdotErrorBoundary
+          fallback={
+            <View style={styles.section}>
+              <Text style={styles.errorText}>ErrorBoundary caught the crash</Text>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => setShowCrashy(false)}
+              >
+                <Text style={styles.buttonText}>Reset</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        >
+          {showCrashy && <CrashyComponent />}
+        </EdotErrorBoundary>
 
         <View style={styles.section}>
           <Text style={styles.label}>Log:</Text>
