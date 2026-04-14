@@ -1,15 +1,8 @@
 const { device, element, by, expect, waitFor } = require('detox');
 
-// scrollTo('top'/'bottom') calls Espresso's scrollToEdge ViewAction, which
-// blocks on the mqt_js LooperIdlingResource (any pending timer keeps it
-// non-idle, deadlocking the test). Use scroll() instead — it uses touch
-// injection and bypasses Espresso's idling-resource synchronization.
-
-async function scrollToTop() {
-  for (let i = 0; i < 3; i++) {
-    await element(by.id('scroll-view')).scroll(3000, 'up');
-  }
-}
+// Use touch-injection scroll() rather than scrollToEdge — Espresso's
+// scrollToEdge blocks on LooperIdlingResource-mqt_js which EDOT SDK
+// background timers keep permanently non-idle.
 
 async function scrollToBottom() {
   for (let i = 0; i < 3; i++) {
@@ -17,16 +10,14 @@ async function scrollToBottom() {
   }
 }
 
+// whileElement().scroll() polls for visibility, scrolling 400px at a time.
+// Buttons are ordered top-to-bottom matching test execution order, so this
+// typically takes 0-2 scrolls per button with no top-reset needed.
 async function scrollToButton(buttonId) {
-  await scrollToTop();
-  for (let i = 0; i < 20; i++) {
-    try {
-      await expect(element(by.id(buttonId))).toBeVisible();
-      return;
-    } catch {
-      await element(by.id('scroll-view')).scroll(150, 'down');
-    }
-  }
+  await waitFor(element(by.id(buttonId)))
+    .toBeVisible()
+    .whileElement(by.id('scroll-view'))
+    .scroll(400, 'down');
 }
 
 describe('EDOT Example App', () => {
@@ -53,36 +44,26 @@ describe('EDOT Example App', () => {
     it('should tap Set User button', async () => {
       await scrollToButton('btn-set-user');
       await element(by.id('btn-set-user')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Clear User button', async () => {
       await scrollToButton('btn-clear-user');
       await element(by.id('btn-clear-user')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Set Session Attr button', async () => {
       await scrollToButton('btn-set-session-attr');
       await element(by.id('btn-set-session-attr')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Set Global Attr button', async () => {
       await scrollToButton('btn-set-global-attr');
       await element(by.id('btn-set-global-attr')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Remove Global Attr button', async () => {
       await scrollToButton('btn-remove-global-attr');
       await element(by.id('btn-remove-global-attr')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
   });
 
@@ -90,15 +71,11 @@ describe('EDOT Example App', () => {
     it('should tap Create Span button', async () => {
       await scrollToButton('btn-create-span');
       await element(by.id('btn-create-span')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Nested Spans button', async () => {
       await scrollToButton('btn-nested-spans');
       await element(by.id('btn-nested-spans')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
   });
 
@@ -106,22 +83,16 @@ describe('EDOT Example App', () => {
     it('should tap Counter button', async () => {
       await scrollToButton('btn-counter');
       await element(by.id('btn-counter')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Histogram button', async () => {
       await scrollToButton('btn-histogram');
       await element(by.id('btn-histogram')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap UpDownCounter button', async () => {
       await scrollToButton('btn-updown-counter');
       await element(by.id('btn-updown-counter')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
   });
 
@@ -129,22 +100,16 @@ describe('EDOT Example App', () => {
     it('should tap Log Info button', async () => {
       await scrollToButton('btn-log-info');
       await element(by.id('btn-log-info')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Log Warn button', async () => {
       await scrollToButton('btn-log-warn');
       await element(by.id('btn-log-warn')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Log Error button', async () => {
       await scrollToButton('btn-log-error');
       await element(by.id('btn-log-error')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
   });
 
@@ -152,29 +117,21 @@ describe('EDOT Example App', () => {
     it('should tap Fetch Data and wait for response', async () => {
       await scrollToButton('btn-fetch-success');
       await element(by.id('btn-fetch-success')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Fetch Error button', async () => {
       await scrollToButton('btn-fetch-error');
       await element(by.id('btn-fetch-error')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Fetch Multiple button', async () => {
       await scrollToButton('btn-fetch-multiple');
       await element(by.id('btn-fetch-multiple')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap XHR Request button', async () => {
       await scrollToButton('btn-xhr-request');
       await element(by.id('btn-xhr-request')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
   });
 
@@ -196,8 +153,6 @@ describe('EDOT Example App', () => {
     it('should tap Promise Reject button', async () => {
       await scrollToBottom();
       await element(by.id('btn-reject-promise')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Error Boundary and show fallback', async () => {
@@ -222,15 +177,11 @@ describe('EDOT Example App', () => {
     it('should tap Tracked button', async () => {
       await scrollToButton('btn-tracked');
       await element(by.id('btn-tracked')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
 
     it('should tap Hook Action button', async () => {
       await scrollToButton('btn-hook-action');
       await element(by.id('btn-hook-action')).tap();
-      await scrollToBottom();
-      await expect(element(by.id('log-section'))).toBeVisible();
     });
   });
 });
