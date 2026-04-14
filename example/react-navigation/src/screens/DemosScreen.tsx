@@ -1,10 +1,10 @@
 import React from 'react';
 import {
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
@@ -31,7 +31,7 @@ export function DemosScreen(): React.JSX.Element {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView testID="demos-scroll" style={styles.scroll} contentContainerStyle={styles.content}>
         <Text style={styles.title}>SDK Demos</Text>
         {DEMO_SCREENS.map((screen) => (
           <TouchableOpacity
@@ -44,13 +44,14 @@ export function DemosScreen(): React.JSX.Element {
             <Text style={styles.arrow}>{'>'}</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
+  scroll: { flex: 1 },
   content: { padding: 16 },
   title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, color: '#333' },
   row: {

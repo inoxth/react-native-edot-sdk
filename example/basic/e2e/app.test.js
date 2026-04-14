@@ -163,12 +163,11 @@ describe('EDOT Example App', () => {
     it('should tap Error Boundary and show fallback', async () => {
       await scrollToButton('btn-error-boundary');
       await element(by.id('btn-error-boundary')).tap();
-      // The fallback view is taller than the button it replaces and may extend
-      // below the viewport. whileElement().scroll() scrolls down until visible.
+      // The fallback renders in-place where the button was (already scrolled into view).
+      // On Android debug, LogBox steals window focus preventing scroll interactions.
       await waitFor(element(by.id('error-boundary-fallback')))
         .toBeVisible()
-        .whileElement(by.id('scroll-view'))
-        .scroll(100, 'down');
+        .withTimeout(10000);
     });
 
     afterAll(async () => {
