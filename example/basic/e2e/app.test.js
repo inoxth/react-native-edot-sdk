@@ -6,7 +6,12 @@ const { device, element, by, expect, waitFor } = require('detox');
 
 async function scrollToBottom() {
   for (let i = 0; i < 3; i++) {
-    await element(by.id('scroll-view')).scroll(3000, 'down');
+    try {
+      await element(by.id('scroll-view')).scroll(3000, 'down');
+    } catch {
+      // iOS throws "unable to scroll" when already at the bottom — treat as done
+      break;
+    }
   }
 }
 
@@ -137,7 +142,7 @@ describe('EDOT Example App', () => {
 
   describe('Error Tracing', () => {
     it('should tap JS Error button and reload after crash', async () => {
-      await scrollToBottom();
+      await scrollToButton('btn-throw-error');
       try {
         await element(by.id('btn-throw-error')).tap();
         // Give the setTimeout a moment to fire before Detox detects the crash
@@ -151,16 +156,19 @@ describe('EDOT Example App', () => {
     });
 
     it('should tap Promise Reject button', async () => {
-      await scrollToBottom();
+      await scrollToButton('btn-reject-promise');
       await element(by.id('btn-reject-promise')).tap();
     });
 
     it('should tap Error Boundary and show fallback', async () => {
-      await scrollToBottom();
+      await scrollToButton('btn-error-boundary');
       await element(by.id('btn-error-boundary')).tap();
-      // React processes setShouldCrash(true) asynchronously; waitFor polls
-      // until the error boundary fallback is committed to the view hierarchy.
-      await waitFor(element(by.id('error-boundary-fallback'))).toBeVisible().withTimeout(10000);
+      // The fallback view is taller than the button it replaces and may extend
+      // below the viewport. whileElement().scroll() scrolls down until visible.
+      await waitFor(element(by.id('error-boundary-fallback')))
+        .toBeVisible()
+        .whileElement(by.id('scroll-view'))
+        .scroll(100, 'down');
     });
 
     afterAll(async () => {
