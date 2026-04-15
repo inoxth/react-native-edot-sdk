@@ -83,13 +83,8 @@ metro.config.js.map
 # Native build artifacts
 *.orig
 
-# Detox artifacts
-example/artifacts/
-
 # Turborepo
 .turbo/
 
 # Claude Code
 .claude/tsc-cache/
-
-artifacts/

@@ -14,14 +14,13 @@ context:
     - Swift 5.10+ (iOS native module)
     - Kotlin (Android native module)
     - Jest (unit testing)
-    - Detox (E2E testing)
     - react-native-builder-bob (library build)
     - Yarn Workspaces (monorepo)
     - Changesets (versioning)
 
   conventions:
     file_structure: "monorepo with packages/ directory"
-    testing_framework: "Jest for unit, Detox for E2E"
+    testing_framework: "Jest for unit"
     code_style: "ESLint + Prettier, strict TypeScript"
     native_ios: "Swift with ObjC bridge headers"
     native_android: "Kotlin with ReactContextBaseJavaModule"
