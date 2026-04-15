@@ -1,6 +1,5 @@
 'use strict';
 
-const { NativeModules } = require('react-native');
 const React = require('react');
 const { View } = require('react-native');
 
@@ -11,33 +10,46 @@ global.__edotSpy = {
   logEmissions: 0,
 };
 
-const nativeModule = NativeModules.EdotReactNative;
-if (nativeModule) {
-  const origStartSpan = nativeModule.startSpan.bind(nativeModule);
-  nativeModule.startSpan = function (name) {
-    if (typeof name === 'string' && (name.startsWith('HTTP ') || name.startsWith('GraphQL:'))) {
-      global.__edotSpy.networkSpans++;
-    }
-    return origStartSpan.apply(this, arguments);
-  };
-
-  const origReportJsException = nativeModule.reportJsException.bind(nativeModule);
-  nativeModule.reportJsException = function () {
-    global.__edotSpy.errorReports++;
-    return origReportJsException.apply(this, arguments);
-  };
-
-  const origRecordMetric = nativeModule.recordMetric.bind(nativeModule);
-  nativeModule.recordMetric = function () {
-    global.__edotSpy.metricRecords++;
-    return origRecordMetric.apply(this, arguments);
-  };
-
-  const origEmitLog = nativeModule.emitLog.bind(nativeModule);
-  nativeModule.emitLog = function () {
-    global.__edotSpy.logEmissions++;
-    return origEmitLog.apply(this, arguments);
-  };
+// Require the SDK's nativeModule via the metro subpath alias so we get the
+// exact same cached module object that fetch.ts / errors.ts / metrics access.
+// We replace the EdotNativeModule export property with a Proxy so that every
+// live _nativeModule.EdotNativeModule property lookup in the SDK picks up our
+// wrapper, without needing to mutate the TurboModule host object directly.
+const nativeMod = require('@inox/react-native-edot-sdk/nativeModule');
+if (nativeMod && nativeMod.EdotNativeModule) {
+  const original = nativeMod.EdotNativeModule;
+  nativeMod.EdotNativeModule = new Proxy(original, {
+    get(target, prop) {
+      const value = target[prop];
+      if (prop === 'startSpan') {
+        return function (name) {
+          if (typeof name === 'string' && (name.startsWith('HTTP ') || name.startsWith('GraphQL:'))) {
+            global.__edotSpy.networkSpans++;
+          }
+          return value.apply(target, arguments);
+        };
+      }
+      if (prop === 'reportJsException') {
+        return function () {
+          global.__edotSpy.errorReports++;
+          return value.apply(target, arguments);
+        };
+      }
+      if (prop === 'recordMetric') {
+        return function () {
+          global.__edotSpy.metricRecords++;
+          return value.apply(target, arguments);
+        };
+      }
+      if (prop === 'emitLog') {
+        return function () {
+          global.__edotSpy.logEmissions++;
+          return value.apply(target, arguments);
+        };
+      }
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
 }
 
 function SdkSpyOverlay() {
