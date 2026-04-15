@@ -285,14 +285,6 @@ yarn build              # Build all packages
 
 Each example uses `.env` for configuration. Copy `.env.example` to `.env` and fill in your EDOT server details.
 
-Each example has Detox E2E tests:
-
-```bash
-cd example/<app-name>
-yarn e2e:build    # xcodebuild Release for iOS Simulator
-yarn e2e:test     # run Detox tests
-```
-
 ## License
 
 MIT

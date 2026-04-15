@@ -21,10 +21,6 @@ import { MetricsDemo } from './screens/MetricsDemo';
 import { LogsDemo } from './screens/LogsDemo';
 import { ErrorDemo } from './screens/ErrorDemo';
 
-declare global {
-  var __edotSpy: Record<string, number> & { SdkSpyOverlay?: React.ComponentType } | undefined;
-}
-
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
 const DemosStack = createNativeStackNavigator();
@@ -65,7 +61,6 @@ function screenNameMapper(routeName: string): string {
 
 export function App(): React.JSX.Element {
   const [sdkReady, setSdkReady] = useState(false);
-  const SpyOverlay: React.ComponentType | null = global.__edotSpy?.SdkSpyOverlay ?? null;
   const edotNav = useRef(
     createEdotNavigationContainerRef({ screenNameMapper }),
   );
@@ -95,48 +90,45 @@ export function App(): React.JSX.Element {
   }, []);
 
   return (
-    <>
-      <NavigationContainer
-        ref={edotNav.current.navigationRef}
-        onReady={edotNav.current.onReady}
-        onStateChange={edotNav.current.onStateChange}
+    <NavigationContainer
+      ref={edotNav.current.navigationRef}
+      onReady={edotNav.current.onReady}
+      onStateChange={edotNav.current.onStateChange}
+    >
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarLabelStyle: { fontSize: 12 },
+        }}
       >
-        <Tab.Navigator
-          screenOptions={{
-            headerShown: false,
-            tabBarLabelStyle: { fontSize: 12 },
+        <Tab.Screen
+          name="HomeTab"
+          component={HomeStackScreen}
+          options={{
+            tabBarLabel: 'Home',
+            tabBarTestID: 'tab-home',
+            tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>H</Text>,
           }}
-        >
-          <Tab.Screen
-            name="HomeTab"
-            component={HomeStackScreen}
-            options={{
-              tabBarLabel: 'Home',
-              tabBarTestID: 'tab-home',
-              tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>H</Text>,
-            }}
-          />
-          <Tab.Screen
-            name="DemosTab"
-            component={DemosStackScreen}
-            options={{
-              tabBarLabel: 'Demos',
-              tabBarTestID: 'tab-demos',
-              tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>D</Text>,
-            }}
-          />
-          <Tab.Screen
-            name="SettingsTab"
-            component={SettingsStackScreen}
-            options={{
-              tabBarLabel: 'Settings',
-              tabBarTestID: 'tab-settings',
-              tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>S</Text>,
-            }}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
-      {SpyOverlay != null && <SpyOverlay />}
-    </>
+        />
+        <Tab.Screen
+          name="DemosTab"
+          component={DemosStackScreen}
+          options={{
+            tabBarLabel: 'Demos',
+            tabBarTestID: 'tab-demos',
+            tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>D</Text>,
+          }}
+        />
+        <Tab.Screen
+          name="SettingsTab"
+          component={SettingsStackScreen}
+          options={{
+            tabBarLabel: 'Settings',
+            tabBarTestID: 'tab-settings',
+            tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>S</Text>,
+          }}
+        />
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }

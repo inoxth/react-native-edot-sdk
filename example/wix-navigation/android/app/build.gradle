@@ -79,8 +79,6 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-        missingDimensionStrategy 'detox', 'full'
     }
     signingConfigs {
         debug {
@@ -105,8 +103,6 @@ android {
 }
 
 dependencies {
-    androidTestImplementation(project(path: ":detox"))
-
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
     implementation("com.facebook.react:flipper-integration")

@@ -17,12 +17,6 @@ yarn build                        # bob build for all @inox/* packages
 
 # Single test file
 yarn jest packages/react-native/src/__tests__/errors.test.ts
-
-# E2E (run from each example app directory, e.g. example/basic/)
-yarn e2e:build:ios     # build for iOS simulator
-yarn e2e:test:ios      # run tests on iOS simulator
-yarn e2e:build:android # build for Android emulator
-yarn e2e:test:android  # run tests on Android emulator (requires Pixel_7_API_34 AVD)
 ```
 
 ## Project Structure
@@ -36,7 +30,7 @@ packages/
 ├── react-native-wix-navigation/   # @inox/react-native-edot-wix-navigation
 ├── react-native-tracer-provider/  # @inox/react-native-edot-tracer-provider
 └── cli/                           # @inox/react-native-edot-cli
-example/                           # 4 demo apps with Detox E2E tests (see example/AGENTS.md)
+example/                           # 4 demo apps (see example/AGENTS.md)
 openspec/                          # OpenSpec specs and change tracking
 ```
 
@@ -59,6 +53,12 @@ Each package has its own `CLAUDE.md` and `AGENTS.md` with detailed documentation
 ### Native Bridge
 
 `EdotNativeModule` (`packages/react-native/src/nativeModule.ts`) is the single gateway to native code. It loads the native module with TurboModule-first fallback to `NativeModules`, then a no-op Proxy when neither is available. The TurboModule spec is `NativeEdotReactNative.ts`. Span creation (`startSpan`) returns a span ID synchronously — the native side holds the actual span in a thread-safe registry.
+
+### Native Module — Platform Differences
+
+**iOS** (`packages/react-native/ios/`): Swift implementation gated by `#if ELASTIC_APM_AVAILABLE`. `EdotReactNative.swift` calls `ElasticApmAgent` directly. `EdotReactNativeAgent.swift` allows pre-initialization from AppDelegate before the JS bridge loads. Source files are included directly in example app Xcode targets (not as a Pod) because ElasticApm is distributed via SPM and pods cannot declare SPM dependencies.
+
+**Android** (`packages/react-native/android/`): Kotlin implementation. `initialize()` does NOT start the agent — the Elastic Gradle plugin handles agent init at build time. Uses `GlobalOpenTelemetry` (OTel global API). `getCurrentSessionId()` returns `""` (Android SDK doesn't expose session ID). The EDOT Gradle plugin (`co.elastic.otel.android.agent`) requires Gradle 8.7+ which is incompatible with RN 0.73 (Gradle 8.3) — it is intentionally not applied in example apps.
 
 ### Initialization Flow
 
@@ -97,6 +97,8 @@ Fetch and XHR are monkey-patched to create OTel spans. They capture `http.method
 | Public API surface | `packages/react-native/src/index.ts` |
 | Config shape / defaults | `types.ts`, `defaults.ts`, `config.ts` |
 | Native method signatures | `NativeEdotReactNative.ts` (TurboModule spec) |
+| iOS native implementation | `packages/react-native/ios/EdotReactNative.swift` |
+| Android native implementation | `packages/react-native/android/src/.../EdotReactNativeModule.kt` |
 | Add new instrumentation | `packages/react-native/src/instrumentation/` — follow fetch.ts pattern |
 | Add navigation plugin | Copy `packages/react-native-navigation/` — same structure |
 | Shared cross-package types | `packages/shared/src/` |
@@ -106,13 +108,13 @@ Fetch and XHR are monkey-patched to create OTel spans. They capture `http.method
 
 ```
 shared (pure JS/TS, no deps)
-  ↓
+  |
 react-native (core SDK, depends: shared)
-  ↓
-  ├── react-native-navigation (depends: sdk + shared)
-  ├── react-native-expo-router (depends: sdk + shared)
-  ├── react-native-wix-navigation (depends: sdk + shared)
-  └── react-native-tracer-provider (depends: sdk only)
+  |
+  +-- react-native-navigation (depends: sdk + shared)
+  +-- react-native-expo-router (depends: sdk + shared)
+  +-- react-native-wix-navigation (depends: sdk + shared)
+  +-- react-native-tracer-provider (depends: sdk only)
 
 cli (standalone Node.js, depends: commander only)
 ```
@@ -120,7 +122,7 @@ cli (standalone Node.js, depends: commander only)
 ## Conventions
 
 ### Tooling
-- **Linting**: oxlint with `correctness: error`, `suspicious: warn`, `typescript/no-explicit-any: error`. Config in `oxlintrc.json`.
+- **Linting**: oxlint with `correctness: error`, `suspicious: warn`, `typescript/no-explicit-any: error`. Config in `oxlintrc.json`. Ignores `node_modules`, `lib`, `*.d.ts`, `example`.
 - **Formatting**: oxfmt — 100 char width, single quotes, trailing commas. Config in `.oxfmtrc.json`. Ignores `node_modules`, `lib`, `*.d.ts`, `example/ios`, `example/android`.
 - **TypeScript**: Strict mode, `moduleResolution: bundler`. Composite project references in root `tsconfig.json`. Each package has `tsconfig.json` + `tsconfig.build.json`.
 - **Package builds**: `react-native-builder-bob` outputs CommonJS + ESM + TypeScript declarations to `lib/`. The CLI package uses plain `tsc`.
@@ -130,7 +132,6 @@ cli (standalone Node.js, depends: commander only)
 - Each package has its own `jest.config.js`.
 - Cross-package imports resolved via `moduleNameMapper` pointing to sibling `src/` dirs (e.g., `'^@inox/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts'`).
 - Mocking pattern: `jest.mock()` for native module, `jest.clearAllMocks()` in `beforeEach()`. All trackers/providers export `resetForTesting()` functions for test isolation.
-- E2E via Detox — all 4 example apps have `e2e/` suites. Elements use `testID` props. See [example/AGENTS.md](./example/AGENTS.md) for patterns.
 
 ### Example Apps
 Four example apps under `example/`, each a yarn workspace member:
@@ -141,9 +142,10 @@ Four example apps under `example/`, each a yarn workspace member:
 - All use `.env` for config (server URL, service name, secret token). Copy `.env.example` to `.env`.
 - Each has `installConfig.hoistingLimits: "workspaces"` so native deps resolve correctly.
 - Metro configs add monorepo root as watch folder + extraNodeModules for `@inox/*` packages.
+- All apps: RN 0.73.6, min iOS 16.0, min Android SDK 24, compile/target SDK 34.
 
 ### OpenSpec Workflow
-Changes tracked in `openspec/changes/` with proposal → design → specs → tasks artifacts. Archived after implementation to `openspec/changes/archive/`. Main specs live in `openspec/specs/`. Use `/opsx:propose`, `/opsx:apply`, `/opsx:archive` skills.
+Changes tracked in `openspec/changes/` with proposal -> design -> specs -> tasks artifacts. Archived after implementation to `openspec/changes/archive/`. Main specs live in `openspec/specs/`. Use `/opsx:propose`, `/opsx:apply`, `/opsx:archive` skills.
 
 ## Anti-Patterns
 
