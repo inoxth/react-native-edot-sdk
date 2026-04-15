@@ -182,6 +182,13 @@ describe('EDOT Wix Navigation Example', () => {
 
     it('should tap Error Boundary', async () => {
       await element(by.id('errors-btn-error-boundary')).tap();
+      // Debug builds show a Render Error overlay — dismiss it before continuing
+      try {
+        await waitFor(element(by.text('Dismiss'))).toBeVisible().withTimeout(3000);
+        await element(by.text('Dismiss')).tap();
+      } catch (_) {
+        // No overlay in release/non-debug builds
+      }
     });
 
     it('should tap Native Crash', async () => {
