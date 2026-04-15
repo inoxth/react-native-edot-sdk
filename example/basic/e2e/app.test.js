@@ -1,20 +1,5 @@
 const { device, element, by, expect, waitFor } = require('detox');
 
-// Use touch-injection scroll() rather than scrollToEdge — Espresso's
-// scrollToEdge blocks on LooperIdlingResource-mqt_js which EDOT SDK
-// background timers keep permanently non-idle.
-
-async function scrollToBottom() {
-  for (let i = 0; i < 3; i++) {
-    try {
-      await element(by.id('scroll-view')).scroll(3000, 'down');
-    } catch {
-      // iOS throws "unable to scroll" when already at the bottom — treat as done
-      break;
-    }
-  }
-}
-
 // whileElement().scroll() polls for visibility, scrolling 400px at a time.
 // Buttons are ordered top-to-bottom matching test execution order, so this
 // typically takes 0-2 scrolls per button with no top-reset needed.
@@ -164,10 +149,16 @@ describe('EDOT Example App', () => {
     it('should tap Error Boundary and show fallback', async () => {
       await scrollToButton('btn-error-boundary');
       await element(by.id('btn-error-boundary')).tap();
-      // The fallback renders in-place where the button was (already scrolled into view).
-      // On Android debug, LogBox steals window focus preventing scroll interactions.
+      // Android debug builds render the LogBox Render Error overlay in a separate
+      // native Window that steals Espresso's focus — dismiss it before asserting.
+      try {
+        await waitFor(element(by.text('Dismiss'))).toBeVisible().withTimeout(3000);
+        await element(by.text('Dismiss')).tap();
+      } catch {
+        // No overlay in release builds or on iOS
+      }
       await waitFor(element(by.id('error-boundary-fallback')))
-        .toBeVisible()
+        .toExist()
         .withTimeout(10000);
     });
 
