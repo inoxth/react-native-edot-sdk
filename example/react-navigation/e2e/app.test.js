@@ -43,9 +43,13 @@ describe('React Navigation Example', () => {
     it('taps user and attribute buttons', async () => {
       await waitFor(element(by.id('home-btn-set-user'))).toBeVisible().withTimeout(3000);
       await element(by.id('home-btn-set-user')).tap();
+      await waitFor(element(by.id('home-btn-clear-user'))).toBeVisible().withTimeout(5000);
       await element(by.id('home-btn-clear-user')).tap();
+      await waitFor(element(by.id('home-btn-set-session-attr'))).toBeVisible().withTimeout(5000);
       await element(by.id('home-btn-set-session-attr')).tap();
+      await waitFor(element(by.id('home-btn-set-global-attr'))).toBeVisible().withTimeout(5000);
       await element(by.id('home-btn-set-global-attr')).tap();
+      await waitFor(element(by.id('home-btn-remove-global-attr'))).toBeVisible().withTimeout(5000);
       await element(by.id('home-btn-remove-global-attr')).tap();
     });
   });
@@ -61,7 +65,9 @@ describe('React Navigation Example', () => {
       await element(by.id('demos-btn-network')).tap();
       await waitFor(element(by.id('network-btn-fetch'))).toBeVisible().withTimeout(5000);
       await element(by.id('network-btn-fetch')).tap();
+      await waitFor(element(by.id('network-btn-fetch-error'))).toBeVisible().withTimeout(5000);
       await element(by.id('network-btn-fetch-error')).tap();
+      await waitFor(element(by.id('network-btn-xhr'))).toBeVisible().withTimeout(5000);
       await element(by.id('network-btn-xhr')).tap();
       await navigateBack();
       await waitFor(element(by.id('demos-btn-network'))).toBeVisible().withTimeout(5000);
@@ -72,6 +78,7 @@ describe('React Navigation Example', () => {
       await element(by.id('demos-btn-tracing')).tap();
       await waitFor(element(by.id('tracing-btn-create-span'))).toBeVisible().withTimeout(5000);
       await element(by.id('tracing-btn-create-span')).tap();
+      await waitFor(element(by.id('tracing-btn-nested-spans'))).toBeVisible().withTimeout(5000);
       await element(by.id('tracing-btn-nested-spans')).tap();
       await navigateBack();
       await waitFor(element(by.id('demos-btn-tracing'))).toBeVisible().withTimeout(5000);
@@ -82,7 +89,9 @@ describe('React Navigation Example', () => {
       await element(by.id('demos-btn-metrics')).tap();
       await waitFor(element(by.id('metrics-btn-counter'))).toBeVisible().withTimeout(5000);
       await element(by.id('metrics-btn-counter')).tap();
+      await waitFor(element(by.id('metrics-btn-histogram'))).toBeVisible().withTimeout(5000);
       await element(by.id('metrics-btn-histogram')).tap();
+      await waitFor(element(by.id('metrics-btn-updown'))).toBeVisible().withTimeout(5000);
       await element(by.id('metrics-btn-updown')).tap();
       await navigateBack();
       await waitFor(element(by.id('demos-btn-metrics'))).toBeVisible().withTimeout(5000);
@@ -93,7 +102,9 @@ describe('React Navigation Example', () => {
       await element(by.id('demos-btn-logs')).tap();
       await waitFor(element(by.id('logs-btn-info'))).toBeVisible().withTimeout(5000);
       await element(by.id('logs-btn-info')).tap();
+      await waitFor(element(by.id('logs-btn-warn'))).toBeVisible().withTimeout(5000);
       await element(by.id('logs-btn-warn')).tap();
+      await waitFor(element(by.id('logs-btn-error'))).toBeVisible().withTimeout(5000);
       await element(by.id('logs-btn-error')).tap();
       await navigateBack();
       await waitFor(element(by.id('demos-btn-logs'))).toBeVisible().withTimeout(5000);
