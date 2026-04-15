@@ -104,6 +104,13 @@ describe('React Navigation Example', () => {
       await element(by.id('demos-btn-errors')).tap();
       await waitFor(element(by.id('errors-btn-error-boundary'))).toBeVisible().withTimeout(5000);
       await element(by.id('errors-btn-error-boundary')).tap();
+      // Debug builds show a Render Error overlay — dismiss it before navigating back
+      try {
+        await waitFor(element(by.text('Dismiss'))).toBeVisible().withTimeout(3000);
+        await element(by.text('Dismiss')).tap();
+      } catch (_) {
+        // No overlay in release/non-debug builds
+      }
       await navigateBack();
       await waitFor(element(by.id('demos-btn-errors'))).toBeVisible().withTimeout(5000);
     });
