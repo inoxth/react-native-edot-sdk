@@ -22,7 +22,7 @@ import { LogsDemo } from './screens/LogsDemo';
 import { ErrorDemo } from './screens/ErrorDemo';
 
 declare global {
-  var __edotSpy: Record<string, number> | undefined;
+  var __edotSpy: Record<string, number> & { SdkSpyOverlay?: React.ComponentType } | undefined;
 }
 
 const Tab = createBottomTabNavigator();
@@ -65,9 +65,7 @@ function screenNameMapper(routeName: string): string {
 
 export function App(): React.JSX.Element {
   const [sdkReady, setSdkReady] = useState(false);
-  const SpyOverlay: React.ComponentType | null = global.__edotSpy != null
-    ? require('../e2e/sdk-spy').SdkSpyOverlay
-    : null;
+  const SpyOverlay: React.ComponentType | null = global.__edotSpy?.SdkSpyOverlay ?? null;
   const edotNav = useRef(
     createEdotNavigationContainerRef({ screenNameMapper }),
   );
