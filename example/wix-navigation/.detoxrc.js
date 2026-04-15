@@ -35,6 +35,12 @@ module.exports = {
       testBinaryPath: 'android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk',
       build: 'cd android && ./gradlew assembleDebug assembleDebugAndroidTest && cd ..',
     },
+    'android.release': {
+      type: 'android.apk',
+      binaryPath: 'android/app/build/outputs/apk/release/app-release.apk',
+      testBinaryPath: 'android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk',
+      build: 'cd android && ./gradlew assembleRelease assembleDebugAndroidTest && cd ..',
+    },
   },
   devices: {
     simulator: {
@@ -50,5 +56,6 @@ module.exports = {
     'ios.sim.debug': { device: 'simulator', app: 'ios.sim.debug' },
     'ios.sim.release': { device: 'simulator', app: 'ios.sim.release' },
     'android.emu.debug': { device: 'emulator', app: 'android.debug' },
+    'android.emu.release': { device: 'emulator', app: 'android.release' },
   },
 };
