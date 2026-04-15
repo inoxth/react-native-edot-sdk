@@ -50,7 +50,7 @@ export function MetricsDemo(): React.JSX.Element {
           <Button title="Increment Counter" onPress={handleCounter} testID="metrics-btn-counter" />
           <Button title="Record Histogram" onPress={handleHistogram} testID="metrics-btn-histogram" />
           <Button title="UpDown +1" onPress={handleUpDownIncrement} testID="metrics-btn-updown" />
-          <Button title="UpDown -1" onPress={handleUpDownDecrement} />
+          <Button title="UpDown -1" onPress={handleUpDownDecrement} testID="metrics-btn-updown-decrement" />
         </View>
 
         <View style={styles.section}>

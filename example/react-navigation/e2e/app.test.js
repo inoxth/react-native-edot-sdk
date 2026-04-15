@@ -67,6 +67,8 @@ describe('React Navigation Example', () => {
       await element(by.id('network-btn-fetch')).tap();
       await waitFor(element(by.id('network-btn-fetch-error'))).toBeVisible().withTimeout(5000);
       await element(by.id('network-btn-fetch-error')).tap();
+      await waitFor(element(by.id('network-btn-fetch-multiple'))).toBeVisible().withTimeout(5000);
+      await element(by.id('network-btn-fetch-multiple')).tap();
       await waitFor(element(by.id('network-btn-xhr'))).toBeVisible().withTimeout(5000);
       await element(by.id('network-btn-xhr')).tap();
       await navigateBack();
@@ -93,6 +95,8 @@ describe('React Navigation Example', () => {
       await element(by.id('metrics-btn-histogram')).tap();
       await waitFor(element(by.id('metrics-btn-updown'))).toBeVisible().withTimeout(5000);
       await element(by.id('metrics-btn-updown')).tap();
+      await waitFor(element(by.id('metrics-btn-updown-decrement'))).toBeVisible().withTimeout(5000);
+      await element(by.id('metrics-btn-updown-decrement')).tap();
       await navigateBack();
       await waitFor(element(by.id('demos-btn-metrics'))).toBeVisible().withTimeout(5000);
     });
@@ -113,13 +117,41 @@ describe('React Navigation Example', () => {
     it('navigates to Error demo and interacts', async () => {
       await waitFor(element(by.id('demos-btn-errors'))).toBeVisible().withTimeout(5000);
       await element(by.id('demos-btn-errors')).tap();
+
+      // Promise reject — non-fatal unhandled rejection
+      await waitFor(element(by.id('errors-btn-promise-reject'))).toBeVisible().withTimeout(5000);
+      await element(by.id('errors-btn-promise-reject')).tap();
+
+      // Native crash — shows an Alert placeholder, dismiss it
+      await waitFor(element(by.id('errors-btn-native-crash'))).toBeVisible().withTimeout(5000);
+      await element(by.id('errors-btn-native-crash')).tap();
+      await waitFor(element(by.text('OK'))).toBeVisible().withTimeout(3000);
+      await element(by.text('OK')).tap();
+
+      // JS error — thrown in setTimeout; fatal in release, red screen in debug
+      await waitFor(element(by.id('errors-btn-js-error'))).toBeVisible().withTimeout(5000);
+      try {
+        await element(by.id('errors-btn-js-error')).tap();
+        await new Promise(r => setTimeout(r, 500));
+      } catch {
+        // Fatal in release mode
+      }
+      // Relaunch to clear the error state, then re-navigate to Error demo
+      await device.launchApp({ newInstance: true });
+      await device.disableSynchronization();
+      await waitFor(element(by.id('tab-home'))).toBeVisible().withTimeout(10000);
+      await element(by.id('tab-demos')).tap();
+      await waitFor(element(by.id('demos-btn-errors'))).toBeVisible().withTimeout(5000);
+      await element(by.id('demos-btn-errors')).tap();
+
+      // Error boundary — triggers a render crash caught by EdotErrorBoundary
       await waitFor(element(by.id('errors-btn-error-boundary'))).toBeVisible().withTimeout(5000);
       await element(by.id('errors-btn-error-boundary')).tap();
       // Debug builds show a Render Error overlay — dismiss it before navigating back
       try {
         await waitFor(element(by.text('Dismiss'))).toBeVisible().withTimeout(3000);
         await element(by.text('Dismiss')).tap();
-      } catch (_) {
+      } catch {
         // No overlay in release/non-debug builds
       }
       await navigateBack();
