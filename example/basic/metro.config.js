@@ -13,6 +13,10 @@ const subpathMap = {
 const config = {
   watchFolders: [root],
   resolver: {
+    extraNodeModules: {
+      '@inox/react-native-edot-sdk': path.resolve(packages, 'react-native'),
+      '@inox/react-native-edot-tracer-provider': path.resolve(packages, 'react-native-tracer-provider'),
+    },
     nodeModulesPaths: [
       path.resolve(__dirname, 'node_modules'),
       path.resolve(root, 'node_modules'),

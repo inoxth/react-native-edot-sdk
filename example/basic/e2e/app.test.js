@@ -31,6 +31,7 @@ describe('EDOT Example App', () => {
     // Disable Detox's JS-thread idle synchronization — the EDOT SDK's background
     // timers keep the thread perpetually non-idle, which would otherwise hang.
     await device.disableSynchronization();
+    await waitFor(element(by.id('title'))).toBeVisible().withTimeout(15000);
   });
 
   it('should show the app title', async () => {
