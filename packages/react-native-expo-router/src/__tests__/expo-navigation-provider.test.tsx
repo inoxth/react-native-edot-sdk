@@ -1,6 +1,6 @@
 import React from 'react';
-// @ts-expect-error -- react-test-renderer types not installed
-import { create, act } from 'react-test-renderer';
+import { View } from 'react-native';
+import { render } from '@testing-library/react-native';
 import { EdotExpoNavigationProvider, resetNativeModuleForTesting } from '../expo-navigation-provider';
 import { ActiveViewContext } from '@inox/react-native-edot-shared';
 
@@ -26,7 +26,7 @@ jest.mock('expo-router', () => ({
 }));
 
 function TestChild(): React.ReactElement {
-  return React.createElement('View');
+  return <View />;
 }
 
 describe('EdotExpoNavigationProvider', () => {
@@ -38,13 +38,11 @@ describe('EdotExpoNavigationProvider', () => {
   });
 
   it('creates initial view span on mount', () => {
-    act(() => {
-      create(
-        React.createElement(EdotExpoNavigationProvider, null,
-          React.createElement(TestChild),
-        ),
-      );
-    });
+    render(
+      <EdotExpoNavigationProvider>
+        <TestChild />
+      </EdotExpoNavigationProvider>,
+    );
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
       'Navigation: /home',
@@ -62,26 +60,21 @@ describe('EdotExpoNavigationProvider', () => {
   });
 
   it('creates new span on pathname change', () => {
-    let renderer: ReturnType<typeof create>;
-    act(() => {
-      renderer = create(
-        React.createElement(EdotExpoNavigationProvider, null,
-          React.createElement(TestChild),
-        ),
-      );
-    });
+    const { rerender } = render(
+      <EdotExpoNavigationProvider>
+        <TestChild />
+      </EdotExpoNavigationProvider>,
+    );
 
     jest.clearAllMocks();
     mockPathname = '/products/42';
     mockNativeModule.startSpan.mockReturnValue('view-span-2');
 
-    act(() => {
-      renderer!.update(
-        React.createElement(EdotExpoNavigationProvider, null,
-          React.createElement(TestChild),
-        ),
-      );
-    });
+    rerender(
+      <EdotExpoNavigationProvider>
+        <TestChild />
+      </EdotExpoNavigationProvider>,
+    );
 
     expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
@@ -98,11 +91,11 @@ describe('EdotExpoNavigationProvider', () => {
     mockPathname = '/products/42';
     const mapper = (path: string) => path.replace(/\/\d+/g, '/:id');
 
-    act(() => {
-      create(
-        React.createElement(EdotExpoNavigationProvider, { screenNameMapper: mapper, children: React.createElement(TestChild) }),
-      );
-    });
+    render(
+      <EdotExpoNavigationProvider screenNameMapper={mapper}>
+        <TestChild />
+      </EdotExpoNavigationProvider>,
+    );
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
       'Navigation: /products/:id',
@@ -112,20 +105,15 @@ describe('EdotExpoNavigationProvider', () => {
   });
 
   it('ends span and clears context on unmount', () => {
-    let renderer: ReturnType<typeof create>;
-    act(() => {
-      renderer = create(
-        React.createElement(EdotExpoNavigationProvider, null,
-          React.createElement(TestChild),
-        ),
-      );
-    });
+    const { unmount } = render(
+      <EdotExpoNavigationProvider>
+        <TestChild />
+      </EdotExpoNavigationProvider>,
+    );
 
     jest.clearAllMocks();
 
-    act(() => {
-      renderer!.unmount();
-    });
+    unmount();
 
     expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
     expect(ActiveViewContext.clearActiveView).toHaveBeenCalled();
