@@ -24,11 +24,10 @@
     "@inox/react-native-edot-shared": "workspace:*"
   },
   "devDependencies": {
-    "expo-router": "^3.0.0",
-    "react": "^18.2.0",
-    "react-native": "^0.73.6",
-    "react-test-renderer": "^18.2.0",
-    "typescript": "~5.4.0"
+    "expo-router": "^55.0.0",
+    "react": "^19.2.3",
+    "react-native": "^0.85.1",
+    "typescript": "~5.8.3"
   },
   "peerDependencies": {
     "expo-router": ">=3.0.0",

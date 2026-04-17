@@ -24,10 +24,10 @@
     "@inox/react-native-edot-shared": "workspace:*"
   },
   "devDependencies": {
-    "@react-navigation/native": "^6.0.0",
-    "react": "^18.2.0",
-    "react-native": "^0.73.6",
-    "typescript": "~5.4.0"
+    "@react-navigation/native": "^7.0.0",
+    "react": "^19.2.3",
+    "react-native": "^0.85.1",
+    "typescript": "~5.8.3"
   },
   "peerDependencies": {
     "@react-navigation/native": ">=6.0.0",
