@@ -7,22 +7,27 @@
   },
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "ios": "react-native run-ios --simulator 'iPhone 17 Pro'",
     "start": "react-native start"
   },
   "dependencies": {
     "@inox/react-native-edot-sdk": "workspace:*",
     "@inox/react-native-edot-tracer-provider": "workspace:*",
     "@inox/react-native-edot-wix-navigation": "workspace:*",
-    "react": "18.2.0",
-    "react-native": "0.73.6",
-    "react-native-navigation": "^7.0.0"
+    "react": "19.2.0",
+    "react-native": "0.83.4",
+    "react-native-navigation": "^8.8.2"
   },
   "devDependencies": {
-    "@react-native/babel-preset": "^0.73.0",
-    "@react-native/metro-config": "^0.73.0",
-    "@react-native/typescript-config": "^0.73.0",
+    "@babel/core": "^7.25.2",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "20.0.0",
+    "@react-native-community/cli-platform-android": "20.0.0",
+    "@react-native-community/cli-platform-ios": "20.0.0",
+    "@react-native/babel-preset": "0.83.4",
+    "@react-native/metro-config": "0.83.4",
+    "@react-native/typescript-config": "0.83.4",
     "react-native-dotenv": "^3.4.11",
-    "typescript": "~5.4.0"
+    "typescript": "~5.8.3"
   }
 }

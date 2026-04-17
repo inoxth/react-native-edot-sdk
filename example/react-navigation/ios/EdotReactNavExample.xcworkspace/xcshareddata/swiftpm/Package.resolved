@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/open-telemetry/opentelemetry-swift-core",
       "state" : {
-        "revision" : "240c8d5e36c3c7b774ed961325369f0b1f2c965f",
-        "version" : "2.3.0"
+        "revision" : "84b9e341cbb7b4dd62cd1b89cd9e008995084132",
+        "version" : "2.4.1"
       }
     },
     {
@@ -159,8 +159,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
       "state" : {
-        "revision" : "8c0f217f01000dd30f60d6e536569ad4e74291f9",
-        "version" : "1.11.0"
+        "revision" : "5073617dac96330a486245e4c0179cb0a6fd2256",
+        "version" : "1.12.0"
       }
     },
     {
@@ -168,8 +168,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-metrics.git",
       "state" : {
-        "revision" : "f17c111cec972c2a4922cef38cf64f76f7e87886",
-        "version" : "2.8.0"
+        "revision" : "c6593dac9d65f2517280d88c430dadffdf259737",
+        "version" : "2.10.0"
       }
     },
     {
@@ -195,8 +195,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio-http2.git",
       "state" : {
-        "revision" : "6d8d596f0a9bfebb925733003731fe2d749b7e02",
-        "version" : "1.42.0"
+        "revision" : "81cc18264f92cd307ff98430f89372711d4f6fe9",
+        "version" : "1.43.0"
       }
     },
     {
