@@ -1,7 +1,6 @@
 import React from 'react';
 import { Text } from 'react-native';
-// @ts-expect-error -- react-test-renderer types not installed
-import { create } from 'react-test-renderer';
+import { render, screen } from '@testing-library/react-native';
 import { EdotErrorBoundary } from '../components/EdotErrorBoundary';
 
 jest.mock('../nativeModule', () => ({
@@ -30,29 +29,29 @@ describe('EdotErrorBoundary', () => {
   });
 
   it('renders children when no error', () => {
-    const tree = create(
+    render(
       <EdotErrorBoundary fallback={<Text>Error</Text>}>
         <GoodComponent />
       </EdotErrorBoundary>,
     );
 
-    expect(tree.toJSON()).toMatchObject({ children: ['Working'] });
+    expect(screen.getByText('Working')).toBeTruthy();
   });
 
   it('renders fallback when child throws', () => {
-    const tree = create(
+    render(
       <EdotErrorBoundary fallback={<Text>Error occurred</Text>}>
         <ThrowingComponent />
       </EdotErrorBoundary>,
     );
 
-    expect(tree.toJSON()).toMatchObject({ children: ['Error occurred'] });
+    expect(screen.getByText('Error occurred')).toBeTruthy();
   });
 
   it('reports error to native module', () => {
     const { EdotNativeModule } = require('../nativeModule');
 
-    create(
+    render(
       <EdotErrorBoundary fallback={<Text>Error</Text>}>
         <ThrowingComponent />
       </EdotErrorBoundary>,

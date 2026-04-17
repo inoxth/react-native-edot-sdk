@@ -1,6 +1,6 @@
 import React from 'react';
-// @ts-expect-error -- react-test-renderer types not installed
-import { create, act } from 'react-test-renderer';
+import { Pressable, Text } from 'react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { withEdotTracking } from '../interactions/with-edot-tracking';
 import { useEdotAction } from '../interactions/use-edot-action';
 import { ActiveViewContext } from '../activeViewContext';
@@ -18,7 +18,11 @@ interface ButtonProps {
 }
 
 function MockButton(props: ButtonProps): React.ReactElement {
-  return React.createElement('button', { onClick: props.onPress }, props.title);
+  return (
+    <Pressable onPress={props.onPress} testID="mock-button">
+      <Text>{props.title}</Text>
+    </Pressable>
+  );
 }
 MockButton.displayName = 'MockButton';
 
@@ -32,15 +36,11 @@ describe('withEdotTracking', () => {
     const TrackedButton = withEdotTracking(MockButton);
     const onPress = jest.fn();
 
-    let renderer: ReturnType<typeof create>;
-    act(() => {
-      renderer = create(React.createElement(TrackedButton, { onPress, title: 'Add' }));
-    });
+    const { getByTestId } = render(
+      <TrackedButton onPress={onPress} title="Add" />,
+    );
 
-    const buttonInstance = renderer.root.findByType(MockButton);
-    act(() => {
-      buttonInstance.props.onPress();
-    });
+    fireEvent.press(getByTestId('mock-button'));
 
     expect(EdotNativeModule.emitLog).toHaveBeenCalledWith(
       'info',
@@ -56,15 +56,11 @@ describe('withEdotTracking', () => {
   it('uses custom action name', () => {
     const TrackedButton = withEdotTracking(MockButton, 'checkout.confirm');
 
-    let renderer: ReturnType<typeof create>;
-    act(() => {
-      renderer = create(React.createElement(TrackedButton, { title: 'Confirm' }));
-    });
+    const { getByTestId } = render(
+      <TrackedButton title="Confirm" />,
+    );
 
-    const buttonInstance = renderer.root.findByType(MockButton);
-    act(() => {
-      buttonInstance.props.onPress();
-    });
+    fireEvent.press(getByTestId('mock-button'));
 
     expect(EdotNativeModule.emitLog).toHaveBeenCalledWith(
       'info',
@@ -77,15 +73,11 @@ describe('withEdotTracking', () => {
     ActiveViewContext.setActiveView({ name: 'CartScreen', spanId: 'span-1' });
     const TrackedButton = withEdotTracking(MockButton);
 
-    let renderer: ReturnType<typeof create>;
-    act(() => {
-      renderer = create(React.createElement(TrackedButton, { title: 'Add' }));
-    });
+    const { getByTestId } = render(
+      <TrackedButton title="Add" />,
+    );
 
-    const buttonInstance = renderer.root.findByType(MockButton);
-    act(() => {
-      buttonInstance.props.onPress();
-    });
+    fireEvent.press(getByTestId('mock-button'));
 
     expect(EdotNativeModule.emitLog).toHaveBeenCalledWith(
       'info',
@@ -104,16 +96,14 @@ describe('useEdotAction', () => {
   function TestComponent({ onReady }: { onReady: (api: ReturnType<typeof useEdotAction>) => void }): React.ReactElement {
     const api = useEdotAction();
     React.useEffect(() => { onReady(api); }, []);
-    return React.createElement('View');
+    return React.createElement(Text, null, 'test');
   }
 
   it('tracks action with attributes', () => {
     let api: ReturnType<typeof useEdotAction> | undefined;
-    act(() => {
-      create(React.createElement(TestComponent, {
-        onReady: (a) => { api = a; },
-      }));
-    });
+    render(
+      <TestComponent onReady={(a) => { api = a; }} />,
+    );
 
     act(() => {
       api?.trackAction('swipe', 'dismiss_card', { 'card.id': '42' });
@@ -134,11 +124,9 @@ describe('useEdotAction', () => {
     ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'span-1' });
 
     let api: ReturnType<typeof useEdotAction> | undefined;
-    act(() => {
-      create(React.createElement(TestComponent, {
-        onReady: (a) => { api = a; },
-      }));
-    });
+    render(
+      <TestComponent onReady={(a) => { api = a; }} />,
+    );
 
     act(() => {
       api?.trackAction('tap', 'login');
@@ -153,11 +141,9 @@ describe('useEdotAction', () => {
 
   it('works without active view', () => {
     let api: ReturnType<typeof useEdotAction> | undefined;
-    act(() => {
-      create(React.createElement(TestComponent, {
-        onReady: (a) => { api = a; },
-      }));
-    });
+    render(
+      <TestComponent onReady={(a) => { api = a; }} />,
+    );
 
     act(() => {
       api?.trackAction('tap', 'login');
