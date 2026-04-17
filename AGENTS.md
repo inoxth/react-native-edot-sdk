@@ -58,7 +58,7 @@ Each package has its own `CLAUDE.md` and `AGENTS.md` with detailed documentation
 
 **iOS** (`packages/react-native/ios/`): Swift implementation gated by `#if ELASTIC_APM_AVAILABLE`. `EdotReactNative.swift` calls `ElasticApmAgent` directly. `EdotReactNativeAgent.swift` allows pre-initialization from AppDelegate before the JS bridge loads. Source files are included directly in example app Xcode targets (not as a Pod) because ElasticApm is distributed via SPM and pods cannot declare SPM dependencies.
 
-**Android** (`packages/react-native/android/`): Kotlin implementation. `initialize()` does NOT start the agent — the Elastic Gradle plugin handles agent init at build time. Uses `GlobalOpenTelemetry` (OTel global API). `getCurrentSessionId()` returns `""` (Android SDK doesn't expose session ID). The EDOT Gradle plugin (`co.elastic.otel.android.agent`) requires Gradle 8.7+ which is incompatible with RN 0.73 (Gradle 8.3) — it is intentionally not applied in example apps.
+**Android** (`packages/react-native/android/`): Kotlin implementation. `initialize()` does NOT start the agent — the Elastic Gradle plugin handles agent init at build time. Uses `GlobalOpenTelemetry` (OTel global API). `getCurrentSessionId()` returns `""` (Android SDK doesn't expose session ID). The EDOT Gradle plugin (`co.elastic.otel.android.agent`) v1.5.0 requires Gradle 8.7+, AGP 8.9.1+, and compileSdk 36. It is applied in all example apps.
 
 ### Initialization Flow
 
@@ -142,7 +142,7 @@ Four example apps under `example/`, each a yarn workspace member:
 - All use `.env` for config (server URL, service name, secret token). Copy `.env.example` to `.env`.
 - Each has `installConfig.hoistingLimits: "workspaces"` so native deps resolve correctly.
 - Metro configs add monorepo root as watch folder + extraNodeModules for `@inox/*` packages.
-- All apps: RN 0.73.6, min iOS 16.0, min Android SDK 24, compile/target SDK 34.
+- RN versions vary by navigation library compatibility: basic + react-navigation use RN 0.85.1, expo-router + wix-navigation use RN 0.83.4. Min iOS 16.0, min Android SDK 24, compile/target SDK 36.
 
 ### OpenSpec Workflow
 Changes tracked in `openspec/changes/` with proposal -> design -> specs -> tasks artifacts. Archived after implementation to `openspec/changes/archive/`. Main specs live in `openspec/specs/`. Use `/opsx:propose`, `/opsx:apply`, `/opsx:archive` skills.

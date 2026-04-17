@@ -23,7 +23,14 @@ example/
 
 ## Platform Versions
 
-All apps: RN 0.73.6, React 18.2.0, Hermes engine, min iOS 16.0, min Android SDK 24, compile/target SDK 34.
+Hermes engine, min iOS 16.0, min Android SDK 24, compile/target SDK 36. RN versions vary by navigation library compatibility:
+
+| App | RN | React |
+|---|---|---|
+| `basic/` | 0.85.1 | 19.2.3 |
+| `react-navigation/` | 0.85.1 | 19.2.3 |
+| `expo-router/` | 0.83.4 | 19.2.0 |
+| `wix-navigation/` | 0.83.4 | 19.2.0 |
 
 ## SDK Initialization Pattern
 
@@ -54,11 +61,11 @@ All apps share this monorepo Metro config pattern:
 
 ## iOS Native Setup
 
-All Podfiles share: `platform :ios, '16.0'`, `use_native_modules!`, Flipper via `NO_FLIPPER` env var. EDOT SDK source files are included directly in Xcode targets (not as a Pod) — ElasticApm is an SPM dependency that pods cannot express.
+All Podfiles share: `platform :ios, '16.0'`, `use_native_modules!`. EDOT SDK source files are included directly in Xcode targets (not as a Pod) — ElasticApm is an SPM dependency that pods cannot express. The wix-navigation and expo-router Podfiles include a `post_install` patch to disable `FMT_USE_CONSTEVAL` for Xcode 26 Apple clang compatibility.
 
 ## Android Native Setup
 
-All apps: Gradle 8.3 (RN 0.73 default). EDOT Gradle plugin (`co.elastic.otel.android.agent`) intentionally not applied — requires Gradle 8.7+. React root set to `../../` for monorepo hoisted `node_modules`.
+EDOT Gradle plugin (`co.elastic.otel.android.agent`) v1.5.0 applied in all apps. Requires AGP 8.9.1+, compileSdk 36, and Kotlin stdlib force-resolution to match the build's Kotlin version (prevents EDOT transitive deps from pulling incompatible versions). Monorepo root set to `../../../../` from `android/app/` (react root). Each app's `node_modules/` is local due to `hoistingLimits: "workspaces"`.
 
 ## Per-App Notes
 
