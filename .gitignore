@@ -32,6 +32,7 @@ build/
 *.mode1v3
 *.mode2v3
 DerivedData/
+.xcode.env.local
 
 # Android
 *.apk
@@ -47,6 +48,7 @@ app/build/
 .externalNativeBuild/
 .cxx/
 captures/
+.kotlin/
 
 # IDE
 .idea/
