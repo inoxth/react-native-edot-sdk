@@ -46,13 +46,14 @@ The SDK SHALL apply these defaults when optional fields are omitted: `exportProt
 - **THEN** `debug` is `false`
 
 ### Requirement: Native pre-initialization support
-The native modules SHALL expose a `preInitialize(serverUrl, secretToken?)` static method callable from AppDelegate (iOS) or MainApplication (Android). This SHALL start the native EDOT agent with minimal config for early crash capture. A subsequent JS `initialize()` call SHALL merge JS-specific config without restarting the agent.
+The native modules SHALL expose a `preInitialize(serverUrl, secretToken?, serviceName?, serviceVersion?, deploymentEnvironment?)` static method callable from AppDelegate (iOS) or MainApplication (Android). This SHALL start the native EDOT agent with minimal config for early crash capture. Any provided `serviceName`/`serviceVersion`/`deploymentEnvironment` SHALL be injected into the OpenTelemetry `Resource` so emitted telemetry carries the correct service identity from the first span onward. A subsequent JS `initialize()` call SHALL merge JS-specific config without restarting the agent.
 
 #### Scenario: Pre-init followed by JS init
-- **GIVEN** `EdotReactNativeAgent.preInitialize(serverUrl, secretToken)` was called in native code
+- **GIVEN** `EdotReactNativeAgent.preInitialize(serverUrl, secretToken, serviceName, serviceVersion, deploymentEnvironment)` was called in native code
 - **WHEN** `EdotReactNative.initialize(config)` is called from JS
 - **THEN** the native agent is NOT restarted
 - **THEN** JS-specific config (debug flags, instrumentation toggles) is applied
+- **THEN** the service identity supplied to `preInitialize` remains the authoritative Resource value
 
 ### Requirement: Prevent double initialization
 The SDK SHALL track initialization state. Calling `initialize()` a second time SHALL log a warning and return the existing session without restarting.

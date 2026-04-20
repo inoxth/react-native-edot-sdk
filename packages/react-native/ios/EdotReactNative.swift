@@ -109,20 +109,13 @@ class EdotReactNative: NSObject {
     }
 
     if !EdotReactNativeAgent.isPreInitialized {
+      EdotReactNativeAgent.applyResourceAttributes(
+        serviceName: config["serviceName"] as? String,
+        serviceVersion: config["serviceVersion"] as? String,
+        deploymentEnvironment: config["deploymentEnvironment"] as? String
+      )
       ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
     }
-
-    EdotReactNative.attrLock.lock()
-    if let serviceName = config["serviceName"] as? String {
-      EdotReactNative.globalAttributes["service.name"] = .string(serviceName)
-    }
-    if let serviceVersion = config["serviceVersion"] as? String {
-      EdotReactNative.globalAttributes["service.version"] = .string(serviceVersion)
-    }
-    if let environment = config["deploymentEnvironment"] as? String {
-      EdotReactNative.globalAttributes["deployment.environment"] = .string(environment)
-    }
-    EdotReactNative.attrLock.unlock()
 
     EdotReactNative.stateLock.lock()
     EdotReactNative.isInitialized = true

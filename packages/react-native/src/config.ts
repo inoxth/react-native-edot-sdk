@@ -7,10 +7,25 @@ const REQUIRED_FIELDS: (keyof EdotConfig)[] = [
   'deploymentEnvironment',
 ];
 
+const RESOURCE_IDENTITY_FIELDS: (keyof EdotConfig)[] = [
+  'serviceName',
+  'serviceVersion',
+  'deploymentEnvironment',
+];
+
 export function validateConfig(config: EdotConfig): void {
   for (const field of REQUIRED_FIELDS) {
     if (!config[field]) {
       throw new Error(`[EDOT] ${field} is required`);
+    }
+  }
+
+  for (const field of RESOURCE_IDENTITY_FIELDS) {
+    const value = config[field];
+    if (typeof value === 'string' && /[,=]/.test(value)) {
+      throw new Error(
+        `[EDOT] ${field} must not contain ',' or '=' characters (got: ${JSON.stringify(value)})`,
+      );
     }
   }
 
@@ -23,5 +38,4 @@ export function validateConfig(config: EdotConfig): void {
       throw new Error('[EDOT] sessionSamplingRate must be between 0.0 and 1.0');
     }
   }
-
 }

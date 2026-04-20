@@ -71,4 +71,25 @@ describe('validateConfig', () => {
     expect(() => validateConfig({ ...validConfig, sessionSamplingRate: 0 })).not.toThrow();
     expect(() => validateConfig({ ...validConfig, sessionSamplingRate: 1 })).not.toThrow();
   });
+
+  it('rejects serviceName containing reserved characters', () => {
+    expect(() => validateConfig({ ...validConfig, serviceName: 'foo,bar' })).toThrow(
+      "serviceName must not contain ',' or '='",
+    );
+    expect(() => validateConfig({ ...validConfig, serviceName: 'foo=bar' })).toThrow(
+      "serviceName must not contain ',' or '='",
+    );
+  });
+
+  it('rejects serviceVersion containing reserved characters', () => {
+    expect(() => validateConfig({ ...validConfig, serviceVersion: '1.0=beta' })).toThrow(
+      "serviceVersion must not contain ',' or '='",
+    );
+  });
+
+  it('rejects deploymentEnvironment containing reserved characters', () => {
+    expect(() => validateConfig({ ...validConfig, deploymentEnvironment: 'prod,staging' })).toThrow(
+      "deploymentEnvironment must not contain ',' or '='",
+    );
+  });
 });

@@ -64,7 +64,7 @@ describe('setupErrorHandler', () => {
     expect(previousHandler).toHaveBeenCalledWith(error, true);
   });
 
-  it('includes service resource attributes on error spans', () => {
+  it('does not stamp service identity on error spans (Resource carries it)', () => {
     setupErrorHandler({
       ...baseConfig,
       serviceName: 'my-app',
@@ -75,15 +75,10 @@ describe('setupErrorHandler', () => {
     const installedHandler = (ErrorUtils.setGlobalHandler as jest.Mock).mock.calls[0][0];
     installedHandler(new Error('boom'), false);
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'JS Error',
-      expect.objectContaining({
-        'service.name': 'my-app',
-        'service.version': '2.0.0',
-        'deployment.environment': 'production',
-      }),
-      null,
-    );
+    const [, attrs] = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0];
+    expect(attrs).not.toHaveProperty('service.name');
+    expect(attrs).not.toHaveProperty('service.version');
+    expect(attrs).not.toHaveProperty('deployment.environment');
   });
 
   it('restores previous handler on teardown', () => {
