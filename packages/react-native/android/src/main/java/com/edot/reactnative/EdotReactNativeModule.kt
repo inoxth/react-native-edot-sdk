@@ -1,7 +1,7 @@
 package com.edot.reactnative
 
+import android.app.Application
 import com.facebook.react.bridge.*
-import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
@@ -41,14 +41,26 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         try {
             debugEnabled = config.getBooleanSafe("debug", false)
 
-            // Store service identity as global attributes (applied to all spans)
-            config.getStringSafe("serviceName")?.let { globalAttributes["service.name"] = it }
-            config.getStringSafe("serviceVersion")?.let { globalAttributes["service.version"] = it }
-            config.getStringSafe("deploymentEnvironment")?.let { globalAttributes["deployment.environment"] = it }
+            val serverUrl = config.getStringSafe("serverUrl") ?: ""
+            if (serverUrl.isBlank()) {
+                promise.reject("EDOT_INIT_ERROR", "Invalid serverUrl: $serverUrl", null as Throwable?)
+                return
+            }
 
-            // The EDOT Android agent is initialized by the Gradle plugin
-            // (co.elastic.otel.android.agent) at app startup. Runtime config
-            // (serverUrl, auth, sampling) is handled by the plugin configuration.
+            if (!EdotReactNativeAgent.isPreInitialized) {
+                val application = reactApplicationContext.applicationContext as Application
+                EdotReactNativeAgent.buildFromJsConfig(
+                    application = application,
+                    serverUrl = serverUrl,
+                    secretToken = config.getStringSafe("secretToken"),
+                    apiKey = config.getStringSafe("apiKey"),
+                    sessionSamplingRate = config.getDoubleSafe("sessionSamplingRate"),
+                    connectionType = config.getStringSafe("connectionType"),
+                    serviceName = config.getStringSafe("serviceName"),
+                    serviceVersion = config.getStringSafe("serviceVersion"),
+                    deploymentEnvironment = config.getStringSafe("deploymentEnvironment"),
+                )
+            }
 
             isInitialized = true
             debugLog("SDK initialized successfully")
@@ -97,9 +109,8 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         val stack = errorInfo.getStringSafe("stack") ?: ""
         val isFatal = errorInfo.getBooleanSafe("isFatal", false)
 
-        val tracer = try {
-            GlobalOpenTelemetry.getTracer("react-native-edot")
-        } catch (e: Exception) {
+        val tracer = EdotReactNativeAgent.openTelemetry?.getTracer("react-native-edot") ?: run {
+            debugLog("OpenTelemetry not available; skipping reportJsException")
             return
         }
 
@@ -115,9 +126,8 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     fun startSpan(name: String, attributes: ReadableMap, parentSpanId: String?): String {
-        val tracer = try {
-            GlobalOpenTelemetry.getTracer("react-native-edot")
-        } catch (e: Exception) {
+        val tracer = EdotReactNativeAgent.openTelemetry?.getTracer("react-native-edot") ?: run {
+            debugLog("OpenTelemetry not available; returning stub span id")
             return UUID.randomUUID().toString()
         }
 
@@ -197,9 +207,8 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun recordMetric(name: String, value: Double, attributes: ReadableMap, metricType: String) {
-        val meter = try {
-            GlobalOpenTelemetry.getMeter("react-native-edot")
-        } catch (e: Exception) {
+        val meter = EdotReactNativeAgent.openTelemetry?.getMeter("react-native-edot") ?: run {
+            debugLog("OpenTelemetry not available; skipping recordMetric")
             return
         }
 
@@ -223,15 +232,12 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun emitLog(severity: String, message: String, attributes: ReadableMap) {
-        val logger = try {
-            GlobalOpenTelemetry.get().logsBridge
-                .loggerBuilder("react-native-edot")
-                .build()
-        } catch (e: Exception) {
-            debugLog("[$severity] $message")
+        val otel = EdotReactNativeAgent.openTelemetry ?: run {
+            debugLog("OpenTelemetry not available; skipping emitLog [$severity] $message")
             return
         }
 
+        val logger = otel.logsBridge.loggerBuilder("react-native-edot").build()
         val builder = logger.logRecordBuilder()
         builder.setBody(message)
 
@@ -239,7 +245,10 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         while (iterator.hasNextKey()) {
             val key = iterator.nextKey()
             if (attributes.getType(key) == ReadableType.String) {
-                builder.setAttribute(io.opentelemetry.api.common.AttributeKey.stringKey(key), attributes.getString(key) ?: "")
+                builder.setAttribute(
+                    io.opentelemetry.api.common.AttributeKey.stringKey(key),
+                    attributes.getString(key) ?: "",
+                )
             }
         }
 
@@ -257,5 +266,9 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     private fun ReadableMap.getStringSafe(key: String): String? {
         return if (hasKey(key)) getString(key) else null
+    }
+
+    private fun ReadableMap.getDoubleSafe(key: String): Double? {
+        return if (hasKey(key) && getType(key) == ReadableType.Number) getDouble(key) else null
     }
 }

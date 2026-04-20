@@ -30,6 +30,6 @@ android {
 
 dependencies {
     implementation("com.facebook.react:react-android")
-    // OTel API — spans and metrics via GlobalOpenTelemetry (set up by EDOT Gradle plugin at runtime)
     implementation("io.opentelemetry:opentelemetry-api:1.60.1")
+    implementation("co.elastic.otel.android:agent-sdk:1.5.0")
 }
