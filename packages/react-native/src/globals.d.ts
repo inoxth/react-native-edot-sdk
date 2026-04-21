@@ -14,3 +14,6 @@ declare var global: typeof globalThis & {
   };
   ErrorUtils?: ErrorUtilsLike;
 };
+
+declare function requestIdleCallback(callback: () => void): number;
+declare function cancelIdleCallback(handle: number): void;

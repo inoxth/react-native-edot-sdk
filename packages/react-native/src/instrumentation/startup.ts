@@ -1,4 +1,3 @@
-import { InteractionManager } from 'react-native';
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
 
@@ -20,7 +19,7 @@ export function setupStartupTracing(config: EdotConfig): () => void {
 
     const firstRenderSpanId = EdotNativeModule.startSpan('AppStartup: first_render', {}, parentSpanId);
 
-    const handle = InteractionManager.runAfterInteractions(() => {
+    const handle = requestIdleCallback(() => {
       try {
         const firstRenderAt = Date.now();
         EdotNativeModule.setSpanAttributeNumber(
@@ -44,7 +43,7 @@ export function setupStartupTracing(config: EdotConfig): () => void {
     });
 
     return () => {
-      handle.cancel();
+      cancelIdleCallback(handle);
     };
   } catch (sdkError) {
     if (config.debug) {

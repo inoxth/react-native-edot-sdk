@@ -1,4 +1,3 @@
-import { InteractionManager } from 'react-native';
 import { setupStartupTracing } from '../instrumentation/startup';
 import { EdotNativeModule } from '../nativeModule';
 import type { EdotConfig } from '../types';
@@ -21,25 +20,25 @@ const baseConfig: EdotConfig = {
 };
 
 describe('setupStartupTracing', () => {
-  let runAfterSpy: jest.SpyInstance;
   let capturedCallback: (() => void) | null = null;
+  let requestSpy: jest.Mock;
+  let cancelSpy: jest.Mock;
 
   beforeEach(() => {
     capturedCallback = null;
-    runAfterSpy = jest
-      .spyOn(InteractionManager, 'runAfterInteractions')
-      .mockImplementation((callback) => {
-        if (typeof callback === 'function') {
-          capturedCallback = callback;
-        }
-        const handle = { done: jest.fn(), cancel: jest.fn() };
-        return Object.assign(Promise.resolve(), handle);
-      });
+    requestSpy = jest.fn((callback: () => void) => {
+      capturedCallback = callback;
+      return 1;
+    });
+    cancelSpy = jest.fn();
+    global.requestIdleCallback = requestSpy;
+    global.cancelIdleCallback = cancelSpy;
     jest.clearAllMocks();
   });
 
   afterEach(() => {
-    runAfterSpy.mockRestore();
+    Reflect.deleteProperty(global, 'requestIdleCallback');
+    Reflect.deleteProperty(global, 'cancelIdleCallback');
   });
 
   it('creates parent AppStartup span', () => {
@@ -77,7 +76,7 @@ describe('setupStartupTracing', () => {
     teardown();
   });
 
-  it('ends first_render and parent span after interactions', () => {
+  it('ends first_render and parent span after idle callback fires', () => {
     jest.clearAllMocks();
     const teardown = setupStartupTracing(baseConfig);
 
@@ -90,10 +89,10 @@ describe('setupStartupTracing', () => {
     teardown();
   });
 
-  it('registers InteractionManager callback', () => {
+  it('registers requestIdleCallback', () => {
     const teardown = setupStartupTracing(baseConfig);
 
-    expect(InteractionManager.runAfterInteractions).toHaveBeenCalled();
+    expect(requestSpy).toHaveBeenCalled();
     teardown();
   });
 });
