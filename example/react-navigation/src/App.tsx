@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import type { NavigationContainerRef, ParamListBase } from '@react-navigation/native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -62,7 +63,9 @@ function screenNameMapper(routeName: string): string {
 export function App(): React.JSX.Element {
   const [sdkReady, setSdkReady] = useState(false);
   const edotNav = useRef(
-    createEdotNavigationContainerRef({ screenNameMapper }),
+    createEdotNavigationContainerRef<NavigationContainerRef<ParamListBase>>({
+      screenNameMapper,
+    }),
   );
 
   useEffect(() => {

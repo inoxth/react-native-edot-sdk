@@ -28,7 +28,6 @@ describe('createEdotNavigationContainerRef', () => {
     const { onReady, navigationRef } = createEdotNavigationContainerRef();
     navigationRef.current = {
       getCurrentRoute: () => ({ name: 'HomeScreen', key: 'home-1' }),
-      addListener: jest.fn(),
     };
 
     onReady();
@@ -53,7 +52,6 @@ describe('createEdotNavigationContainerRef', () => {
       getCurrentRoute: jest.fn()
         .mockReturnValueOnce({ name: 'HomeScreen', key: 'home-1' })
         .mockReturnValueOnce({ name: 'ProductDetail', key: 'product-1' }),
-      addListener: jest.fn(),
     };
 
     onReady();
@@ -80,7 +78,6 @@ describe('createEdotNavigationContainerRef', () => {
     });
     navigationRef.current = {
       getCurrentRoute: () => ({ name: 'UserProfile/42', key: 'user-1' }),
-      addListener: jest.fn(),
     };
 
     onReady();
@@ -96,7 +93,6 @@ describe('createEdotNavigationContainerRef', () => {
     const { onReady, cleanup, navigationRef } = createEdotNavigationContainerRef();
     navigationRef.current = {
       getCurrentRoute: () => ({ name: 'HomeScreen', key: 'home-1' }),
-      addListener: jest.fn(),
     };
 
     onReady();
@@ -112,7 +108,6 @@ describe('createEdotNavigationContainerRef', () => {
     const { onReady, navigationRef } = createEdotNavigationContainerRef();
     navigationRef.current = {
       getCurrentRoute: () => undefined,
-      addListener: jest.fn(),
     };
 
     onReady();

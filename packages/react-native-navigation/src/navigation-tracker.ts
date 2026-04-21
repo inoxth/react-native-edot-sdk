@@ -45,15 +45,17 @@ function startViewSpan(screenName: string, transitionType: string): void {
   previousScreenName = screenName;
 }
 
-export function createEdotNavigationContainerRef(
+export function createEdotNavigationContainerRef<
+  T extends NavigationContainerRef = NavigationContainerRef,
+>(
   options?: EdotNavigationOptions,
 ): {
   onStateChange: () => void;
   onReady: () => void;
   cleanup: () => void;
-  navigationRef: { current: NavigationContainerRef | null };
+  navigationRef: { current: T | null };
 } {
-  const navigationRef: { current: NavigationContainerRef | null } = { current: null };
+  const navigationRef: { current: T | null } = { current: null };
   const mapper = options?.screenNameMapper;
 
   function getScreenName(ref: NavigationContainerRef): string | null {
