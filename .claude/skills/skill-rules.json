@@ -1,0 +1,83 @@
+{
+  "version": "1.0",
+  "skills": {
+    "git-commit": {
+      "type": "domain",
+      "priority": "low",
+      "enforcement": "suggest",
+      "promptTriggers": {
+        "keywords": [
+          "/commit"
+        ],
+        "intentPatterns": [
+          "(commit|stage).{0,30}(change|file)"
+        ]
+      }
+    },
+    "index-knowledge": {
+      "type": "domain",
+      "priority": "low",
+      "enforcement": "suggest",
+      "promptTriggers": {
+        "keywords": [
+          "/index-knowledge"
+        ],
+        "intentPatterns": [
+          "(generate|refresh|update|build).{0,30}(AGENTS\\.md|knowledge.base|knowledge.tree)"
+        ]
+      }
+    },
+    "react-native-architecture": {
+      "type": "domain",
+      "priority": "low",
+      "enforcement": "suggest",
+      "promptTriggers": {
+        "keywords": [
+          "/react-native-architecture"
+        ],
+        "intentPatterns": [
+          "(react.native|RN|expo).{0,30}(architect|structure|native.module|offline|monorepo)"
+        ]
+      }
+    },
+    "react-native-best-practices": {
+      "type": "domain",
+      "priority": "low",
+      "enforcement": "suggest",
+      "promptTriggers": {
+        "keywords": [
+          "/react-native-best-practices"
+        ],
+        "intentPatterns": [
+          "(performance|jank|frame|TTI|FlashList|bundle|memory.leak|re.render).{0,30}(react.native|RN|mobile)"
+        ]
+      }
+    },
+    "react-native-design": {
+      "type": "domain",
+      "priority": "low",
+      "enforcement": "suggest",
+      "promptTriggers": {
+        "keywords": [
+          "/react-native-design"
+        ],
+        "intentPatterns": [
+          "(react.navigation|reanimated|animation|gesture|StyleSheet).{0,30}(react.native|RN|mobile)"
+        ]
+      }
+    },
+    "vercel-react-native-skills": {
+      "type": "domain",
+      "priority": "low",
+      "enforcement": "suggest",
+      "promptTriggers": {
+        "keywords": [
+          "/vercel-react-native-skills"
+        ],
+        "intentPatterns": [
+          "vercel.{0,30}(react.native|RN|expo)"
+        ]
+      }
+    }
+  }
+}
