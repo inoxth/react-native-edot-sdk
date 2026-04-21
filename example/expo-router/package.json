@@ -9,7 +9,8 @@
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
-    "ios": "expo run:ios --device 'iPhone 17 Pro'"
+    "ios": "expo run:ios --device 'iPhone 17 Pro'",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@inox/react-native-edot-expo-router": "workspace:*",
