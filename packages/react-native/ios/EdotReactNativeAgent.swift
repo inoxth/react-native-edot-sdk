@@ -12,13 +12,21 @@ public class EdotReactNativeAgent: NSObject {
   @objc
   public static func preInitialize(
     serverUrl: String,
-    secretToken: String? = nil,
-    serviceName: String? = nil,
-    serviceVersion: String? = nil,
-    deploymentEnvironment: String? = nil
+    serviceName: String,
+    serviceVersion: String,
+    deploymentEnvironment: String,
+    secretToken: String? = nil
   ) {
     guard !preInitialized else { return }
-    guard let url = URL(string: serverUrl), !serverUrl.isEmpty else { return }
+    if serverUrl.isEmpty {
+      raiseInvalid("serverUrl must not be blank")
+    }
+    guard let url = URL(string: serverUrl) else {
+      raiseInvalid("serverUrl is not a valid URL: \(serverUrl)")
+    }
+    requireResourceIdentity("serviceName", serviceName)
+    requireResourceIdentity("serviceVersion", serviceVersion)
+    requireResourceIdentity("deploymentEnvironment", deploymentEnvironment)
 
     #if ELASTIC_APM_AVAILABLE
     applyResourceAttributes(
@@ -38,6 +46,24 @@ public class EdotReactNativeAgent: NSObject {
     #endif
 
     preInitialized = true
+  }
+
+  private static func requireResourceIdentity(_ name: String, _ value: String) {
+    if value.isEmpty {
+      raiseInvalid("\(name) must not be blank")
+    }
+    if value.contains(",") || value.contains("=") {
+      raiseInvalid("\(name) must not contain ',' or '=' characters (got: \(value))")
+    }
+  }
+
+  private static func raiseInvalid(_ reason: String) -> Never {
+    NSException(
+      name: .invalidArgumentException,
+      reason: "[EDOT] \(reason)",
+      userInfo: nil
+    ).raise()
+    fatalError("[EDOT] \(reason)")
   }
 
   @objc

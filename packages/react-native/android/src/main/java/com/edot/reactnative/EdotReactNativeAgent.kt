@@ -24,24 +24,35 @@ object EdotReactNativeAgent {
     fun preInitialize(
         application: Application,
         serverUrl: String,
+        serviceName: String,
+        serviceVersion: String,
+        deploymentEnvironment: String,
         secretToken: String? = null,
-        serviceName: String? = null,
-        serviceVersion: String? = null,
-        deploymentEnvironment: String? = null,
     ) {
         if (preInitialized) return
-        if (serverUrl.isBlank()) return
+        require(serverUrl.isNotBlank()) { "[EDOT] serverUrl must not be blank" }
+        requireResourceIdentity("serviceName", serviceName)
+        requireResourceIdentity("serviceVersion", serviceVersion)
+        requireResourceIdentity("deploymentEnvironment", deploymentEnvironment)
 
-        val builder = ElasticApmAgent.builder(application).setExportUrl(serverUrl)
+        val builder = ElasticApmAgent.builder(application)
+            .setExportUrl(serverUrl)
+            .setServiceName(serviceName)
+            .setServiceVersion(serviceVersion)
+            .setDeploymentEnvironment(deploymentEnvironment)
         secretToken?.takeIf { it.isNotBlank() }?.let {
             builder.setExportAuthentication(Authentication.SecretToken(it))
         }
-        serviceName?.takeIf { it.isNotBlank() }?.let { builder.setServiceName(it) }
-        serviceVersion?.takeIf { it.isNotBlank() }?.let { builder.setServiceVersion(it) }
-        deploymentEnvironment?.takeIf { it.isNotBlank() }?.let { builder.setDeploymentEnvironment(it) }
 
         agent = builder.build()
         preInitialized = true
+    }
+
+    private fun requireResourceIdentity(name: String, value: String) {
+        require(value.isNotBlank()) { "[EDOT] $name must not be blank" }
+        require(!value.contains(',') && !value.contains('=')) {
+            "[EDOT] $name must not contain ',' or '=' characters (got: $value)"
+        }
     }
 
     internal fun buildFromJsConfig(
