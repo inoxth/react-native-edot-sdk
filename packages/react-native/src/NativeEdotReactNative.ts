@@ -13,6 +13,8 @@ export interface Spec extends TurboModule {
   startSpan(name: string, attributes: Object, parentSpanId: string | null): string;
   endSpan(spanId: string, statusCode: number): void;
   setSpanAttribute(spanId: string, key: string, value: string): void;
+  setSpanAttributeNumber(spanId: string, key: string, value: number): void;
+  setSpanAttributeBoolean(spanId: string, key: string, value: boolean): void;
   recordSpanException(spanId: string, errorInfo: Object): void;
   recordMetric(name: string, value: number, attributes: Object, metricType: string): void;
   emitLog(severity: string, message: string, attributes: Object): void;

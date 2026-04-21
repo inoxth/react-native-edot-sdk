@@ -22,6 +22,8 @@ RCT_EXTERN__BLOCKING_SYNCHRONOUS_METHOD(startSpan:(NSString *)name
 
 RCT_EXTERN_METHOD(endSpan:(NSString *)spanId statusCode:(NSInteger)statusCode)
 RCT_EXTERN_METHOD(setSpanAttribute:(NSString *)spanId key:(NSString *)key value:(NSString *)value)
+RCT_EXTERN_METHOD(setSpanAttributeNumber:(NSString *)spanId key:(NSString *)key value:(nonnull NSNumber *)value)
+RCT_EXTERN_METHOD(setSpanAttributeBoolean:(NSString *)spanId key:(NSString *)key value:(BOOL)value)
 RCT_EXTERN_METHOD(recordSpanException:(NSString *)spanId errorInfo:(NSDictionary *)errorInfo)
 RCT_EXTERN_METHOD(recordMetric:(NSString *)name
                   value:(double)value

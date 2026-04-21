@@ -5,6 +5,7 @@ import com.facebook.react.bridge.*
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.logs.Severity
 import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.SpanBuilder
 import io.opentelemetry.api.trace.StatusCode
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -152,7 +153,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
             val key = iterator.nextKey()
             when (attributes.getType(key)) {
                 ReadableType.String -> spanBuilder.setAttribute(key, attributes.getString(key)!!)
-                ReadableType.Number -> spanBuilder.setAttribute(key, attributes.getDouble(key))
+                ReadableType.Number -> spanBuilder.setNumericAttribute(key, attributes.getDouble(key))
                 ReadableType.Boolean -> spanBuilder.setAttribute(key, attributes.getBoolean(key))
                 else -> {}
             }
@@ -186,14 +187,21 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     }
 
     @ReactMethod
-    fun setSpanAttribute(spanId: String, key: String, value: Dynamic) {
+    fun setSpanAttribute(spanId: String, key: String, value: String) {
         val span = activeSpans[spanId] ?: return
-        when (value.type) {
-            ReadableType.String -> span.setAttribute(key, value.asString())
-            ReadableType.Number -> span.setAttribute(key, value.asDouble())
-            ReadableType.Boolean -> span.setAttribute(key, value.asBoolean())
-            else -> {}
-        }
+        span.setAttribute(key, value)
+    }
+
+    @ReactMethod
+    fun setSpanAttributeNumber(spanId: String, key: String, value: Double) {
+        val span = activeSpans[spanId] ?: return
+        span.setNumericAttribute(key, value)
+    }
+
+    @ReactMethod
+    fun setSpanAttributeBoolean(spanId: String, key: String, value: Boolean) {
+        val span = activeSpans[spanId] ?: return
+        span.setAttribute(key, value)
     }
 
     @ReactMethod
@@ -291,4 +299,13 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     private fun ReadableMap.getBooleanOrNull(key: String): Boolean? {
         return if (hasKey(key) && getType(key) == ReadableType.Boolean) getBoolean(key) else null
     }
+
+    private fun isIntegerValued(value: Double): Boolean =
+        value.isFinite() && value == value.toLong().toDouble()
+
+    private fun SpanBuilder.setNumericAttribute(key: String, value: Double): SpanBuilder =
+        if (isIntegerValued(value)) setAttribute(key, value.toLong()) else setAttribute(key, value)
+
+    private fun Span.setNumericAttribute(key: String, value: Double): Span =
+        if (isIntegerValued(value)) setAttribute(key, value.toLong()) else setAttribute(key, value)
 }

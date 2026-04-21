@@ -60,6 +60,8 @@ describe('nativeModule', () => {
       startSpan: jest.fn(),
       endSpan: jest.fn(),
       setSpanAttribute: jest.fn(),
+      setSpanAttributeNumber: jest.fn(),
+      setSpanAttributeBoolean: jest.fn(),
       recordSpanException: jest.fn(),
       recordMetric: jest.fn(),
       emitLog: jest.fn(),

@@ -7,9 +7,15 @@ import type {
 } from './types';
 
 interface NativeModule {
-  startSpan(name: string, attributes: Record<string, string>, parentSpanId: string | null): string;
+  startSpan(
+    name: string,
+    attributes: Record<string, string | number | boolean>,
+    parentSpanId: string | null,
+  ): string;
   endSpan(spanId: string, statusCode: number): void;
   setSpanAttribute(spanId: string, key: string, value: string): void;
+  setSpanAttributeNumber(spanId: string, key: string, value: number): void;
+  setSpanAttributeBoolean(spanId: string, key: string, value: boolean): void;
   recordSpanException(spanId: string, errorInfo: Record<string, string>): void;
 }
 
@@ -29,7 +35,7 @@ let contextParentSpan: Span | null = null;
 
 function createSpan(
   name: string,
-  attributes: Record<string, string>,
+  attributes: Record<string, string | number | boolean>,
   parentSpanId: string | null,
 ): Span {
   const native = getNativeModule();
@@ -44,7 +50,13 @@ function createSpan(
 
     setAttribute(key: string, value: string | number | boolean): void {
       if (ended) return;
-      native.setSpanAttribute(spanId, key, String(value));
+      if (typeof value === 'number') {
+        native.setSpanAttributeNumber(spanId, key, value);
+      } else if (typeof value === 'boolean') {
+        native.setSpanAttributeBoolean(spanId, key, value);
+      } else {
+        native.setSpanAttribute(spanId, key, value);
+      }
     },
 
     setStatus(code: SpanStatusCodeValue): void {
@@ -74,10 +86,10 @@ function createSpan(
 function createTracer(_name: string, _version?: string): Tracer {
   return {
     startSpan(name: string, options?: SpanOptions): Span {
-      const attrs: Record<string, string> = {};
+      const attrs: Record<string, string | number | boolean> = {};
       if (options?.attributes) {
         for (const [key, value] of Object.entries(options.attributes)) {
-          attrs[key] = String(value);
+          attrs[key] = value;
         }
       }
 

@@ -238,8 +238,9 @@ class EdotReactNative: NSObject {
     }
 
     for (key, value) in attributes {
-      if let k = key as? String, let v = value as? String {
-        builder = builder.setAttribute(key: k, value: .string(v))
+      guard let k = key as? String else { continue }
+      if let attr = EdotReactNative.attributeValue(from: value) {
+        builder = builder.setAttribute(key: k, value: attr)
       }
     }
 
@@ -297,6 +298,32 @@ class EdotReactNative: NSObject {
     let span = activeSpans[spanId]
     spanLock.unlock()
     span?.setAttribute(key: key, value: .string(value))
+    #endif
+  }
+
+  @objc
+  func setSpanAttributeNumber(_ spanId: String, key: String, value: NSNumber) {
+    #if ELASTIC_APM_AVAILABLE
+    spanLock.lock()
+    let span = activeSpans[spanId]
+    spanLock.unlock()
+    if CFGetTypeID(value) == CFBooleanGetTypeID() {
+      span?.setAttribute(key: key, value: .bool(value.boolValue))
+    } else if CFNumberIsFloatType(value) {
+      span?.setAttribute(key: key, value: .double(value.doubleValue))
+    } else {
+      span?.setAttribute(key: key, value: .int(value.intValue))
+    }
+    #endif
+  }
+
+  @objc
+  func setSpanAttributeBoolean(_ spanId: String, key: String, value: Bool) {
+    #if ELASTIC_APM_AVAILABLE
+    spanLock.lock()
+    let span = activeSpans[spanId]
+    spanLock.unlock()
+    span?.setAttribute(key: key, value: .bool(value))
     #endif
   }
 
@@ -391,6 +418,22 @@ class EdotReactNative: NSObject {
   }
 
   #if ELASTIC_APM_AVAILABLE
+  private static func attributeValue(from raw: Any) -> AttributeValue? {
+    if let s = raw as? String {
+      return .string(s)
+    }
+    if let n = raw as? NSNumber {
+      if CFGetTypeID(n) == CFBooleanGetTypeID() {
+        return .bool(n.boolValue)
+      }
+      if CFNumberIsFloatType(n) {
+        return .double(n.doubleValue)
+      }
+      return .int(n.intValue)
+    }
+    return nil
+  }
+
   private func mapSeverity(_ severity: String) -> Severity {
     switch severity {
     case "trace": return .trace

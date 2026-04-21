@@ -8,6 +8,8 @@ jest.mock('../nativeModule', () => ({
     startSpan: jest.fn().mockReturnValue('xhr-span-1'),
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
+    setSpanAttributeNumber: jest.fn(),
+    setSpanAttributeBoolean: jest.fn(),
     recordSpanException: jest.fn(),
   },
 }));

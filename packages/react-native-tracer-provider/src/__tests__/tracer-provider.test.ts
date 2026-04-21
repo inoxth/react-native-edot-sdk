@@ -6,6 +6,8 @@ const mockNativeModule = {
   startSpan: jest.fn().mockImplementation(() => `span-${++spanCounter}`),
   endSpan: jest.fn(),
   setSpanAttribute: jest.fn(),
+  setSpanAttributeNumber: jest.fn(),
+  setSpanAttributeBoolean: jest.fn(),
   recordSpanException: jest.fn(),
 };
 
