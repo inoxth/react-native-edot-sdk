@@ -35,7 +35,7 @@ context:
       - "co.elastic.otel.android.agent Gradle plugin v1.5.0 (EDOT Android SDK — applied by consumer app)"
       - "io.opentelemetry:opentelemetry-api:1.60.1 (direct dependency of library module)"
 
-  prd_location: "docs/PRD.md"
+  prd_location: "docs/ARCHITECTURE.md"
 
   api_style: "OpenTelemetry-aligned JavaScript API surface"
 

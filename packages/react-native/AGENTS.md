@@ -47,11 +47,17 @@ This package exposes subpath imports used by sibling packages:
 ### Initialization Flow
 
 `EdotReactNative.initialize(config)`:
-1. Validates config → 2. Merges defaults + platform overrides → 3. Calls native `initialize()` → 4. Sets up JS instrumentation → 5. Stores teardown functions
+1. Validates config (required fields, resource-identity chars, token mutual exclusivity, sampling range) → 2. Flattens platform overrides onto the native payload → 3. Calls native `initialize()` → 4. Sets up JS instrumentation (fetch, XHR, errors, lifecycle, startup) based on `EDOT_DEFAULTS`-merged toggles, plus unconditional `setupSpanCleanup` → 5. Stores teardown functions; `_resetForTesting()` drains them.
+
+On iOS, `EdotReactNativeAgent.preInitialize(...)` (from `ios/EdotReactNativeAgent.swift`) can be called from AppDelegate before the JS bridge loads. It enforces the same resource-identity rules as JS `validateConfig` and injects `service.name`/`service.version`/`deployment.environment` into the OTel `Resource` via `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. If `isPreInitialized`, the JS-side `initialize()` skips `ElasticApmAgent.start` and only records config for the bridge.
 
 ### Instrumentation Pattern
 
-Each `setup*()` function in `instrumentation/` monkey-patches a global (fetch, XHR, ErrorUtils) and returns a `() => void` teardown that restores the original.
+Each `setup*()` function in `instrumentation/` monkey-patches a global (fetch, XHR, ErrorUtils) and returns a `() => void` teardown that restores the original. `startup.ts` uses `requestIdleCallback` (not `InteractionManager`) to mark first-render. Startup emits a `cold` parent span with two child spans (`js_bundle_load` and `first_render`) and closes all three via `requestIdleCallback`.
+
+### Typed Span-Attribute Bridge
+
+The native spec (`NativeEdotReactNative.ts`) exposes three typed setters: `setSpanAttribute` (string), `setSpanAttributeNumber` (number), `setSpanAttributeBoolean` (boolean). JS instrumentation uses the number variant for HTTP body sizes, status codes, and startup timings so the native side can pick int vs. double (iOS uses `CFNumberIsFloatType`; Android uses `isIntegerValued`). Never pre-stringify a numeric attribute before handing it to the bridge.
 
 ### Native Module Loading
 

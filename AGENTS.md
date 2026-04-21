@@ -56,18 +56,18 @@ Each package has its own `CLAUDE.md` and `AGENTS.md` with detailed documentation
 
 ### Native Module — Platform Differences
 
-**iOS** (`packages/react-native/ios/`): Swift implementation gated by `#if ELASTIC_APM_AVAILABLE`. `EdotReactNative.swift` calls `ElasticApmAgent` directly. `EdotReactNativeAgent.swift` allows pre-initialization from AppDelegate before the JS bridge loads. Source files are included directly in example app Xcode targets (not as a Pod) because ElasticApm is distributed via SPM and pods cannot declare SPM dependencies.
+**iOS** (`packages/react-native/ios/`): Swift implementation gated by `#if ELASTIC_APM_AVAILABLE`. `EdotReactNative.swift` calls `ElasticApmAgent` directly. `EdotReactNativeAgent.swift` allows pre-initialization from AppDelegate before the JS bridge loads — it requires `serviceName`, `serviceVersion`, and `deploymentEnvironment` (all non-blank, no `,` or `=`) and injects them into the OTel `Resource` via `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. Source files are included directly in example app Xcode targets (not as a Pod) because ElasticApm is distributed via SPM and pods cannot declare SPM dependencies.
 
-**Android** (`packages/react-native/android/`): Kotlin implementation. `initialize()` does NOT start the agent — the Elastic Gradle plugin handles agent init at build time. Uses `GlobalOpenTelemetry` (OTel global API). `getCurrentSessionId()` returns `""` (Android SDK doesn't expose session ID). The EDOT Gradle plugin (`co.elastic.otel.android.agent`) v1.5.0 requires Gradle 8.7+, AGP 8.9.1+, and compileSdk 36. It is applied in all example apps.
+**Android** (`packages/react-native/android/`): Kotlin implementation. `initialize()` starts the agent programmatically via `EdotReactNativeAgent.buildFromJsConfig(...)` using the JS-supplied config (serverUrl, tokens, sampling, exportProtocol, diskBufferingEnabled, service identity). `getCurrentSessionId()` returns `""` — ElasticApmAgent 1.5.0 exposes `SessionManager` only as an internal `$agent_sdk` API. The EDOT Gradle plugin (`co.elastic.otel.android.agent`) v1.5.0 is still applied in all example apps (requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36) for build-time code-generation and instrumentation hooks, but the runtime agent is now started from JS config.
 
 ### Initialization Flow
 
 `EdotReactNative.initialize(config)` in `EdotReactNative.ts`:
-1. Validates config via `validateConfig()` (throws on missing required fields, invalid values)
-2. Merges with `EDOT_DEFAULTS`, applies platform-specific overrides (`config.ios` / `config.android`)
-3. Calls `EdotNativeModule.initialize()` to start native agent
-4. Sets up JS-side instrumentation based on config toggles (fetch, XHR, errors, lifecycle, startup, span cleanup)
-5. Each setup function returns a teardown function stored in `teardowns[]`
+1. Validates config via `validateConfig()` — required fields (`serverUrl`, `serviceName`, `serviceVersion`, `deploymentEnvironment`), resource-identity character restrictions (no `,` or `=`), `secretToken`/`apiKey` mutual exclusivity, `sessionSamplingRate` range
+2. Flattens the native config (spreads `config.ios` or `config.android` onto the top-level payload sent to the bridge)
+3. Calls `EdotNativeModule.initialize()` — on Android this starts the agent programmatically via `EdotReactNativeAgent.buildFromJsConfig(...)` unless pre-initialized; on iOS this calls `ElasticApmAgent.start(...)` unless `EdotReactNativeAgent.preInitialize(...)` was called earlier from AppDelegate
+4. Sets up JS-side instrumentation based on `EDOT_DEFAULTS`-merged toggles (fetch, XHR, errors, lifecycle, startup) plus unconditional `setupSpanCleanup`
+5. Each setup function returns a teardown function stored in `teardowns[]`; `_resetForTesting()` drains them
 
 ### ActiveViewContext
 
@@ -84,11 +84,11 @@ All three plugins (`react-native-navigation`, `react-native-expo-router`, `react
 
 ### Network Instrumentation
 
-Fetch and XHR are monkey-patched to create OTel spans. They capture `http.method`, `http.url` (sanitized), `http.status_code`, inject W3C `traceparent` for matching URLs, and add `X-Edot-RN-Traced: 1` dedup header. When an active view exists, spans include `view.name` and `view.id` attributes.
+Fetch and XHR are monkey-patched to create OTel spans using v1.23 stable HTTP semantic conventions: `http.request.method`, `url.full` (sanitized via `config.urlSanitizer`), `http.request.body.size`, `http.response.status_code`, `http.response.body.size`. They inject a W3C `traceparent` header for URLs matching `tracePropagationTargets` and add an `X-Edot-RN-Traced: 1` dedup header on every traced request. When an active view exists, spans include `view.name` and `view.id` attributes. Body/response sizes and status code are written via the typed `setSpanAttributeNumber` bridge method to preserve numeric type end-to-end.
 
 ### Error Tracking
 
-`errors.ts` installs three handlers: `ErrorUtils.setGlobalHandler()` for uncaught exceptions, Hermes promise rejection tracker (with `promise/setimmediate` fallback), and `EdotErrorBoundary` for React render errors. Error spans include `service.name`/`service.version`/`deployment.environment` for sourcemap symbolication routing.
+`errors.ts` installs two handlers: `ErrorUtils.setGlobalHandler()` for uncaught JS exceptions and Hermes `enablePromiseRejectionTracker` (with `promise/setimmediate/rejection-tracking` fallback for non-Hermes engines). Each reported error opens a short-lived span with `exception.type`/`exception.message`/`exception.stacktrace`/`error.source` and also calls `reportJsException` so the native side emits a structured error event. React render errors are captured separately by the opt-in `EdotErrorBoundary` component exported from `@inox/react-native-edot-sdk`. Service identity (`service.name`, `service.version`, `deployment.environment`) is carried on the OTel Resource (set by the native agent at start), not on each span.
 
 ## Where to Look
 

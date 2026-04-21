@@ -53,7 +53,43 @@ yarn add @inox/react-native-edot-wix-navigation
 cd ios && pod install
 ```
 
-### 3. Initialize
+The EDOT iOS agent (`ElasticApm`) is distributed via Swift Package Manager, not CocoaPods. Add it to your Xcode project:
+
+1. Open your iOS workspace in Xcode.
+2. **File → Add Package Dependencies…**
+3. Enter `https://github.com/elastic/apm-agent-ios` and pin to a 2.x tag.
+4. Add the `ElasticApm` product to your app target.
+
+The SDK's native files are conditionally compiled against `ELASTIC_APM_AVAILABLE`; without the SPM package they compile as a no-op.
+
+### 3. Android Setup
+
+Apply the EDOT Android Gradle plugin — it provides the `co.elastic.otel.android` runtime the SDK links against.
+
+`android/build.gradle` (project-level):
+
+```groovy
+buildscript {
+  dependencies {
+    classpath("co.elastic.otel.android.agent:co.elastic.otel.android.agent.gradle.plugin:1.5.0")
+  }
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
+}
+```
+
+`android/app/build.gradle`:
+
+```groovy
+apply plugin: "co.elastic.otel.android.agent"
+```
+
+Requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36, minSdk 24. See `example/react-navigation/android/` for a reference setup.
+
+### 4. Initialize
 
 ```typescript
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
