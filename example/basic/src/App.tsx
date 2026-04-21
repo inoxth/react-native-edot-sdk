@@ -173,7 +173,7 @@ export function App(): React.JSX.Element {
 
         const id = await EdotReactNative.getCurrentSessionId();
         setSessionId(id);
-        addLog(`Session ID: ${id}`);
+        addLog(id ? `Session ID: ${id}` : 'Session ID: unavailable (Android)');
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         setStatus(`Error: ${message}`);

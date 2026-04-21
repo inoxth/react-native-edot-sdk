@@ -24,7 +24,7 @@ export function HomeScreen(): React.JSX.Element {
         const id = await EdotReactNative.getCurrentSessionId();
         setSessionId(id);
         setStatus('Initialized');
-        addLog(`Session ID: ${id}`);
+        addLog(id ? `Session ID: ${id}` : 'Session ID: unavailable (Android)');
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         setStatus(`Error: ${message}`);

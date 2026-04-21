@@ -10,7 +10,7 @@ export default function HomeScreen(): React.ReactElement {
     try {
       const id = await EdotReactNative.getCurrentSessionId();
       setSessionId(id);
-      setStatus('Session ID fetched');
+      setStatus(id ? 'Session ID fetched' : 'Session ID unavailable (Android)');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       setStatus(`Error: ${message}`);
