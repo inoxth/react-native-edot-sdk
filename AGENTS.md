@@ -152,6 +152,6 @@ Changes tracked in `openspec/changes/` with proposal -> design -> specs -> tasks
 - **Don't import `ActiveViewContext` from `@inox/react-native-edot-sdk`** in navigation plugins — import from `@inox/react-native-edot-shared` to avoid circular dependency.
 - **Don't eagerly import `@inox/react-native-edot-sdk/nativeModule`** at top level in nav plugins — use lazy `require()` inside a function to break the dependency cycle.
 - **Don't add React Native dependencies to `@inox/react-native-edot-shared`** — it must stay pure JS/TS.
-- **Don't use `Object` (capital O)** in TurboModule specs — use `object` (lowercase).
+- **Don't use lowercase `object`** in TurboModule specs — use capital `Object`. RN codegen rejects `TSObjectKeyword`; capital `Object` maps to `GenericObjectTypeAnnotation`. The spec file has an oxlint file-level disable of `no-wrapper-object-types` with the rationale inline.
 - **Don't manually construct `node_modules` paths** — use yarn workspace resolution and `moduleNameMapper` in jest configs.
 - **Don't commit `lib/` or `src/**/*.js`** build artifacts — they're gitignored.

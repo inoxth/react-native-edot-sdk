@@ -116,7 +116,7 @@ cd example/react-navigation/android
 ./gradlew :app:assembleDebug
 ```
 
-TurboModule spec types: use lowercase `object` in `NativeEdotReactNative.ts` (not capital `Object`) — the codegen treats them differently.
+TurboModule spec types: the RN codegen (0.83+ and 0.85+) requires capital `Object` in `NativeEdotReactNative.ts` for dictionary-shaped params — it maps to `GenericObjectTypeAnnotation` in `parsers-primitives.js`. Lowercase `object` (TSObjectKeyword) is rejected with `UnsupportedTypeAnnotationParserError`. The spec file has a top-of-file `oxlint-disable no-wrapper-object-types` with this rationale.
 
 ## Example Apps
 
@@ -179,4 +179,4 @@ Conventional Commits style — `feat(sdk): ...`, `fix(android): ...`, `refactor(
 - Don't import `ActiveViewContext` from `@inox/react-native-edot-sdk` in navigation plugins — import from `@inox/react-native-edot-shared` directly.
 - Don't manually construct `node_modules` paths in Metro config — rely on workspace resolution and `extraNodeModules`.
 - Don't commit `lib/` or `src/**/*.js` build artifacts — they're gitignored.
-- Don't use `Object` (capital O) in TurboModule specs — use `object` (lowercase).
+- Don't use lowercase `object` in TurboModule specs — use capital `Object`. The RN codegen rejects `TSObjectKeyword`; capital `Object` maps to `GenericObjectTypeAnnotation`.

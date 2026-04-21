@@ -1,23 +1,24 @@
+/* oxlint-disable no-wrapper-object-types -- RN codegen requires capital Object for dictionary-shaped params; lowercase `object` (TSObjectKeyword) throws UnsupportedTypeAnnotationParserError. */
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
 export interface Spec extends TurboModule {
-  initialize(config: object): Promise<void>;
+  initialize(config: Object): Promise<void>;
   getCurrentSessionId(): Promise<string>;
-  setUser(userInfo: object): void;
+  setUser(userInfo: Object): void;
   clearUser(): void;
   setSessionAttribute(key: string, value: string): void;
   setGlobalAttribute(key: string, value: string): void;
   removeGlobalAttribute(key: string): void;
-  reportJsException(errorInfo: object): void;
-  startSpan(name: string, attributes: object, parentSpanId: string | null): string;
+  reportJsException(errorInfo: Object): void;
+  startSpan(name: string, attributes: Object, parentSpanId: string | null): string;
   endSpan(spanId: string, statusCode: number): void;
   setSpanAttribute(spanId: string, key: string, value: string): void;
   setSpanAttributeNumber(spanId: string, key: string, value: number): void;
   setSpanAttributeBoolean(spanId: string, key: string, value: boolean): void;
-  recordSpanException(spanId: string, errorInfo: object): void;
-  recordMetric(name: string, value: number, attributes: object, metricType: string): void;
-  emitLog(severity: string, message: string, attributes: object): void;
+  recordSpanException(spanId: string, errorInfo: Object): void;
+  recordMetric(name: string, value: number, attributes: Object, metricType: string): void;
+  emitLog(severity: string, message: string, attributes: Object): void;
   setTrackingConsent(consent: string): void;
 }
 

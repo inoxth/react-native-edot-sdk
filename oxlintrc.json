@@ -10,8 +10,7 @@
   },
   "rules": {
     "no-unused-vars": "warn",
-    "typescript/no-explicit-any": "error",
-    "@typescript-eslint/no-wrapper-object-types": "off"
+    "typescript/no-explicit-any": "error"
   },
   "ignorePatterns": ["node_modules", "lib", "**/*.d.ts", "**/*.d.ts.map", "**/*.test.d.ts", "example"]
 }
