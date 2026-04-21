@@ -57,6 +57,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
                     apiKey = config.getStringSafe("apiKey"),
                     sessionSamplingRate = config.getDoubleSafe("sessionSamplingRate"),
                     exportProtocol = config.getStringSafe("exportProtocol"),
+                    diskBufferingEnabled = config.getBooleanOrNull("diskBufferingEnabled"),
                     serviceName = config.getStringSafe("serviceName"),
                     serviceVersion = config.getStringSafe("serviceVersion"),
                     deploymentEnvironment = config.getStringSafe("deploymentEnvironment"),
@@ -73,6 +74,9 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun getCurrentSessionId(promise: Promise) {
+        // ElasticApmAgent 1.5.0 exposes SessionManager only as an internal
+        // $agent_sdk API with no public accessor. Returns empty until
+        // upstream adds a public SessionProvider/SessionManager getter.
         promise.resolve("")
     }
 
@@ -282,5 +286,9 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     private fun ReadableMap.getDoubleSafe(key: String): Double? {
         return if (hasKey(key) && getType(key) == ReadableType.Number) getDouble(key) else null
+    }
+
+    private fun ReadableMap.getBooleanOrNull(key: String): Boolean? {
+        return if (hasKey(key) && getType(key) == ReadableType.Boolean) getBoolean(key) else null
     }
 }

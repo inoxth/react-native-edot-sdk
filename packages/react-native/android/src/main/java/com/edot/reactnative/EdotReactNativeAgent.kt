@@ -4,6 +4,7 @@ import android.app.Application
 import co.elastic.otel.android.ElasticApmAgent
 import co.elastic.otel.android.connectivity.Authentication
 import co.elastic.otel.android.exporters.configuration.ExportProtocol
+import co.elastic.otel.android.features.diskbuffering.DiskBufferingConfiguration
 import io.opentelemetry.api.OpenTelemetry
 
 object EdotReactNativeAgent {
@@ -50,6 +51,7 @@ object EdotReactNativeAgent {
         apiKey: String?,
         sessionSamplingRate: Double?,
         exportProtocol: String?,
+        diskBufferingEnabled: Boolean?,
         serviceName: String?,
         serviceVersion: String?,
         deploymentEnvironment: String?,
@@ -65,6 +67,11 @@ object EdotReactNativeAgent {
         exportProtocol?.let {
             builder.setExportProtocol(
                 if (it == "grpc") ExportProtocol.GRPC else ExportProtocol.HTTP
+            )
+        }
+        diskBufferingEnabled?.let {
+            builder.setDiskBufferingConfiguration(
+                if (it) DiskBufferingConfiguration.enabled() else DiskBufferingConfiguration.disabled()
             )
         }
         serviceName?.takeIf { it.isNotBlank() }?.let { builder.setServiceName(it) }

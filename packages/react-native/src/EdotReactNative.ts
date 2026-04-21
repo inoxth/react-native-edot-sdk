@@ -87,6 +87,11 @@ export const EdotReactNative = {
     debugLog(config, 'SDK initialized successfully');
   },
 
+  /**
+   * On Android, returns an empty string: ElasticApmAgent 1.5.0 exposes
+   * SessionManager only as an internal $agent_sdk API. Re-enable once
+   * upstream adds a public SessionProvider accessor.
+   */
   async getCurrentSessionId(): Promise<string> {
     return EdotNativeModule.getCurrentSessionId();
   },
