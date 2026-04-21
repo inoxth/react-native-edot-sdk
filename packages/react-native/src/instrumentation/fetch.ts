@@ -37,8 +37,8 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       const activeView = ActiveViewContext.getActiveView();
 
       const spanAttributes: Record<string, string> = {
-        'http.method': method,
-        'http.url': sanitizedUrl,
+        'http.request.method': method,
+        'url.full': sanitizedUrl,
       };
       if (activeView) {
         spanAttributes['view.name'] = activeView.name;
@@ -58,18 +58,18 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       const patchedInit: RequestInit = { ...init, headers };
 
       if (typeof init?.body === 'string') {
-        EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.request_content_length', init.body.length);
+        EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.request.body.size', init.body.length);
       }
 
       const response = await originalFetch(input, patchedInit);
 
-      EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.status_code', response.status);
+      EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.response.status_code', response.status);
 
       const responseContentLength = response.headers.get('content-length');
       if (responseContentLength) {
         const parsed = Number(responseContentLength);
         if (Number.isFinite(parsed)) {
-          EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.response_content_length', parsed);
+          EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.response.body.size', parsed);
         }
       }
 

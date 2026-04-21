@@ -42,7 +42,7 @@ describe('setupFetchInstrumentation', () => {
 
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
       'HTTP GET',
-      expect.objectContaining({ 'http.method': 'GET' }),
+      expect.objectContaining({ 'http.request.method': 'GET' }),
       null,
     );
     expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('span-1', 1);

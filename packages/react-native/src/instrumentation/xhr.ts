@@ -57,8 +57,8 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
       const activeView = ActiveViewContext.getActiveView();
 
       const spanAttributes: Record<string, string> = {
-        'http.method': method,
-        'http.url': sanitizedUrl,
+        'http.request.method': method,
+        'url.full': sanitizedUrl,
       };
       if (activeView) {
         spanAttributes['view.name'] = activeView.name;
@@ -78,7 +78,7 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
       if (bodyStr) {
         EdotNativeModule.setSpanAttributeNumber(
           nativeSpanId,
-          'http.request_content_length',
+          'http.request.body.size',
           bodyStr.length,
         );
       }
@@ -87,14 +87,14 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         if (!state.spanId) {
           return;
         }
-        EdotNativeModule.setSpanAttributeNumber(state.spanId, 'http.status_code', this.status);
+        EdotNativeModule.setSpanAttributeNumber(state.spanId, 'http.response.status_code', this.status);
         const responseLength = this.getResponseHeader('content-length');
         if (responseLength) {
           const parsed = Number(responseLength);
           if (Number.isFinite(parsed)) {
             EdotNativeModule.setSpanAttributeNumber(
               state.spanId,
-              'http.response_content_length',
+              'http.response.body.size',
               parsed,
             );
           }
