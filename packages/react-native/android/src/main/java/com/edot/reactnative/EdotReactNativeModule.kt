@@ -44,7 +44,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
             val serverUrl = config.getStringSafe("serverUrl") ?: ""
             if (serverUrl.isBlank()) {
-                promise.reject("EDOT_INIT_ERROR", "Invalid serverUrl: $serverUrl", null as Throwable?)
+                promise.reject("EDOT_INIT_ERROR", "Invalid serverUrl: $serverUrl")
                 return
             }
 
