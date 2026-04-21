@@ -84,8 +84,8 @@ class EdotReactNative: NSObject {
       configBuilder = configBuilder.withSessionSampleRate(samplingRate)
     }
 
-    if let connectionType = config["connectionType"] as? String {
-      configBuilder = configBuilder.useConnectionType(connectionType == "http" ? .http : .grpc)
+    if let exportProtocol = config["exportProtocol"] as? String {
+      configBuilder = configBuilder.useConnectionType(exportProtocol == "http" ? .http : .grpc)
     }
 
     var instrumentationConfig = InstrumentationConfiguration()

@@ -7,6 +7,8 @@ export interface EdotConfig {
   secretToken?: string;
   apiKey?: string;
 
+  exportProtocol?: 'http' | 'grpc';
+
   sessionSamplingRate?: number;
 
   instrumentNetworkRequests?: boolean;
@@ -31,7 +33,6 @@ export interface EdotConfig {
 }
 
 export interface EdotIosConfig {
-  connectionType?: 'grpc' | 'http';
   enableCrashReporting?: boolean;
   enableURLSessionInstrumentation?: boolean;
   enableViewControllerInstrumentation?: boolean;
@@ -41,7 +42,6 @@ export interface EdotIosConfig {
 }
 
 export interface EdotAndroidConfig {
-  exportProtocol?: 'http' | 'grpc';
   diskBufferingEnabled?: boolean;
 }
 

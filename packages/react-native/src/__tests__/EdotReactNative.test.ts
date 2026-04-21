@@ -130,7 +130,6 @@ describe('EdotReactNative', () => {
       await Fresh.initialize({
         ...validConfig,
         ios: {
-          connectionType: 'http',
           enableCrashReporting: false,
           enableSystemMetrics: false,
         },
@@ -138,7 +137,6 @@ describe('EdotReactNative', () => {
 
       const { EdotNativeModule: MockModule } = require('../nativeModule');
       const nativeConfig = (MockModule.initialize as jest.Mock).mock.calls[0][0];
-      expect(nativeConfig.connectionType).toBe('http');
       expect(nativeConfig.enableCrashReporting).toBe(false);
       expect(nativeConfig.enableSystemMetrics).toBe(false);
     });
@@ -153,14 +151,12 @@ describe('EdotReactNative', () => {
       await Fresh.initialize({
         ...validConfig,
         android: {
-          exportProtocol: 'grpc',
           diskBufferingEnabled: true,
         },
       });
 
       const { EdotNativeModule: MockModule } = require('../nativeModule');
       const nativeConfig = (MockModule.initialize as jest.Mock).mock.calls[0][0];
-      expect(nativeConfig.exportProtocol).toBe('grpc');
       expect(nativeConfig.diskBufferingEnabled).toBe(true);
     });
 
@@ -173,12 +169,19 @@ describe('EdotReactNative', () => {
 
       await Fresh.initialize({
         ...validConfig,
-        ios: { connectionType: 'http' },
+        ios: { enableCrashReporting: true },
       });
 
       const { EdotNativeModule: MockModule } = require('../nativeModule');
       const nativeConfig = (MockModule.initialize as jest.Mock).mock.calls[0][0];
-      expect(nativeConfig.connectionType).toBeUndefined();
+      expect(nativeConfig.enableCrashReporting).toBeUndefined();
+    });
+
+    it('forwards top-level exportProtocol to native on both platforms', async () => {
+      await EdotReactNative.initialize({ ...validConfig, exportProtocol: 'grpc' });
+
+      const nativeConfig = (EdotNativeModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.exportProtocol).toBe('grpc');
     });
 
     it('only sends optional fields when explicitly set', async () => {

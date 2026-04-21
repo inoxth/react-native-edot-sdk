@@ -99,9 +99,12 @@ await EdotReactNative.initialize({
   sessionSamplingRate: 0.5,        // 0.0 to 1.0
   trackingConsent: 'granted',      // 'granted' | 'pending' | 'not_granted'
 
+  // Transport (applies to both platforms)
+  exportProtocol: 'grpc',          // 'http' | 'grpc'
+
   // Platform-specific
-  ios: { connectionType: 'grpc', enableCrashReporting: true },
-  android: { exportProtocol: 'grpc', diskBufferingEnabled: true },
+  ios: { enableCrashReporting: true },
+  android: { diskBufferingEnabled: true },
 
   // Debug
   debug: false,

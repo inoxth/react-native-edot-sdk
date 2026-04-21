@@ -27,6 +27,7 @@ function mergeConfig(config: EdotConfig): Record<string, unknown> {
     ...(config.trackingConsent ? { trackingConsent: config.trackingConsent } : {}),
     ...(config.secretToken ? { secretToken: config.secretToken } : {}),
     ...(config.apiKey ? { apiKey: config.apiKey } : {}),
+    ...(config.exportProtocol ? { exportProtocol: config.exportProtocol } : {}),
     ...(config.globalAttributes ? { globalAttributes: config.globalAttributes } : {}),
     ...platformConfig,
   };

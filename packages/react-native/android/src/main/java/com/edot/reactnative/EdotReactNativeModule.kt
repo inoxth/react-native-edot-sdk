@@ -56,7 +56,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
                     secretToken = config.getStringSafe("secretToken"),
                     apiKey = config.getStringSafe("apiKey"),
                     sessionSamplingRate = config.getDoubleSafe("sessionSamplingRate"),
-                    connectionType = config.getStringSafe("connectionType"),
+                    exportProtocol = config.getStringSafe("exportProtocol"),
                     serviceName = config.getStringSafe("serviceName"),
                     serviceVersion = config.getStringSafe("serviceVersion"),
                     deploymentEnvironment = config.getStringSafe("deploymentEnvironment"),

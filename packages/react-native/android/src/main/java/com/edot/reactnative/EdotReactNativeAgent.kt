@@ -49,7 +49,7 @@ object EdotReactNativeAgent {
         secretToken: String?,
         apiKey: String?,
         sessionSamplingRate: Double?,
-        connectionType: String?,
+        exportProtocol: String?,
         serviceName: String?,
         serviceVersion: String?,
         deploymentEnvironment: String?,
@@ -62,7 +62,7 @@ object EdotReactNativeAgent {
             builder.setExportAuthentication(Authentication.ApiKey(it))
         }
         sessionSamplingRate?.let { builder.setSessionSampleRate(it) }
-        connectionType?.let {
+        exportProtocol?.let {
             builder.setExportProtocol(
                 if (it == "grpc") ExportProtocol.GRPC else ExportProtocol.HTTP
             )
