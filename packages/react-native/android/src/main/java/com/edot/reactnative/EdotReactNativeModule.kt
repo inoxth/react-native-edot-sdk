@@ -3,6 +3,7 @@ package com.edot.reactnative
 import android.app.Application
 import com.facebook.react.bridge.*
 import io.opentelemetry.api.common.Attributes
+import io.opentelemetry.api.logs.Severity
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import java.util.UUID
@@ -240,6 +241,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         val logger = otel.logsBridge.loggerBuilder("react-native-edot").build()
         val builder = logger.logRecordBuilder()
         builder.setBody(message)
+        builder.setSeverity(mapSeverity(severity))
 
         val iterator = attributes.keySetIterator()
         while (iterator.hasNextKey()) {
@@ -258,6 +260,16 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     @ReactMethod
     fun setTrackingConsent(consent: String) {
         android.util.Log.i("EDOT", "setTrackingConsent($consent) called but not supported by native SDK")
+    }
+
+    private fun mapSeverity(severity: String): Severity = when (severity) {
+        "trace" -> Severity.TRACE
+        "debug" -> Severity.DEBUG
+        "info" -> Severity.INFO
+        "warn" -> Severity.WARN
+        "error" -> Severity.ERROR
+        "fatal" -> Severity.FATAL
+        else -> Severity.INFO
     }
 
     private fun ReadableMap.getBooleanSafe(key: String, default: Boolean): Boolean {
