@@ -1,3 +1,4 @@
+import { Alert } from 'react-native';
 import { Navigation } from 'react-native-navigation';
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
 import { registerEdotNavigationListener } from '@inox/react-native-edot-wix-navigation';
@@ -38,17 +39,21 @@ const SCREEN_NAME_MAP = {
 };
 
 Navigation.events().registerAppLaunchedListener(async () => {
-  try {
-    await EdotReactNative.initialize({
-      serverUrl: EDOT_SERVER_URL,
-      serviceName: EDOT_SERVICE_NAME ?? 'edot-wix-nav-example',
-      serviceVersion: EDOT_SERVICE_VERSION ?? '0.1.0',
-      deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT ?? 'development',
-      secretToken: EDOT_SECRET_TOKEN,
-      debug: true,
-    });
-  } catch (_) {
-    // SDK init failure is non-fatal; screens still render
+  if (!EDOT_SERVER_URL) {
+    Alert.alert('Missing .env', 'Copy .env.example to .env');
+  } else {
+    try {
+      await EdotReactNative.initialize({
+        serverUrl: EDOT_SERVER_URL,
+        serviceName: EDOT_SERVICE_NAME ?? 'edot-wix-nav-example',
+        serviceVersion: EDOT_SERVICE_VERSION ?? '0.1.0',
+        deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT ?? 'development',
+        secretToken: EDOT_SECRET_TOKEN,
+        debug: true,
+      });
+    } catch (_) {
+      // SDK init failure is non-fatal; screens still render
+    }
   }
 
   registerEdotNavigationListener(Navigation, {

@@ -3,7 +3,7 @@ import type { NavigationContainerRef, ParamListBase } from '@react-navigation/na
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Text } from 'react-native';
+import { Alert, Text } from 'react-native';
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
 import { createEdotNavigationContainerRef } from '@inox/react-native-edot-navigation';
 import {
@@ -70,7 +70,10 @@ export function App(): React.JSX.Element {
 
   useEffect(() => {
     async function init(): Promise<void> {
-      if (!EDOT_SERVER_URL) return;
+      if (!EDOT_SERVER_URL) {
+        Alert.alert('Missing .env', 'Copy .env.example to .env');
+        return;
+      }
       try {
         await EdotReactNative.initialize({
           serverUrl: EDOT_SERVER_URL,

@@ -129,7 +129,13 @@ Four demo apps under `example/` are yarn workspace members. Each has `installCon
 | `expo-router/` | Expo Router (file-based) | RN 0.83.4. Wraps layout in `<EdotExpoNavigationProvider>`. Uses `babel-preset-expo` (not `@react-native/babel-preset`). |
 | `wix-navigation/` | Wix react-native-navigation | RN 0.83.4. AppDelegate extends `RNNAppDelegate`. SDK init inside `registerAppLaunchedListener` callback. |
 
-Runtime config comes from `example/.env` via `react-native-dotenv`. Copy `example/.env.example` to `example/.env` and fill in `EDOT_SERVER_URL`, `EDOT_SERVICE_NAME`, `EDOT_SECRET_TOKEN`, etc.
+Each app owns its own `.env` at its root — there is no shared `example/.env`. Copy the template before running an app:
+
+```bash
+cp example/<app>/.env.example example/<app>/.env
+```
+
+Then fill in `EDOT_SERVER_URL`, `EDOT_SERVICE_NAME`, `EDOT_SECRET_TOKEN`, etc. Values are consumed via `react-native-dotenv` (`import ... from '@env'`). If `EDOT_SERVER_URL` is empty, each app surfaces a user-visible "Missing .env" message and skips SDK init without crashing.
 
 To run an example (React Navigation):
 

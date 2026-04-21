@@ -10,14 +10,25 @@ import {
   EDOT_DEPLOYMENT_ENVIRONMENT,
 } from '@env';
 
+type InitState = 'missing-env' | 'initializing' | 'ready';
+
 function screenNameMapper(pathname: string): string {
   return pathname.replace(/\/\d+/g, '/:id');
 }
 
+function titleFor(state: InitState): string {
+  if (state === 'ready') return 'EDOT Expo Router';
+  if (state === 'missing-env') return 'Missing .env -- copy .env.example';
+  return 'Initializing...';
+}
+
 export default function RootLayout(): React.ReactElement {
-  const [initialized, setInitialized] = useState(false);
+  const [initState, setInitState] = useState<InitState>(
+    EDOT_SERVER_URL ? 'initializing' : 'missing-env',
+  );
 
   useEffect(() => {
+    if (!EDOT_SERVER_URL) return;
     EdotReactNative.initialize({
       serverUrl: EDOT_SERVER_URL,
       serviceName: EDOT_SERVICE_NAME,
@@ -26,7 +37,7 @@ export default function RootLayout(): React.ReactElement {
       deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT,
       debug: true,
     })
-      .then(() => setInitialized(true))
+      .then(() => setInitState('ready'))
       .catch((err: unknown) => console.error('[EDOT] Init failed:', err));
   }, []);
 
@@ -35,7 +46,7 @@ export default function RootLayout(): React.ReactElement {
       <Stack
         screenOptions={{
           headerShown: true,
-          title: initialized ? 'EDOT Expo Router' : 'Initializing...',
+          title: titleFor(initState),
         }}
       />
     </EdotExpoNavigationProvider>

@@ -13,13 +13,19 @@ Four standalone demo apps showing SDK integration with different navigation fram
 | `expo-router/` | Expo Router (file-based, root Stack + tabs) | sdk, tracer-provider, expo-router |
 | `wix-navigation/` | Wix react-native-navigation (bottomTabs + push) | sdk, tracer-provider, wix-navigation |
 
-## Shared Infrastructure
+## Runtime Config
 
+Each app owns its own `.env` and `.env.example` at the app root — there is no shared
+`example/.env`. Before running an app, copy its template:
+
+```bash
+cp example/<app>/.env.example example/<app>/.env
 ```
-example/
-├── .env                # Runtime config — copy from .env.example (git-ignored)
-└── .env.example        # Template: EDOT_SERVER_URL, EDOT_SERVICE_NAME, EDOT_SECRET_TOKEN, etc.
-```
+
+All four templates declare the same five vars: `EDOT_SERVER_URL`, `EDOT_SERVICE_NAME`,
+`EDOT_SERVICE_VERSION`, `EDOT_SECRET_TOKEN`, `EDOT_DEPLOYMENT_ENVIRONMENT`. They are consumed via
+`react-native-dotenv` (`import ... from '@env'`). If `EDOT_SERVER_URL` is empty, each app surfaces
+a user-visible "Missing .env" message and skips SDK init without crashing the app.
 
 ## Platform Versions
 
