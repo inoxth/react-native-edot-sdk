@@ -76,10 +76,10 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
       }
 
       if (bodyStr) {
-        EdotNativeModule.setSpanAttribute(
+        EdotNativeModule.setSpanAttributeNumber(
           nativeSpanId,
           'http.request_content_length',
-          String(bodyStr.length),
+          bodyStr.length,
         );
       }
 
@@ -87,14 +87,17 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         if (!state.spanId) {
           return;
         }
-        EdotNativeModule.setSpanAttribute(state.spanId, 'http.status_code', String(this.status));
+        EdotNativeModule.setSpanAttributeNumber(state.spanId, 'http.status_code', this.status);
         const responseLength = this.getResponseHeader('content-length');
         if (responseLength) {
-          EdotNativeModule.setSpanAttribute(
-            state.spanId,
-            'http.response_content_length',
-            responseLength,
-          );
+          const parsed = Number(responseLength);
+          if (Number.isFinite(parsed)) {
+            EdotNativeModule.setSpanAttributeNumber(
+              state.spanId,
+              'http.response_content_length',
+              parsed,
+            );
+          }
         }
         EdotNativeModule.endSpan(state.spanId, statusCode);
         state.spanId = '';

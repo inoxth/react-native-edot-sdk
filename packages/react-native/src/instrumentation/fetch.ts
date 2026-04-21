@@ -58,16 +58,19 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       const patchedInit: RequestInit = { ...init, headers };
 
       if (typeof init?.body === 'string') {
-        EdotNativeModule.setSpanAttribute(nativeSpanId, 'http.request_content_length', String(init.body.length));
+        EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.request_content_length', init.body.length);
       }
 
       const response = await originalFetch(input, patchedInit);
 
-      EdotNativeModule.setSpanAttribute(nativeSpanId, 'http.status_code', String(response.status));
+      EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.status_code', response.status);
 
       const responseContentLength = response.headers.get('content-length');
       if (responseContentLength) {
-        EdotNativeModule.setSpanAttribute(nativeSpanId, 'http.response_content_length', responseContentLength);
+        const parsed = Number(responseContentLength);
+        if (Number.isFinite(parsed)) {
+          EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.response_content_length', parsed);
+        }
       }
 
       // OTel StatusCode: 1=Ok, 2=Error

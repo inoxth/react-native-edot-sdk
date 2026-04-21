@@ -11,10 +11,10 @@ export function setupStartupTracing(config: EdotConfig): () => void {
     }, null);
 
     const jsBundleSpanId = EdotNativeModule.startSpan('AppStartup: js_bundle_load', {}, parentSpanId);
-    EdotNativeModule.setSpanAttribute(
+    EdotNativeModule.setSpanAttributeNumber(
       jsBundleSpanId,
       'app.startup.js_bundle_load_ms',
-      String(jsBundleLoadedAt),
+      jsBundleLoadedAt,
     );
     EdotNativeModule.endSpan(jsBundleSpanId, 1);
 
@@ -23,17 +23,17 @@ export function setupStartupTracing(config: EdotConfig): () => void {
     const handle = InteractionManager.runAfterInteractions(() => {
       try {
         const firstRenderAt = Date.now();
-        EdotNativeModule.setSpanAttribute(
+        EdotNativeModule.setSpanAttributeNumber(
           firstRenderSpanId,
           'app.startup.first_render_ms',
-          String(firstRenderAt - jsBundleLoadedAt),
+          firstRenderAt - jsBundleLoadedAt,
         );
         EdotNativeModule.endSpan(firstRenderSpanId, 1);
 
-        EdotNativeModule.setSpanAttribute(
+        EdotNativeModule.setSpanAttributeNumber(
           parentSpanId,
           'app.startup.duration_ms',
-          String(firstRenderAt - jsBundleLoadedAt),
+          firstRenderAt - jsBundleLoadedAt,
         );
         EdotNativeModule.endSpan(parentSpanId, 1);
       } catch (sdkError) {
