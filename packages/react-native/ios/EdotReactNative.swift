@@ -441,8 +441,11 @@ class EdotReactNative: NSObject {
 
     var otelAttrs: [String: AttributeValue] = [:]
     for (key, val) in attributes {
-      if let k = key as? String, let v = val as? String {
-        otelAttrs[k] = .string(v)
+      guard let k = key as? String else { continue }
+      if let attr = EdotReactNative.attributeValue(from: val) {
+        otelAttrs[k] = attr
+      } else {
+        debugLog("recordMetric: skipping attribute '\(k)' — unsupported type")
       }
     }
 

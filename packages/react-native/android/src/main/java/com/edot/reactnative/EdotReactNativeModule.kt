@@ -292,8 +292,24 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         val iterator = attributes.keySetIterator()
         while (iterator.hasNextKey()) {
             val key = iterator.nextKey()
-            if (attributes.getType(key) == ReadableType.String) {
-                attrsBuilder.put(key, attributes.getString(key)!!)
+            when (attributes.getType(key)) {
+                ReadableType.String -> attrsBuilder.put(
+                    io.opentelemetry.api.common.AttributeKey.stringKey(key),
+                    attributes.getString(key)!!
+                )
+                ReadableType.Number -> {
+                    val d = attributes.getDouble(key)
+                    if (isIntegerValued(d)) attrsBuilder.put(
+                        io.opentelemetry.api.common.AttributeKey.longKey(key), d.toLong()
+                    ) else attrsBuilder.put(
+                        io.opentelemetry.api.common.AttributeKey.doubleKey(key), d
+                    )
+                }
+                ReadableType.Boolean -> attrsBuilder.put(
+                    io.opentelemetry.api.common.AttributeKey.booleanKey(key),
+                    attributes.getBoolean(key)
+                )
+                else -> android.util.Log.w("EDOT", "recordMetric: skipping attribute '$key' — unsupported type")
             }
         }
         val attrs = attrsBuilder.build()
