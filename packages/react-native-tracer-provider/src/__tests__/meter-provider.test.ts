@@ -95,3 +95,30 @@ describe('UpDownCounter', () => {
     );
   });
 });
+
+describe('Typed metric attributes (F-17)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    resetMeterForTesting();
+  });
+
+  it('preserves number and boolean attribute types without stringifying', () => {
+    const meter = getMeterProvider().getMeter('test');
+    const counter = meter.createCounter('api.calls');
+
+    counter.add(42, { userId: 'abc', count: 5, enabled: true });
+
+    expect(mockNativeModule.recordMetric).toHaveBeenCalledWith(
+      'api.calls',
+      42,
+      { userId: 'abc', count: 5, enabled: true },
+      'counter',
+    );
+
+    const recorded: Record<string, string | number | boolean> =
+      mockNativeModule.recordMetric.mock.calls[0][2];
+    expect(typeof recorded['count']).toBe('number');
+    expect(typeof recorded['enabled']).toBe('boolean');
+    expect(typeof recorded['userId']).toBe('string');
+  });
+});

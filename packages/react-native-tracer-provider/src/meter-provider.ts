@@ -1,7 +1,12 @@
 import type { MeterProvider, Meter, Counter, Histogram, UpDownCounter } from './types';
 
 interface NativeModule {
-  recordMetric(name: string, value: number, attributes: Record<string, string>, metricType: string): void;
+  recordMetric(
+    name: string,
+    value: number,
+    attributes: Record<string, string | number | boolean>,
+    metricType: string,
+  ): void;
 }
 
 let nativeModule: NativeModule | null = null;
@@ -16,15 +21,10 @@ function getNativeModule(): NativeModule {
   return nativeModule;
 }
 
-function stringifyAttributes(
+function resolveAttributes(
   attributes?: Record<string, string | number | boolean>,
-): Record<string, string> {
-  if (!attributes) return {};
-  const result: Record<string, string> = {};
-  for (const [key, value] of Object.entries(attributes)) {
-    result[key] = String(value);
-  }
-  return result;
+): Record<string, string | number | boolean> {
+  return attributes ?? {};
 }
 
 function createMeter(_name: string, _version?: string): Meter {
@@ -32,7 +32,7 @@ function createMeter(_name: string, _version?: string): Meter {
     createCounter(name: string): Counter {
       return {
         add(value: number, attributes?: Record<string, string | number | boolean>): void {
-          getNativeModule().recordMetric(name, value, stringifyAttributes(attributes), 'counter');
+          getNativeModule().recordMetric(name, value, resolveAttributes(attributes), 'counter');
         },
       };
     },
@@ -40,7 +40,7 @@ function createMeter(_name: string, _version?: string): Meter {
     createHistogram(name: string): Histogram {
       return {
         record(value: number, attributes?: Record<string, string | number | boolean>): void {
-          getNativeModule().recordMetric(name, value, stringifyAttributes(attributes), 'histogram');
+          getNativeModule().recordMetric(name, value, resolveAttributes(attributes), 'histogram');
         },
       };
     },
@@ -51,7 +51,7 @@ function createMeter(_name: string, _version?: string): Meter {
           getNativeModule().recordMetric(
             name,
             value,
-            stringifyAttributes(attributes),
+            resolveAttributes(attributes),
             'upDownCounter',
           );
         },

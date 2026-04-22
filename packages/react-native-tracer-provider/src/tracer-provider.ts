@@ -31,7 +31,11 @@ function getNativeModule(): NativeModule {
   return nativeModule;
 }
 
-let contextParentSpan: Span | null = null;
+const contextStack: Span[] = [];
+
+function currentContextParent(): Span | null {
+  return contextStack[contextStack.length - 1] ?? null;
+}
 
 function createSpan(
   name: string,
@@ -93,7 +97,7 @@ function createTracer(_name: string, _version?: string): Tracer {
         }
       }
 
-      const parentSpanId = options?.parentSpan?.spanId ?? contextParentSpan?.spanId ?? null;
+      const parentSpanId = options?.parentSpan?.spanId ?? currentContextParent()?.spanId ?? null;
 
       return createSpan(name, attrs, parentSpanId);
     },
@@ -113,18 +117,39 @@ export function getTracerProvider(): TracerProvider {
   return tracerProviderInstance;
 }
 
+/**
+ * Sets an implicit parent span for synchronous `fn`. Supports async `fn` but
+ * concurrent async calls may interleave — pass `parentSpan` explicitly via
+ * `SpanOptions` for async code.
+ */
 export function withSpanContext<T>(parentSpan: Span, fn: () => T): T {
-  const previousParent = contextParentSpan;
-  contextParentSpan = parentSpan;
+  contextStack.push(parentSpan);
+  const expectedTop = parentSpan;
   try {
     return fn();
   } finally {
-    contextParentSpan = previousParent;
+    const top = contextStack[contextStack.length - 1];
+    if (top !== expectedTop) {
+      console.warn(
+        '[EDOT] withSpanContext stack mismatch — use explicit parentSpan for async fn',
+      );
+      const idx = contextStack.lastIndexOf(expectedTop);
+      if (idx !== -1) {
+        contextStack.splice(idx, 1);
+      }
+    } else {
+      contextStack.pop();
+    }
   }
 }
 
 export function resetForTesting(): void {
   tracerProviderInstance = null;
-  contextParentSpan = null;
+  contextStack.length = 0;
   nativeModule = null;
+}
+
+/** Exposed only for testing the mismatch-detection branch. */
+export function __test_pushContextStack(span: Span): void {
+  contextStack.push(span);
 }
