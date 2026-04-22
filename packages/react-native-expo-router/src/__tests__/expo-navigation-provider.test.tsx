@@ -118,4 +118,64 @@ describe('EdotExpoNavigationProvider', () => {
     expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
     expect(ActiveViewContext.clearActiveView).toHaveBeenCalled();
   });
+
+  it('F-14: emits new span when two pathnames share the same displayName', () => {
+    const mapper = (path: string) => path.replace(/\/\d+/g, '/:id');
+
+    mockPathname = '/products/1';
+    const { rerender } = render(
+      <EdotExpoNavigationProvider screenNameMapper={mapper}>
+        <TestChild />
+      </EdotExpoNavigationProvider>,
+    );
+
+    jest.clearAllMocks();
+    mockNativeModule.startSpan.mockReturnValue('view-span-2');
+    mockPathname = '/products/2';
+
+    rerender(
+      <EdotExpoNavigationProvider screenNameMapper={mapper}>
+        <TestChild />
+      </EdotExpoNavigationProvider>,
+    );
+
+    expect(mockNativeModule.startSpan).toHaveBeenCalledTimes(1);
+    expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
+      'Navigation: /products/:id',
+      expect.objectContaining({ 'view.name': '/products/:id' }),
+      null,
+    );
+  });
+
+  it('F-15: active span is ended when component unmounts mid-navigation', () => {
+    const { unmount } = render(
+      <EdotExpoNavigationProvider>
+        <TestChild />
+      </EdotExpoNavigationProvider>,
+    );
+
+    expect(mockNativeModule.startSpan).toHaveBeenCalledTimes(1);
+    jest.clearAllMocks();
+
+    unmount();
+
+    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
+  });
+
+  it('F-16: renders correctly when pathname resolves to "/" (expo-router fallback)', () => {
+    mockPathname = '/';
+    mockNativeModule.startSpan.mockReturnValue('view-span-fallback');
+
+    render(
+      <EdotExpoNavigationProvider>
+        <TestChild />
+      </EdotExpoNavigationProvider>,
+    );
+
+    expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
+      'Navigation: /',
+      expect.objectContaining({ 'view.url': '/', 'view.name': '/', 'view.transition_type': 'initial' }),
+      null,
+    );
+  });
 });

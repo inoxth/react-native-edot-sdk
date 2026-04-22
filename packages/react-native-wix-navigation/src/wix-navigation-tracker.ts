@@ -26,6 +26,7 @@ export function registerEdotNavigationListener(
 
   let currentSpanId: string | null = null;
   let previousScreenName: string | null = null;
+  let hasEmittedFirst = false;
 
   function endCurrentSpan(): void {
     if (currentSpanId) {
@@ -42,9 +43,12 @@ export function registerEdotNavigationListener(
 
       endCurrentSpan();
 
+      const transitionType = hasEmittedFirst ? 'push' : 'initial';
+      hasEmittedFirst = true;
+
       const attributes: Record<string, string> = {
         'view.name': screenName,
-        'view.transition_type': 'push',
+        'view.transition_type': transitionType,
       };
       if (previousScreenName) {
         attributes['view.previous'] = previousScreenName;
@@ -66,6 +70,7 @@ export function registerEdotNavigationListener(
     endCurrentSpan();
     ActiveViewContext.clearActiveView();
     previousScreenName = null;
+    hasEmittedFirst = false;
   };
 }
 

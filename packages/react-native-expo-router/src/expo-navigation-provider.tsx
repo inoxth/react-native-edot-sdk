@@ -7,14 +7,44 @@ interface NativeModule {
   endSpan(spanId: string, statusCode: number): void;
 }
 
+interface ExpoRouterModule {
+  usePathname(): string;
+}
+
+function resolveUsePathname(): () => string {
+  try {
+    const mod: unknown = require('expo-router');
+    if (
+      mod !== null &&
+      typeof mod === 'object' &&
+      'usePathname' in mod &&
+      typeof (mod as ExpoRouterModule).usePathname === 'function'
+    ) {
+      return (mod as ExpoRouterModule).usePathname.bind(mod as ExpoRouterModule);
+    }
+  } catch {
+    // expo-router not available
+  }
+  return () => '/';
+}
+
+const usePathnameHook = resolveUsePathname();
+
 let nativeModule: NativeModule | null = null;
 
 function getNativeModule(): NativeModule {
   if (!nativeModule) {
-    const mod = require('@inox/react-native-edot-sdk/nativeModule') as {
-      EdotNativeModule: NativeModule;
-    };
-    nativeModule = mod.EdotNativeModule;
+    const mod: unknown = require('@inox/react-native-edot-sdk/nativeModule');
+    if (
+      mod !== null &&
+      typeof mod === 'object' &&
+      'EdotNativeModule' in mod
+    ) {
+      nativeModule = (mod as { EdotNativeModule: NativeModule }).EdotNativeModule;
+    }
+  }
+  if (!nativeModule) {
+    throw new Error('[EDOT] EdotNativeModule not found');
   }
   return nativeModule;
 }
@@ -26,20 +56,11 @@ export function EdotExpoNavigationProvider({
   const currentSpanIdRef = useRef<string | null>(null);
   const previousPathnameRef = useRef<string | null>(null);
 
-  let pathname: string;
-  try {
-    const expoRouter = require('expo-router') as {
-      usePathname(): string;
-    };
-    pathname = expoRouter.usePathname();
-  } catch {
-    pathname = '/';
-  }
-
+  const pathname = usePathnameHook();
   const displayName = screenNameMapper ? screenNameMapper(pathname) : pathname;
 
   useEffect(() => {
-    if (displayName === previousPathnameRef.current) return;
+    if (previousPathnameRef.current === pathname) return;
 
     if (currentSpanIdRef.current) {
       getNativeModule().endSpan(currentSpanIdRef.current, 1);
@@ -61,20 +82,16 @@ export function EdotExpoNavigationProvider({
     );
 
     currentSpanIdRef.current = spanId;
-    previousPathnameRef.current = displayName;
+    previousPathnameRef.current = pathname;
 
     ActiveViewContext.setActiveView({ name: displayName, spanId });
-  }, [displayName, pathname]);
 
-  useEffect(() => {
     return () => {
-      if (currentSpanIdRef.current) {
-        getNativeModule().endSpan(currentSpanIdRef.current, 1);
-        currentSpanIdRef.current = null;
-      }
+      getNativeModule().endSpan(spanId, 1);
+      currentSpanIdRef.current = null;
       ActiveViewContext.clearActiveView();
     };
-  }, []);
+  }, [pathname, displayName]);
 
   return React.createElement(React.Fragment, null, children);
 }

@@ -8,10 +8,20 @@ type Listener = (view: ActiveView | null) => void;
 let currentView: ActiveView | null = null;
 const listeners = new Set<Listener>();
 
+function notifyListeners(view: ActiveView | null): void {
+  listeners.forEach((cb) => {
+    try {
+      cb(view);
+    } catch (err) {
+      console.warn('[EDOT] ActiveViewContext listener threw:', err);
+    }
+  });
+}
+
 export const ActiveViewContext = {
   setActiveView(view: ActiveView): void {
     currentView = view;
-    listeners.forEach((cb) => cb(currentView));
+    notifyListeners(currentView);
   },
 
   getActiveView(): ActiveView | null {
@@ -20,7 +30,7 @@ export const ActiveViewContext = {
 
   clearActiveView(): void {
     currentView = null;
-    listeners.forEach((cb) => cb(null));
+    notifyListeners(null);
   },
 
   addListener(callback: Listener): () => void {

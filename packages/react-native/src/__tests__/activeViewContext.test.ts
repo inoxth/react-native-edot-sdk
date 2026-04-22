@@ -57,4 +57,27 @@ describe('ActiveViewContext', () => {
 
     expect(listener).not.toHaveBeenCalled();
   });
+
+  it('F-12: a throwing listener does not block subsequent listeners', () => {
+    const throwing = jest.fn().mockImplementation(() => {
+      throw new Error('boom');
+    });
+    const good = jest.fn();
+
+    ActiveViewContext.addListener(throwing);
+    ActiveViewContext.addListener(good);
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'span-1' });
+
+    expect(throwing).toHaveBeenCalledTimes(1);
+    expect(good).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[EDOT] ActiveViewContext listener threw:',
+      expect.any(Error),
+    );
+
+    warnSpy.mockRestore();
+  });
 });

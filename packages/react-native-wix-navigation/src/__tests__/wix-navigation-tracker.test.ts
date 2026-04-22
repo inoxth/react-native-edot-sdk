@@ -58,7 +58,7 @@ describe('registerEdotNavigationListener', () => {
       'Navigation: CartScreen',
       expect.objectContaining({
         'view.name': 'CartScreen',
-        'view.transition_type': 'push',
+        'view.transition_type': 'initial',
       }),
       null,
     );
@@ -119,6 +119,30 @@ describe('registerEdotNavigationListener', () => {
     fireEvent({ componentName: 'HomeScreen', componentId: 'home-1' });
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledTimes(1);
+  });
+
+  it('emits initial transition_type on first event, push on subsequent', () => {
+    const { navigation, fireEvent } = createMockNavigation();
+    registerEdotNavigationListener(navigation);
+
+    fireEvent({ componentName: 'HomeScreen', componentId: 'home-1' });
+
+    expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
+      'Navigation: HomeScreen',
+      expect.objectContaining({ 'view.transition_type': 'initial' }),
+      null,
+    );
+
+    jest.clearAllMocks();
+    mockNativeModule.startSpan.mockReturnValue('view-span-2');
+
+    fireEvent({ componentName: 'CartScreen', componentId: 'cart-1' });
+
+    expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
+      'Navigation: CartScreen',
+      expect.objectContaining({ 'view.transition_type': 'push' }),
+      null,
+    );
   });
 
   it('keeps span state isolated between concurrent listeners', () => {
