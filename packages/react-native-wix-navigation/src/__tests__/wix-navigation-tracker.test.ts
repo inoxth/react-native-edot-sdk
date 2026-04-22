@@ -120,4 +120,28 @@ describe('registerEdotNavigationListener', () => {
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledTimes(1);
   });
+
+  it('keeps span state isolated between concurrent listeners', () => {
+    mockNativeModule.startSpan
+      .mockReturnValueOnce('wix-a-1')
+      .mockReturnValueOnce('wix-b-1');
+
+    const first = createMockNavigation();
+    const second = createMockNavigation();
+
+    const cleanupFirst = registerEdotNavigationListener(first.navigation);
+    const cleanupSecond = registerEdotNavigationListener(second.navigation);
+
+    first.fireEvent({ componentName: 'AScreen', componentId: 'a-1' });
+    second.fireEvent({ componentName: 'BScreen', componentId: 'b-1' });
+
+    expect(mockNativeModule.endSpan).not.toHaveBeenCalled();
+
+    cleanupFirst();
+    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('wix-a-1', 1);
+
+    mockNativeModule.endSpan.mockClear();
+    cleanupSecond();
+    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('wix-b-1', 1);
+  });
 });

@@ -114,4 +114,32 @@ describe('createEdotNavigationContainerRef', () => {
 
     expect(mockNativeModule.startSpan).not.toHaveBeenCalled();
   });
+
+  it('keeps span state isolated between concurrent instances', () => {
+    mockNativeModule.startSpan
+      .mockReturnValueOnce('span-a-1')
+      .mockReturnValueOnce('span-b-1');
+
+    const first = createEdotNavigationContainerRef();
+    first.navigationRef.current = {
+      getCurrentRoute: () => ({ name: 'FirstScreen', key: 'k1' }),
+    };
+
+    const second = createEdotNavigationContainerRef();
+    second.navigationRef.current = {
+      getCurrentRoute: () => ({ name: 'SecondScreen', key: 'k2' }),
+    };
+
+    first.onReady();
+    second.onReady();
+
+    expect(mockNativeModule.endSpan).not.toHaveBeenCalled();
+
+    first.cleanup();
+    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('span-a-1', 1);
+
+    mockNativeModule.endSpan.mockClear();
+    second.cleanup();
+    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('span-b-1', 1);
+  });
 });

@@ -18,21 +18,21 @@ function getNativeModule(): NativeModule {
   return nativeModule;
 }
 
-let currentSpanId: string | null = null;
-let previousScreenName: string | null = null;
-
-function endCurrentSpan(): void {
-  if (currentSpanId) {
-    getNativeModule().endSpan(currentSpanId, 1);
-    currentSpanId = null;
-  }
-}
-
 export function registerEdotNavigationListener(
   Navigation: WixNavigation,
   options?: EdotWixNavigationOptions,
 ): () => void {
   const mapper = options?.screenNameMapper;
+
+  let currentSpanId: string | null = null;
+  let previousScreenName: string | null = null;
+
+  function endCurrentSpan(): void {
+    if (currentSpanId) {
+      getNativeModule().endSpan(currentSpanId, 1);
+      currentSpanId = null;
+    }
+  }
 
   const subscription = Navigation.events().registerComponentDidAppearListener(
     (event: ComponentDidAppearEvent) => {
@@ -70,9 +70,6 @@ export function registerEdotNavigationListener(
 }
 
 export function resetForTesting(): void {
-  endCurrentSpan();
   ActiveViewContext.clearActiveView();
-  previousScreenName = null;
-  currentSpanId = null;
   nativeModule = null;
 }

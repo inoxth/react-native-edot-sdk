@@ -18,33 +18,6 @@ function getNativeModule(): NativeModule {
   return nativeModule;
 }
 
-let currentSpanId: string | null = null;
-let previousScreenName: string | null = null;
-
-function endCurrentSpan(): void {
-  if (currentSpanId) {
-    getNativeModule().endSpan(currentSpanId, 1);
-    currentSpanId = null;
-  }
-}
-
-function startViewSpan(screenName: string, transitionType: string): void {
-  endCurrentSpan();
-
-  const attributes: Record<string, string> = {
-    'view.name': screenName,
-    'view.transition_type': transitionType,
-  };
-  if (previousScreenName) {
-    attributes['view.previous'] = previousScreenName;
-  }
-
-  currentSpanId = getNativeModule().startSpan(`Navigation: ${screenName}`, attributes, null);
-
-  ActiveViewContext.setActiveView({ name: screenName, spanId: currentSpanId });
-  previousScreenName = screenName;
-}
-
 export function createEdotNavigationContainerRef<
   T extends NavigationContainerRef = NavigationContainerRef,
 >(
@@ -57,6 +30,33 @@ export function createEdotNavigationContainerRef<
 } {
   const navigationRef: { current: T | null } = { current: null };
   const mapper = options?.screenNameMapper;
+
+  let currentSpanId: string | null = null;
+  let previousScreenName: string | null = null;
+
+  function endCurrentSpan(): void {
+    if (currentSpanId) {
+      getNativeModule().endSpan(currentSpanId, 1);
+      currentSpanId = null;
+    }
+  }
+
+  function startViewSpan(screenName: string, transitionType: string): void {
+    endCurrentSpan();
+
+    const attributes: Record<string, string> = {
+      'view.name': screenName,
+      'view.transition_type': transitionType,
+    };
+    if (previousScreenName) {
+      attributes['view.previous'] = previousScreenName;
+    }
+
+    currentSpanId = getNativeModule().startSpan(`Navigation: ${screenName}`, attributes, null);
+
+    ActiveViewContext.setActiveView({ name: screenName, spanId: currentSpanId });
+    previousScreenName = screenName;
+  }
 
   function getScreenName(ref: NavigationContainerRef): string | null {
     const route = ref.getCurrentRoute();
@@ -90,9 +90,6 @@ export function createEdotNavigationContainerRef<
 }
 
 export function resetForTesting(): void {
-  endCurrentSpan();
   ActiveViewContext.clearActiveView();
-  previousScreenName = null;
-  currentSpanId = null;
   nativeModule = null;
 }
