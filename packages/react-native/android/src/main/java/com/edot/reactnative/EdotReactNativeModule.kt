@@ -7,6 +7,8 @@ import io.opentelemetry.api.logs.Severity
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanBuilder
 import io.opentelemetry.api.trace.StatusCode
+import java.util.Collections
+import java.util.LinkedHashMap
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -45,7 +47,9 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     }
 
     companion object {
+        @Volatile
         private var isInitialized = false
+        @Volatile
         private var debugEnabled = false
         private var userAttributesSpanScope = UserAttributesSpanScope.ID_ONLY
 
@@ -65,7 +69,15 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         fun emissionAllowed(): Boolean = trackingConsent.allowsEmission
     }
 
-    private val activeSpans = ConcurrentHashMap<String, Span>()
+    private val activeSpans: MutableMap<String, Span> = Collections.synchronizedMap(
+        object : LinkedHashMap<String, Span>(16, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Span>): Boolean {
+                val evict = size > 512
+                if (evict) eldest.value.end()
+                return evict
+            }
+        }
+    )
 
     override fun getName(): String = "EdotReactNative"
 

@@ -57,12 +57,15 @@ class EdotReactNative: NSObject {
     return allowed
   }
 
+  private static let activeSpansCap = 512
+
   private let spanLock = NSLock()
   #if ELASTIC_APM_AVAILABLE
   private var activeSpans: [String: any Span] = [:]
   #else
   private var activeSpans: [String: String] = [:]
   #endif
+  private var activeSpanQueue: [String] = []
 
   #if ELASTIC_APM_AVAILABLE
   private static let attrLock = NSLock()
@@ -327,7 +330,13 @@ class EdotReactNative: NSObject {
 
     let spanId = UUID().uuidString
     spanLock.lock()
+    if activeSpans.count >= EdotReactNative.activeSpansCap,
+       let oldest = activeSpanQueue.first {
+      activeSpanQueue.removeFirst()
+      activeSpans.removeValue(forKey: oldest)?.end()
+    }
     activeSpans[spanId] = span
+    activeSpanQueue.append(spanId)
     spanLock.unlock()
 
     return spanId
@@ -341,6 +350,7 @@ class EdotReactNative: NSObject {
     #if ELASTIC_APM_AVAILABLE
     spanLock.lock()
     let span = activeSpans.removeValue(forKey: spanId)
+    activeSpanQueue.removeAll { $0 == spanId }
     spanLock.unlock()
 
     guard EdotReactNative.emissionAllowed() else { return }
@@ -357,6 +367,7 @@ class EdotReactNative: NSObject {
     #else
     spanLock.lock()
     activeSpans.removeValue(forKey: spanId)
+    activeSpanQueue.removeAll { $0 == spanId }
     spanLock.unlock()
     #endif
   }
@@ -489,8 +500,15 @@ class EdotReactNative: NSObject {
 
   // MARK: - Helpers
 
+  private static func debugEnabledSnapshot() -> Bool {
+    stateLock.lock()
+    let v = debugEnabled
+    stateLock.unlock()
+    return v
+  }
+
   private func debugLog(_ message: String) {
-    if EdotReactNative.debugEnabled {
+    if EdotReactNative.debugEnabledSnapshot() {
       os_log("[EDOT] %{public}@", log: log, type: .debug, message)
     }
   }
