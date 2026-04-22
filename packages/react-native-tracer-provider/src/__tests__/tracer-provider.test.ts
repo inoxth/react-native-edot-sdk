@@ -124,7 +124,8 @@ describe('Span', () => {
     expect(mockNativeModule.endSpan).toHaveBeenCalledWith(span.spanId, 2);
   });
 
-  it('ignores operations after end', () => {
+  it('ignores operations after end and warns', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     const tracer = getTracerProvider().getTracer('test');
     const span = tracer.startSpan('test');
 
@@ -136,6 +137,75 @@ describe('Span', () => {
 
     expect(mockNativeModule.setSpanAttribute).not.toHaveBeenCalled();
     expect(mockNativeModule.endSpan).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledTimes(2);
+    warnSpy.mockRestore();
+  });
+
+  it('warns on recordException after end and skips native call (F-28)', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const tracer = getTracerProvider().getTracer('test');
+    const span = tracer.startSpan('checkout');
+
+    span.end();
+    jest.clearAllMocks();
+
+    const err = new Error('Payment declined');
+    span.recordException(err);
+
+    expect(mockNativeModule.recordSpanException).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toMatch(/recordException/);
+    expect(warnSpy.mock.calls[0][0]).toMatch(/checkout/);
+    expect(warnSpy.mock.calls[0][0]).toMatch(/Payment declined/);
+    warnSpy.mockRestore();
+  });
+
+  it('warns on setAttribute after end and skips native call (F-28)', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const tracer = getTracerProvider().getTracer('test');
+    const span = tracer.startSpan('checkout');
+
+    span.end();
+    jest.clearAllMocks();
+
+    span.setAttribute('user.id', 'u-42');
+
+    expect(mockNativeModule.setSpanAttribute).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toMatch(/setAttribute/);
+    expect(warnSpy.mock.calls[0][0]).toMatch(/checkout/);
+    warnSpy.mockRestore();
+  });
+
+  it('warns on setStatus after end and skips update (F-28)', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const tracer = getTracerProvider().getTracer('test');
+    const span = tracer.startSpan('checkout');
+
+    span.end();
+    jest.clearAllMocks();
+
+    span.setStatus(SpanStatusCode.ERROR);
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toMatch(/setStatus/);
+    warnSpy.mockRestore();
+  });
+
+  it('warn message includes "ended … ago" timestamp context (F-28)', () => {
+    jest.useFakeTimers();
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const tracer = getTracerProvider().getTracer('test');
+    const span = tracer.startSpan('payment');
+
+    span.end();
+    jest.advanceTimersByTime(50);
+
+    span.recordException(new Error('oops'));
+
+    expect(warnSpy.mock.calls[0][0]).toMatch(/\d+ms ago/);
+    warnSpy.mockRestore();
+    jest.useRealTimers();
   });
 });
 

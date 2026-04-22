@@ -44,8 +44,17 @@ function createSpan(
 ): Span {
   const native = getNativeModule();
   const spanId = native.startSpan(name, attributes, parentSpanId);
-  let ended = false;
   let statusCode = 1;
+
+  let endedAt: number | null = null;
+
+  function warnPostEnd(method: string, detail?: string): void {
+    const age = endedAt !== null ? `${Date.now() - endedAt}ms ago` : 'already ended';
+    const extra = detail !== undefined ? ` (${detail})` : '';
+    console.warn(
+      `[EDOT] ${method} called on already-ended span "${name}" — ended ${age}${extra}; drop ignored`,
+    );
+  }
 
   const span: Span = {
     get spanId() {
@@ -53,7 +62,10 @@ function createSpan(
     },
 
     setAttribute(key: string, value: string | number | boolean): void {
-      if (ended) return;
+      if (endedAt !== null) {
+        warnPostEnd('setAttribute', `key="${key}"`);
+        return;
+      }
       if (typeof value === 'number') {
         native.setSpanAttributeNumber(spanId, key, value);
       } else if (typeof value === 'boolean') {
@@ -64,12 +76,18 @@ function createSpan(
     },
 
     setStatus(code: SpanStatusCodeValue): void {
-      if (ended) return;
+      if (endedAt !== null) {
+        warnPostEnd('setStatus', `code=${code}`);
+        return;
+      }
       statusCode = code;
     },
 
     recordException(error: Error): void {
-      if (ended) return;
+      if (endedAt !== null) {
+        warnPostEnd('recordException', error.message);
+        return;
+      }
       native.recordSpanException(spanId, {
         name: error.name,
         message: error.message,
@@ -78,8 +96,11 @@ function createSpan(
     },
 
     end(): void {
-      if (ended) return;
-      ended = true;
+      if (endedAt !== null) {
+        warnPostEnd('end');
+        return;
+      }
+      endedAt = Date.now();
       native.endSpan(spanId, statusCode);
     },
   };
