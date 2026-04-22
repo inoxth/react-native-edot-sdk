@@ -23,8 +23,8 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
   XMLHttpRequest.prototype.open = function (method: string, url: string, ...args: unknown[]) {
     try {
       xhrStateMap.set(this, { method: method.toUpperCase(), url, spanId: '' });
-    } catch {
-      // SDK error — ignore
+    } catch (sdkError) {
+      console.warn('[EDOT] XHR open instrumentation error:', sdkError);
     }
     return originalOpen.apply(this, [method, url, ...args] as Parameters<typeof originalOpen>);
   };
@@ -125,9 +125,7 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         endSpan(2);
       });
     } catch (sdkError) {
-      if (config.debug) {
-        console.log('[EDOT] XHR instrumentation error:', sdkError);
-      }
+      console.warn('[EDOT] XHR instrumentation error:', sdkError);
     }
 
     return originalSend.call(this, body);

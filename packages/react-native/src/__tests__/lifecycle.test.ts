@@ -66,4 +66,22 @@ describe('setupLifecycleTracking', () => {
     );
     teardown();
   });
+
+  it('surfaces SDK errors via console.warn even when debug is false', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    (EdotNativeModule.startSpan as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('native boom');
+    });
+
+    const teardown = setupLifecycleTracking({ ...baseConfig, debug: false });
+    capturedHandler?.('background');
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[EDOT] Lifecycle tracking error:',
+      expect.any(Error),
+    );
+
+    warnSpy.mockRestore();
+    teardown();
+  });
 });

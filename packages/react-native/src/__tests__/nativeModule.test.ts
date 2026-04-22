@@ -47,6 +47,29 @@ describe('nativeModule', () => {
     expect(sessionId).toBe('');
   });
 
+  it('warns and falls back when TurboModule require throws', () => {
+    global.__turboModuleProxy = {};
+    jest.doMock('../NativeEdotReactNative', () => {
+      throw new Error('TurboModule spec broken');
+    });
+
+    const fallback = { startSpan: jest.fn(), endSpan: jest.fn() };
+    NativeModules.EdotReactNative = fallback;
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    const { EdotNativeModule } = require('../nativeModule');
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[EDOT] TurboModule load failed, falling back to NativeModules:',
+      expect.any(Error),
+    );
+    expect(EdotNativeModule).toBe(fallback);
+
+    warnSpy.mockRestore();
+    jest.dontMock('../NativeEdotReactNative');
+  });
+
   it('loads NativeModules when available on old architecture', () => {
     const mockModule = {
       initialize: jest.fn(),

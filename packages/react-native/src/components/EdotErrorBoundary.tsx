@@ -23,8 +23,8 @@ export class EdotErrorBoundary extends React.Component<
   componentDidCatch(error: Error): void {
     try {
       reportError(error, 'js_render_error', false);
-    } catch {
-      // SDK error — never crash the host app
+    } catch (sdkError) {
+      console.warn('[EDOT] Error boundary reportError failed:', sdkError);
     }
   }
 

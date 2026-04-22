@@ -34,8 +34,11 @@ function loadNativeModule(): Spec {
   if (isTurboModuleEnabled) {
     try {
       return require('./NativeEdotReactNative').default;
-    } catch {
-      // TurboModule not available, fall through to NativeModules
+    } catch (sdkError) {
+      console.warn(
+        '[EDOT] TurboModule load failed, falling back to NativeModules:',
+        sdkError,
+      );
     }
   }
 

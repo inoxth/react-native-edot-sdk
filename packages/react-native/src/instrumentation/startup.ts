@@ -1,7 +1,7 @@
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
 
-export function setupStartupTracing(config: EdotConfig): () => void {
+export function setupStartupTracing(_config: EdotConfig): () => void {
   const jsBundleLoadedAt = Date.now();
 
   try {
@@ -36,9 +36,7 @@ export function setupStartupTracing(config: EdotConfig): () => void {
         );
         EdotNativeModule.endSpan(parentSpanId, 1);
       } catch (sdkError) {
-        if (config.debug) {
-          console.log('[EDOT] Startup first render tracking error:', sdkError);
-        }
+        console.warn('[EDOT] Startup first render tracking error:', sdkError);
       }
     });
 
@@ -46,9 +44,7 @@ export function setupStartupTracing(config: EdotConfig): () => void {
       cancelIdleCallback(handle);
     };
   } catch (sdkError) {
-    if (config.debug) {
-      console.log('[EDOT] Failed to set up startup tracing:', sdkError);
-    }
+    console.warn('[EDOT] Failed to set up startup tracing:', sdkError);
     return () => {};
   }
 }

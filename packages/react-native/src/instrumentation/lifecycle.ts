@@ -8,7 +8,7 @@ const STATE_LABELS: Record<string, string> = {
   inactive: 'inactive',
 };
 
-export function setupLifecycleTracking(config: EdotConfig): () => void {
+export function setupLifecycleTracking(_config: EdotConfig): () => void {
   let subscription: NativeEventSubscription | null = null;
 
   try {
@@ -24,16 +24,12 @@ export function setupLifecycleTracking(config: EdotConfig): () => void {
           );
           EdotNativeModule.endSpan(spanId, 1);
         } catch (sdkError) {
-          if (config.debug) {
-            console.log('[EDOT] Lifecycle tracking error:', sdkError);
-          }
+          console.warn('[EDOT] Lifecycle tracking error:', sdkError);
         }
       },
     );
   } catch (sdkError) {
-    if (config.debug) {
-      console.log('[EDOT] Failed to set up lifecycle tracking:', sdkError);
-    }
+    console.warn('[EDOT] Failed to set up lifecycle tracking:', sdkError);
   }
 
   return () => {

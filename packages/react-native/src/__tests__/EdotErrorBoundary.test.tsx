@@ -63,4 +63,25 @@ describe('EdotErrorBoundary', () => {
       null,
     );
   });
+
+  it('warns via console.warn when reportError itself throws', () => {
+    const { EdotNativeModule } = require('../nativeModule');
+    (EdotNativeModule.startSpan as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('native boom');
+    });
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    render(
+      <EdotErrorBoundary fallback={<Text>Error</Text>}>
+        <ThrowingComponent />
+      </EdotErrorBoundary>,
+    );
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[EDOT] Error boundary reportError failed:',
+      expect.any(Error),
+    );
+
+    warnSpy.mockRestore();
+  });
 });

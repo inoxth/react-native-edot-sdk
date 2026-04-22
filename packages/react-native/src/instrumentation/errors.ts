@@ -33,16 +33,14 @@ function reportError(error: Error, source: string, isFatal: boolean): void {
   });
 }
 
-function setupGlobalErrorHandler(debug: boolean): () => void {
+function setupGlobalErrorHandler(): () => void {
   const previousHandler = ErrorUtils.getGlobalHandler();
 
   ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
     try {
       reportError(error, 'js_uncaught', isFatal ?? false);
     } catch (sdkError) {
-      if (debug) {
-        console.log('[EDOT] Error handler failed:', sdkError);
-      }
+      console.warn('[EDOT] Error handler failed:', sdkError);
     }
     previousHandler(error, isFatal);
   });
@@ -52,7 +50,7 @@ function setupGlobalErrorHandler(debug: boolean): () => void {
   };
 }
 
-function setupPromiseRejectionHandler(debug: boolean): () => void {
+function setupPromiseRejectionHandler(): () => void {
   try {
     const hermes = global.HermesInternal;
     if (hermes?.enablePromiseRejectionTracker) {
@@ -63,9 +61,7 @@ function setupPromiseRejectionHandler(debug: boolean): () => void {
             const error = rejection instanceof Error ? rejection : new Error(String(rejection));
             reportError(error, 'js_promise_rejection', false);
           } catch (sdkError) {
-            if (debug) {
-              console.log('[EDOT] Promise rejection handler failed:', sdkError);
-            }
+            console.warn('[EDOT] Promise rejection handler failed:', sdkError);
           }
         },
       });
@@ -78,17 +74,13 @@ function setupPromiseRejectionHandler(debug: boolean): () => void {
             const error = rejection instanceof Error ? rejection : new Error(String(rejection));
             reportError(error, 'js_promise_rejection', false);
           } catch (sdkError) {
-            if (debug) {
-              console.log('[EDOT] Promise rejection handler failed:', sdkError);
-            }
+            console.warn('[EDOT] Promise rejection handler failed:', sdkError);
           }
         },
       });
     }
   } catch (sdkError) {
-    if (debug) {
-      console.log('[EDOT] Failed to set up promise rejection tracking:', sdkError);
-    }
+    console.warn('[EDOT] Failed to set up promise rejection tracking:', sdkError);
   }
 
   return () => {
@@ -96,9 +88,9 @@ function setupPromiseRejectionHandler(debug: boolean): () => void {
   };
 }
 
-export function setupErrorHandler(config: EdotConfig): () => void {
-  const teardownGlobal = setupGlobalErrorHandler(config.debug ?? false);
-  const teardownPromise = setupPromiseRejectionHandler(config.debug ?? false);
+export function setupErrorHandler(_config: EdotConfig): () => void {
+  const teardownGlobal = setupGlobalErrorHandler();
+  const teardownPromise = setupPromiseRejectionHandler();
 
   return () => {
     teardownGlobal();
