@@ -12,7 +12,8 @@
     "fmt": "oxfmt packages/",
     "typecheck": "tsc --build",
     "test": "jest",
-    "build": "yarn workspaces foreach -A --include '@inox/*' run build"
+    "build": "yarn workspaces foreach -A --include '@inox/*' run build",
+    "clean": "yarn workspaces foreach -A --include '@inox/*' run clean"
   },
   "devDependencies": {
     "@react-native/babel-preset": "0.85.1",

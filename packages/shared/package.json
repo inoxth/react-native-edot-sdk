@@ -12,13 +12,16 @@
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
   "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index.ts",
   "scripts": {
     "build": "bob build",
+    "clean": "rimraf lib tsconfig.tsbuildinfo",
     "lint": "oxlint src/",
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },
   "devDependencies": {
+    "rimraf": "^6.1.3",
     "typescript": "~5.8.3"
   },
   "react-native-builder-bob": {
