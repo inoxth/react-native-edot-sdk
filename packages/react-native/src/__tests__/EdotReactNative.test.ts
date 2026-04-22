@@ -84,6 +84,17 @@ describe('EdotReactNative', () => {
       warnSpy.mockRestore();
     });
 
+    it('concurrent initialize calls only call native module once', async () => {
+      const [p1, p2] = await Promise.all([
+        EdotReactNative.initialize(validConfig),
+        EdotReactNative.initialize(validConfig),
+      ]).then((results) => results);
+
+      expect(p1).toBeUndefined();
+      expect(p2).toBeUndefined();
+      expect(EdotNativeModule.initialize).toHaveBeenCalledTimes(1);
+    });
+
     it('throws on invalid config before calling native', async () => {
       await expect(EdotReactNative.initialize({ ...validConfig, serverUrl: '' })).rejects.toThrow(
         'serverUrl is required',

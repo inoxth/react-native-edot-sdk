@@ -11,6 +11,7 @@ import { setupStartupTracing } from './instrumentation/startup';
 import { setupSpanCleanup } from './instrumentation/spanCleanup';
 
 let initialized = false;
+let initPromise: Promise<void> | null = null;
 const teardowns: Array<() => void> = [];
 
 function mergeConfig(config: EdotConfig): Record<string, unknown> {
@@ -41,13 +42,8 @@ function debugLog(config: EdotConfig, ...args: unknown[]): void {
   }
 }
 
-export const EdotReactNative = {
-  async initialize(config: EdotConfig): Promise<void> {
-    if (initialized) {
-      console.warn('[EDOT] SDK already initialized, ignoring duplicate call');
-      return;
-    }
-
+async function doInitialize(config: EdotConfig): Promise<void> {
+  try {
     validateConfig(config);
 
     const nativeConfig = mergeConfig(config);
@@ -59,7 +55,6 @@ export const EdotReactNative = {
     });
 
     await EdotNativeModule.initialize(nativeConfig);
-    initialized = true;
 
     const merged = { ...EDOT_DEFAULTS, ...config };
 
@@ -87,6 +82,25 @@ export const EdotReactNative = {
     teardowns.push(setupSpanCleanup());
 
     debugLog(config, 'SDK initialized successfully');
+    initialized = true;
+  } finally {
+    initPromise = null;
+  }
+}
+
+export const EdotReactNative = {
+  async initialize(config: EdotConfig): Promise<void> {
+    if (initialized) {
+      console.warn('[EDOT] SDK already initialized, ignoring duplicate call');
+      return;
+    }
+
+    if (initPromise) {
+      return initPromise;
+    }
+
+    initPromise = doInitialize(config);
+    return initPromise;
   },
 
   /**
@@ -147,5 +161,6 @@ export const EdotReactNative = {
     teardowns.forEach((fn) => fn());
     teardowns.length = 0;
     initialized = false;
+    initPromise = null;
   },
 };

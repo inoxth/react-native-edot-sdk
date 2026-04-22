@@ -1,5 +1,6 @@
 import { setupXhrInstrumentation } from '../instrumentation/xhr';
 import { EdotNativeModule } from '../nativeModule';
+import { trackSpan, untrackSpan } from '../instrumentation/spanCleanup';
 import type { EdotConfig } from '../types';
 
 jest.mock('../nativeModule', () => ({
@@ -11,6 +12,11 @@ jest.mock('../nativeModule', () => ({
     setSpanAttributeBoolean: jest.fn(),
     recordSpanException: jest.fn(),
   },
+}));
+
+jest.mock('../instrumentation/spanCleanup', () => ({
+  trackSpan: jest.fn(),
+  untrackSpan: jest.fn(),
 }));
 
 const baseConfig: EdotConfig = {
@@ -39,13 +45,19 @@ class MockXMLHttpRequest {
     }
     this._listeners[event].push(handler);
   }
+  dispatch(event: string): void {
+    this._listeners[event]?.forEach((h) => h());
+  }
 }
 
 describe('setupXhrInstrumentation', () => {
   let teardown: () => void;
 
+  let XHR: new () => MockXMLHttpRequest;
+
   beforeEach(() => {
     global.XMLHttpRequest = MockXMLHttpRequest as unknown as typeof XMLHttpRequest;
+    XHR = MockXMLHttpRequest;
     jest.clearAllMocks();
   });
 
@@ -98,5 +110,49 @@ describe('setupXhrInstrumentation', () => {
     xhr.send();
 
     expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+  });
+
+  it('tracks span on send and untracks on load', () => {
+    teardown = setupXhrInstrumentation(baseConfig);
+
+    const xhr = new XHR();
+    xhr.open('GET', 'https://api.example.com/data');
+    xhr.send();
+
+    expect(trackSpan).toHaveBeenCalledWith('span-1');
+
+    xhr.dispatch('load');
+
+    expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('span-1', expect.any(Number));
+    expect(untrackSpan).toHaveBeenCalledWith('span-1');
+  });
+
+  it('ends span and untracks on abort', () => {
+    teardown = setupXhrInstrumentation(baseConfig);
+
+    const xhr = new XHR();
+    xhr.open('POST', 'https://api.example.com/submit');
+    xhr.send('body');
+
+    expect(trackSpan).toHaveBeenCalledWith('span-1');
+
+    xhr.dispatch('abort');
+
+    expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('span-1', 0);
+    expect(untrackSpan).toHaveBeenCalledWith('span-1');
+  });
+
+  it('idempotent: second event after abort is a no-op', () => {
+    teardown = setupXhrInstrumentation(baseConfig);
+
+    const xhr = new XHR();
+    xhr.open('GET', 'https://api.example.com/data');
+    xhr.send();
+
+    xhr.dispatch('abort');
+    xhr.dispatch('load');
+
+    expect(EdotNativeModule.endSpan).toHaveBeenCalledTimes(1);
+    expect(untrackSpan).toHaveBeenCalledTimes(1);
   });
 });

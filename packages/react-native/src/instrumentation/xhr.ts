@@ -4,6 +4,7 @@ import { ActiveViewContext } from '../activeViewContext';
 import { sanitizeUrl, shouldIgnore, shouldPropagate } from './urlUtils';
 import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
+import { trackSpan, untrackSpan } from './spanCleanup';
 
 const DEDUP_HEADER = 'X-Edot-RN-Traced';
 
@@ -67,6 +68,7 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
 
       const nativeSpanId = EdotNativeModule.startSpan(spanName, spanAttributes, null);
       state.spanId = nativeSpanId;
+      trackSpan(nativeSpanId);
 
       originalSetRequestHeader.call(this, DEDUP_HEADER, '1');
       if (shouldPropagate(url, config.tracePropagationTargets)) {
@@ -87,20 +89,22 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         if (!state.spanId) {
           return;
         }
-        EdotNativeModule.setSpanAttributeNumber(state.spanId, 'http.response.status_code', this.status);
+        const currentSpanId = state.spanId;
+        EdotNativeModule.setSpanAttributeNumber(currentSpanId, 'http.response.status_code', this.status);
         const responseLength = this.getResponseHeader('content-length');
         if (responseLength) {
           const parsed = Number(responseLength);
           if (Number.isFinite(parsed)) {
             EdotNativeModule.setSpanAttributeNumber(
-              state.spanId,
+              currentSpanId,
               'http.response.body.size',
               parsed,
             );
           }
         }
-        EdotNativeModule.endSpan(state.spanId, statusCode);
+        EdotNativeModule.endSpan(currentSpanId, statusCode);
         state.spanId = '';
+        untrackSpan(currentSpanId);
       };
 
       this.addEventListener('load', () => {
@@ -123,6 +127,10 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
           stack: '',
         });
         endSpan(2);
+      });
+
+      this.addEventListener('abort', () => {
+        endSpan(0);
       });
     } catch (sdkError) {
       console.warn('[EDOT] XHR instrumentation error:', sdkError);
