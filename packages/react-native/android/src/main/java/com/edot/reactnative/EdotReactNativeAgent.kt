@@ -6,15 +6,16 @@ import co.elastic.otel.android.connectivity.Authentication
 import co.elastic.otel.android.exporters.configuration.ExportProtocol
 import co.elastic.otel.android.features.diskbuffering.DiskBufferingConfiguration
 import io.opentelemetry.api.OpenTelemetry
+import java.util.concurrent.atomic.AtomicBoolean
 
 object EdotReactNativeAgent {
 
     private var agent: ElasticApmAgent? = null
-    private var preInitialized = false
+    private val preInitialized = AtomicBoolean(false)
 
     @JvmStatic
     val isPreInitialized: Boolean
-        get() = preInitialized
+        get() = preInitialized.get()
 
     internal val openTelemetry: OpenTelemetry?
         get() = agent?.getOpenTelemetry()
@@ -29,11 +30,12 @@ object EdotReactNativeAgent {
         deploymentEnvironment: String,
         secretToken: String? = null,
     ) {
-        if (preInitialized) return
         require(serverUrl.isNotBlank()) { "[EDOT] serverUrl must not be blank" }
         requireResourceIdentity("serviceName", serviceName)
         requireResourceIdentity("serviceVersion", serviceVersion)
         requireResourceIdentity("deploymentEnvironment", deploymentEnvironment)
+
+        if (!preInitialized.compareAndSet(false, true)) return
 
         val builder = ElasticApmAgent.builder(application)
             .setExportUrl(serverUrl)
@@ -45,7 +47,6 @@ object EdotReactNativeAgent {
         }
 
         agent = builder.build()
-        preInitialized = true
     }
 
     private fun requireResourceIdentity(name: String, value: String) {

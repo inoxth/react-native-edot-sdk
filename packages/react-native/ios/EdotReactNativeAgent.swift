@@ -7,6 +7,8 @@ import ElasticApm
 @objc
 public class EdotReactNativeAgent: NSObject {
 
+  private static let agentLock = NSLock()
+  private static let envLock = NSLock()
   private static var preInitialized = false
 
   @objc
@@ -17,7 +19,6 @@ public class EdotReactNativeAgent: NSObject {
     deploymentEnvironment: String,
     secretToken: String? = nil
   ) {
-    guard !preInitialized else { return }
     if serverUrl.isEmpty {
       raiseInvalid("serverUrl must not be blank")
     }
@@ -27,6 +28,12 @@ public class EdotReactNativeAgent: NSObject {
     requireResourceIdentity("serviceName", serviceName)
     requireResourceIdentity("serviceVersion", serviceVersion)
     requireResourceIdentity("deploymentEnvironment", deploymentEnvironment)
+
+    agentLock.lock()
+    guard !preInitialized else {
+      agentLock.unlock()
+      return
+    }
 
     #if ELASTIC_APM_AVAILABLE
     applyResourceAttributes(
@@ -46,6 +53,7 @@ public class EdotReactNativeAgent: NSObject {
     #endif
 
     preInitialized = true
+    agentLock.unlock()
   }
 
   private static func requireResourceIdentity(_ name: String, _ value: String) {
@@ -68,12 +76,12 @@ public class EdotReactNativeAgent: NSObject {
 
   @objc
   public static var isPreInitialized: Bool {
-    return preInitialized
+    agentLock.lock()
+    let value = preInitialized
+    agentLock.unlock()
+    return value
   }
 
-  /// Injects `service.name`, `service.version`, and `deployment.environment` into the OpenTelemetry
-  /// `Resource` via the `OTEL_RESOURCE_ATTRIBUTES` environment variable. Must be called before
-  /// `ElasticApmAgent.start(...)` because the agent captures the Resource at start time.
   static func applyResourceAttributes(
     serviceName: String?,
     serviceVersion: String?,
@@ -90,6 +98,8 @@ public class EdotReactNativeAgent: NSObject {
       pairs.append("deployment.environment=\(deploymentEnvironment)")
     }
     guard !pairs.isEmpty else { return }
+    envLock.lock()
     setenv("OTEL_RESOURCE_ATTRIBUTES", pairs.joined(separator: ","), 1)
+    envLock.unlock()
   }
 }
