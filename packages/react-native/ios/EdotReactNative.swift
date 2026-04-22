@@ -9,12 +9,27 @@ import OpenTelemetryApi
 
 private let log = OSLog(subsystem: "com.edot.react-native", category: "SDK")
 
+enum UserAttributesSpanScope {
+  case all
+  case idOnly
+  case none
+
+  static func parse(_ raw: String?) -> UserAttributesSpanScope {
+    switch raw {
+    case "all": return .all
+    case "none": return .none
+    default: return .idOnly
+    }
+  }
+}
+
 @objc(EdotReactNative)
 class EdotReactNative: NSObject {
 
   private static let stateLock = NSLock()
   private static var isInitialized = false
   private static var debugEnabled = false
+  private static var userAttributesSpanScope: UserAttributesSpanScope = .idOnly
 
   private let spanLock = NSLock()
   #if ELASTIC_APM_AVAILABLE
@@ -41,7 +56,28 @@ class EdotReactNative: NSObject {
     let s = sessionAttributes
     let u = userAttributes
     attrLock.unlock()
-    return (g, s, u)
+
+    stateLock.lock()
+    let scope = userAttributesSpanScope
+    stateLock.unlock()
+
+    return (g, s, filterUserAttributes(u, scope: scope))
+  }
+
+  private static func filterUserAttributes(_ all: [String: AttributeValue],
+                                            scope: UserAttributesSpanScope)
+    -> [String: AttributeValue] {
+    switch scope {
+    case .all:
+      return all
+    case .idOnly:
+      if let id = all["enduser.id"] {
+        return ["enduser.id": id]
+      }
+      return [:]
+    case .none:
+      return [:]
+    }
   }
   #endif
 
@@ -59,6 +95,8 @@ class EdotReactNative: NSObject {
       return
     }
     EdotReactNative.debugEnabled = config["debug"] as? Bool ?? false
+    EdotReactNative.userAttributesSpanScope =
+      UserAttributesSpanScope.parse(config["userAttributesIncludeInSpans"] as? String)
     EdotReactNative.stateLock.unlock()
 
     #if ELASTIC_APM_AVAILABLE

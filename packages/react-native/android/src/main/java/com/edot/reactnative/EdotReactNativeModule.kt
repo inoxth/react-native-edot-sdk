@@ -13,9 +13,24 @@ import java.util.concurrent.ConcurrentHashMap
 class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
+    enum class UserAttributesSpanScope {
+        ALL,
+        ID_ONLY,
+        NONE;
+
+        companion object {
+            fun parse(raw: String?): UserAttributesSpanScope = when (raw) {
+                "all" -> ALL
+                "none" -> NONE
+                else -> ID_ONLY
+            }
+        }
+    }
+
     companion object {
         private var isInitialized = false
         private var debugEnabled = false
+        private var userAttributesSpanScope = UserAttributesSpanScope.ID_ONLY
 
         private val userAttributes = ConcurrentHashMap<String, String>()
         private val sessionAttributes = ConcurrentHashMap<String, String>()
@@ -42,6 +57,9 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
         try {
             debugEnabled = config.getBooleanSafe("debug", false)
+            userAttributesSpanScope = UserAttributesSpanScope.parse(
+                config.getStringSafe("userAttributesIncludeInSpans")
+            )
 
             val serverUrl = config.getStringSafe("serverUrl") ?: ""
             if (serverUrl.isBlank()) {
@@ -165,7 +183,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         for ((key, value) in sessionAttributes) {
             spanBuilder.setAttribute(key, value)
         }
-        for ((key, value) in userAttributes) {
+        for ((key, value) in filteredUserAttributesForSpan()) {
             spanBuilder.setAttribute(key, value)
         }
 
@@ -272,6 +290,13 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     @ReactMethod
     fun setTrackingConsent(consent: String) {
         android.util.Log.i("EDOT", "setTrackingConsent($consent) called but not supported by native SDK")
+    }
+
+    private fun filteredUserAttributesForSpan(): Map<String, String> = when (userAttributesSpanScope) {
+        UserAttributesSpanScope.ALL -> userAttributes
+        UserAttributesSpanScope.ID_ONLY ->
+            userAttributes["enduser.id"]?.let { mapOf("enduser.id" to it) } ?: emptyMap()
+        UserAttributesSpanScope.NONE -> emptyMap()
     }
 
     private fun mapSeverity(severity: String): Severity = when (severity) {

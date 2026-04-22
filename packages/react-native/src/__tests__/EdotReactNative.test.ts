@@ -57,6 +57,17 @@ describe('EdotReactNative', () => {
       expect(nativeConfig.serverUrl).toBe('https://apm.example.com:8200');
       expect(nativeConfig.sessionSamplingRate).toBeUndefined();
       expect(nativeConfig.debug).toBe(false);
+      expect(nativeConfig.userAttributesIncludeInSpans).toBe('id-only');
+    });
+
+    it('forwards userAttributes.includeInSpans when set', async () => {
+      await EdotReactNative.initialize({
+        ...validConfig,
+        userAttributes: { includeInSpans: 'all' },
+      });
+
+      const nativeConfig = (EdotNativeModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.userAttributesIncludeInSpans).toBe('all');
     });
 
     it('warns and returns on duplicate initialize', async () => {

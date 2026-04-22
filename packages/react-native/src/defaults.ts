@@ -1,4 +1,4 @@
-import type { EdotConfig } from './types';
+import type { EdotConfig, UserAttributesSpanScope } from './types';
 
 type EdotDefaults = Required<
   Pick<
@@ -18,3 +18,5 @@ export const EDOT_DEFAULTS: EdotDefaults = {
   instrumentAppStartup: true,
   debug: false,
 };
+
+export const DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE: UserAttributesSpanScope = 'id-only';

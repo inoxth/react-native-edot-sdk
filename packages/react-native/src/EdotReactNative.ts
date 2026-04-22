@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import type { EdotConfig, EdotUser, TrackingConsent } from './types';
-import { EDOT_DEFAULTS } from './defaults';
+import { DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE, EDOT_DEFAULTS } from './defaults';
 import { validateConfig } from './config';
 import { EdotNativeModule } from './nativeModule';
 import { setupFetchInstrumentation } from './instrumentation/fetch';
@@ -23,6 +23,8 @@ function mergeConfig(config: EdotConfig): Record<string, unknown> {
     serviceVersion: config.serviceVersion,
     deploymentEnvironment: config.deploymentEnvironment,
     debug: config.debug ?? EDOT_DEFAULTS.debug,
+    userAttributesIncludeInSpans:
+      config.userAttributes?.includeInSpans ?? DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE,
     ...(config.sessionSamplingRate !== undefined ? { sessionSamplingRate: config.sessionSamplingRate } : {}),
     ...(config.trackingConsent ? { trackingConsent: config.trackingConsent } : {}),
     ...(config.secretToken ? { secretToken: config.secretToken } : {}),
