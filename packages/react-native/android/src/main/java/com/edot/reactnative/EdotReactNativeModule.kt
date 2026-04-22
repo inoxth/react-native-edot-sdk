@@ -27,10 +27,30 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         }
     }
 
+    enum class TrackingConsent {
+        GRANTED,
+        NOT_GRANTED,
+        PENDING;
+
+        val allowsEmission: Boolean
+            get() = this == GRANTED
+
+        companion object {
+            fun parse(raw: String?): TrackingConsent = when (raw) {
+                "not_granted" -> NOT_GRANTED
+                "pending" -> PENDING
+                else -> GRANTED
+            }
+        }
+    }
+
     companion object {
         private var isInitialized = false
         private var debugEnabled = false
         private var userAttributesSpanScope = UserAttributesSpanScope.ID_ONLY
+
+        @Volatile
+        private var trackingConsent = TrackingConsent.GRANTED
 
         private val userAttributes = ConcurrentHashMap<String, String>()
         private val sessionAttributes = ConcurrentHashMap<String, String>()
@@ -41,6 +61,8 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
                 android.util.Log.d("EDOT", message)
             }
         }
+
+        fun emissionAllowed(): Boolean = trackingConsent.allowsEmission
     }
 
     private val activeSpans = ConcurrentHashMap<String, Span>()
@@ -59,6 +81,9 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
             debugEnabled = config.getBooleanSafe("debug", false)
             userAttributesSpanScope = UserAttributesSpanScope.parse(
                 config.getStringSafe("userAttributesIncludeInSpans")
+            )
+            trackingConsent = TrackingConsent.parse(
+                config.getStringSafe("trackingConsent")
             )
 
             val serverUrl = config.getStringSafe("serverUrl") ?: ""
@@ -128,6 +153,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun reportJsException(errorInfo: ReadableMap) {
+        if (!emissionAllowed()) return
         val name = errorInfo.getStringSafe("name") ?: "Unknown"
         val message = errorInfo.getStringSafe("message") ?: ""
         val stack = errorInfo.getStringSafe("stack") ?: ""
@@ -150,6 +176,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     fun startSpan(name: String, attributes: ReadableMap, parentSpanId: String?): String {
+        if (!emissionAllowed()) return ""
         val tracer = EdotReactNativeAgent.openTelemetry?.getTracer("react-native-edot") ?: run {
             debugLog("OpenTelemetry not available; returning stub span id")
             return UUID.randomUUID().toString()
@@ -196,6 +223,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     @ReactMethod
     fun endSpan(spanId: String, statusCode: Double) {
         val span = activeSpans.remove(spanId) ?: return
+        if (!emissionAllowed()) return
         // OTel StatusCode: 1=Ok, 2=Error
         when (statusCode.toInt()) {
             2 -> span.setStatus(StatusCode.ERROR)
@@ -206,24 +234,28 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun setSpanAttribute(spanId: String, key: String, value: String) {
+        if (!emissionAllowed()) return
         val span = activeSpans[spanId] ?: return
         span.setAttribute(key, value)
     }
 
     @ReactMethod
     fun setSpanAttributeNumber(spanId: String, key: String, value: Double) {
+        if (!emissionAllowed()) return
         val span = activeSpans[spanId] ?: return
         span.setNumericAttribute(key, value)
     }
 
     @ReactMethod
     fun setSpanAttributeBoolean(spanId: String, key: String, value: Boolean) {
+        if (!emissionAllowed()) return
         val span = activeSpans[spanId] ?: return
         span.setAttribute(key, value)
     }
 
     @ReactMethod
     fun recordSpanException(spanId: String, errorInfo: ReadableMap) {
+        if (!emissionAllowed()) return
         val span = activeSpans[spanId] ?: return
         val message = errorInfo.getStringSafe("message") ?: "Unknown error"
         span.addEvent(
@@ -238,6 +270,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun recordMetric(name: String, value: Double, attributes: ReadableMap, metricType: String) {
+        if (!emissionAllowed()) return
         val meter = EdotReactNativeAgent.openTelemetry?.getMeter("react-native-edot") ?: run {
             debugLog("OpenTelemetry not available; skipping recordMetric")
             return
@@ -263,6 +296,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun emitLog(severity: String, message: String, attributes: ReadableMap) {
+        if (!emissionAllowed()) return
         val otel = EdotReactNativeAgent.openTelemetry ?: run {
             debugLog("OpenTelemetry not available; skipping emitLog [$severity] $message")
             return
@@ -289,7 +323,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun setTrackingConsent(consent: String) {
-        android.util.Log.i("EDOT", "setTrackingConsent($consent) called but not supported by native SDK")
+        trackingConsent = TrackingConsent.parse(consent)
     }
 
     private fun filteredUserAttributesForSpan(): Map<String, String> = when (userAttributesSpanScope) {

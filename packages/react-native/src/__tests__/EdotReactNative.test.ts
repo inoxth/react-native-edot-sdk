@@ -221,5 +221,12 @@ describe('EdotReactNative', () => {
       expect(nativeConfig.secretToken).toBe('tok');
       expect(nativeConfig.globalAttributes).toEqual({ env: 'test' });
     });
+
+    it('forwards trackingConsent to native when set', async () => {
+      await EdotReactNative.initialize({ ...validConfig, trackingConsent: 'not_granted' });
+
+      const nativeConfig = (EdotNativeModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.trackingConsent).toBe('not_granted');
+    });
   });
 });

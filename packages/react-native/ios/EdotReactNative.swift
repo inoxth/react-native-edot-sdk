@@ -23,6 +23,24 @@ enum UserAttributesSpanScope {
   }
 }
 
+enum TrackingConsent {
+  case granted
+  case notGranted
+  case pending
+
+  var allowsEmission: Bool {
+    self == .granted
+  }
+
+  static func parse(_ raw: String?) -> TrackingConsent {
+    switch raw {
+    case "not_granted": return .notGranted
+    case "pending": return .pending
+    default: return .granted
+    }
+  }
+}
+
 @objc(EdotReactNative)
 class EdotReactNative: NSObject {
 
@@ -30,6 +48,14 @@ class EdotReactNative: NSObject {
   private static var isInitialized = false
   private static var debugEnabled = false
   private static var userAttributesSpanScope: UserAttributesSpanScope = .idOnly
+  private static var trackingConsent: TrackingConsent = .granted
+
+  private static func emissionAllowed() -> Bool {
+    stateLock.lock()
+    let allowed = trackingConsent.allowsEmission
+    stateLock.unlock()
+    return allowed
+  }
 
   private let spanLock = NSLock()
   #if ELASTIC_APM_AVAILABLE
@@ -97,6 +123,8 @@ class EdotReactNative: NSObject {
     EdotReactNative.debugEnabled = config["debug"] as? Bool ?? false
     EdotReactNative.userAttributesSpanScope =
       UserAttributesSpanScope.parse(config["userAttributesIncludeInSpans"] as? String)
+    EdotReactNative.trackingConsent =
+      TrackingConsent.parse(config["trackingConsent"] as? String)
     EdotReactNative.stateLock.unlock()
 
     #if ELASTIC_APM_AVAILABLE
@@ -242,6 +270,7 @@ class EdotReactNative: NSObject {
   @objc
   func reportJsException(_ errorInfo: NSDictionary) {
     #if ELASTIC_APM_AVAILABLE
+    guard EdotReactNative.emissionAllowed() else { return }
     let name = errorInfo["name"] as? String ?? "Unknown"
     let message = errorInfo["message"] as? String ?? ""
     let stack = errorInfo["stack"] as? String ?? ""
@@ -264,6 +293,7 @@ class EdotReactNative: NSObject {
                  attributes: NSDictionary,
                  parentSpanId: NSString?) -> String {
     #if ELASTIC_APM_AVAILABLE
+    guard EdotReactNative.emissionAllowed() else { return "" }
     var builder = tracer.spanBuilder(spanName: name)
 
     if let parentId = parentSpanId as? String {
@@ -313,6 +343,8 @@ class EdotReactNative: NSObject {
     let span = activeSpans.removeValue(forKey: spanId)
     spanLock.unlock()
 
+    guard EdotReactNative.emissionAllowed() else { return }
+
     if let otelSpan = span {
       // OTel StatusCode: 1=Ok, 2=Error
       if statusCode == 2 {
@@ -332,6 +364,7 @@ class EdotReactNative: NSObject {
   @objc
   func setSpanAttribute(_ spanId: String, key: String, value: String) {
     #if ELASTIC_APM_AVAILABLE
+    guard EdotReactNative.emissionAllowed() else { return }
     spanLock.lock()
     let span = activeSpans[spanId]
     spanLock.unlock()
@@ -342,6 +375,7 @@ class EdotReactNative: NSObject {
   @objc
   func setSpanAttributeNumber(_ spanId: String, key: String, value: NSNumber) {
     #if ELASTIC_APM_AVAILABLE
+    guard EdotReactNative.emissionAllowed() else { return }
     spanLock.lock()
     let span = activeSpans[spanId]
     spanLock.unlock()
@@ -358,6 +392,7 @@ class EdotReactNative: NSObject {
   @objc
   func setSpanAttributeBoolean(_ spanId: String, key: String, value: Bool) {
     #if ELASTIC_APM_AVAILABLE
+    guard EdotReactNative.emissionAllowed() else { return }
     spanLock.lock()
     let span = activeSpans[spanId]
     spanLock.unlock()
@@ -368,6 +403,7 @@ class EdotReactNative: NSObject {
   @objc
   func recordSpanException(_ spanId: String, errorInfo: NSDictionary) {
     #if ELASTIC_APM_AVAILABLE
+    guard EdotReactNative.emissionAllowed() else { return }
     spanLock.lock()
     let span = activeSpans[spanId]
     spanLock.unlock()
@@ -389,6 +425,7 @@ class EdotReactNative: NSObject {
                     attributes: NSDictionary,
                     metricType: String) {
     #if ELASTIC_APM_AVAILABLE
+    guard EdotReactNative.emissionAllowed() else { return }
     let meter = OpenTelemetry.instance.meterProvider.get(name: "react-native-edot")
 
     var otelAttrs: [String: AttributeValue] = [:]
@@ -421,6 +458,7 @@ class EdotReactNative: NSObject {
                message: String,
                attributes: NSDictionary) {
     #if ELASTIC_APM_AVAILABLE
+    guard EdotReactNative.emissionAllowed() else { return }
     let logger = OpenTelemetry.instance.loggerProvider
       .loggerBuilder(instrumentationScopeName: "react-native-edot")
       .build()
@@ -444,7 +482,9 @@ class EdotReactNative: NSObject {
 
   @objc
   func setTrackingConsent(_ consent: String) {
-    os_log("[EDOT] setTrackingConsent(%{public}@) called but not supported by native SDK", log: log, type: .info, consent)
+    EdotReactNative.stateLock.lock()
+    EdotReactNative.trackingConsent = TrackingConsent.parse(consent)
+    EdotReactNative.stateLock.unlock()
   }
 
   // MARK: - Helpers
