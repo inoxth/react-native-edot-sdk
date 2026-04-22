@@ -4,6 +4,9 @@ import * as https from 'https';
 import * as http from 'http';
 import { URL } from 'url';
 
+const MAX_RESPONSE_BYTES = 5 * 1024 * 1024; // 5 MB
+const REQUEST_TIMEOUT_MS = 60_000; // 60 s
+
 export interface UploadOptions {
   serverUrl: string;
   serviceName: string;
@@ -42,6 +45,20 @@ function buildMultipartBody(
 
   parts.push(Buffer.from(`--${boundary}--\r\n`));
   return { body: Buffer.concat(parts), boundary };
+}
+
+/**
+ * Returns true when the string contains ASCII control characters (U+0000–U+001F
+ * or U+007F) — characters that enable HTTP header injection.
+ */
+function containsControlChars(value: string): boolean {
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i);
+    if (code <= 31 || code === 127) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function uploadSourcemap(options: UploadOptions): Promise<void> {
@@ -90,7 +107,15 @@ export function uploadSourcemap(options: UploadOptions): Promise<void> {
   };
 
   if (secretToken) {
-    headers['Authorization'] = `Bearer ${secretToken}`;
+    // Trim surrounding whitespace then reject any remaining control characters
+    // to prevent HTTP header injection via corrupted CI env vars.
+    const trimmed = secretToken.trim();
+    if (containsControlChars(trimmed)) {
+      return Promise.reject(
+        new Error('secretToken contains invalid control characters'),
+      );
+    }
+    headers['Authorization'] = `Bearer ${trimmed}`;
   } else if (apiKey) {
     headers['Authorization'] = `ApiKey ${apiKey}`;
   }
@@ -105,11 +130,22 @@ export function uploadSourcemap(options: UploadOptions): Promise<void> {
         headers,
       },
       (res) => {
-        let responseBody = '';
+        const chunks: Buffer[] = [];
+        let bytesReceived = 0;
+
         res.on('data', (chunk: Buffer) => {
-          responseBody += chunk.toString();
+          bytesReceived += chunk.length;
+          if (bytesReceived > MAX_RESPONSE_BYTES) {
+            res.destroy(new Error('Response body exceeded MAX_RESPONSE_BYTES limit'));
+            req.destroy();
+            reject(new Error('Upload response body too large (> 5 MB)'));
+            return;
+          }
+          chunks.push(chunk);
         });
+
         res.on('end', () => {
+          const responseBody = Buffer.concat(chunks).toString('utf8');
           const statusCode = res.statusCode ?? 0;
           if (statusCode >= 200 && statusCode < 300) {
             resolve();
@@ -123,6 +159,10 @@ export function uploadSourcemap(options: UploadOptions): Promise<void> {
         });
       },
     );
+
+    req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+      req.destroy(new Error(`Upload request timed out after ${REQUEST_TIMEOUT_MS} ms`));
+    });
 
     req.on('error', (err) => {
       reject(new Error(`Upload request failed: ${err.message}`));
