@@ -95,4 +95,57 @@ describe('setupStartupTracing', () => {
     expect(requestSpy).toHaveBeenCalled();
     teardown();
   });
+
+  it('cancels idle callback on teardown', () => {
+    const teardown = setupStartupTracing(baseConfig);
+    teardown();
+    expect(cancelSpy).toHaveBeenCalledWith(1);
+  });
+});
+
+// F-23: setTimeout fallback when requestIdleCallback is absent
+describe('setupStartupTracing — setTimeout fallback', () => {
+  let capturedCallback: (() => void) | null = null;
+  let setTimeoutSpy: jest.SpyInstance;
+  let clearTimeoutSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    capturedCallback = null;
+    Reflect.deleteProperty(global, 'requestIdleCallback');
+    Reflect.deleteProperty(global, 'cancelIdleCallback');
+
+    setTimeoutSpy = jest.spyOn(global, 'setTimeout').mockImplementation((cb) => {
+      capturedCallback = cb as () => void;
+      return 42 as unknown as ReturnType<typeof setTimeout>;
+    });
+    clearTimeoutSpy = jest.spyOn(global, 'clearTimeout').mockImplementation();
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    setTimeoutSpy.mockRestore();
+    clearTimeoutSpy.mockRestore();
+  });
+
+  it('falls back to setTimeout when requestIdleCallback is unavailable', () => {
+    setupStartupTracing(baseConfig);
+    expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 0);
+  });
+
+  it('cancels via clearTimeout on teardown', () => {
+    const teardown = setupStartupTracing(baseConfig);
+    teardown();
+    expect(clearTimeoutSpy).toHaveBeenCalledWith(42);
+  });
+
+  it('fires callback via setTimeout', () => {
+    jest.clearAllMocks();
+    const teardown = setupStartupTracing(baseConfig);
+
+    const endCallsBefore = (EdotNativeModule.endSpan as jest.Mock).mock.calls.length;
+    capturedCallback?.();
+    const endCallsAfter = (EdotNativeModule.endSpan as jest.Mock).mock.calls.length;
+    expect(endCallsAfter).toBeGreaterThan(endCallsBefore);
+    teardown();
+  });
 });

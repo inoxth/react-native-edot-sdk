@@ -29,12 +29,20 @@ function createNoOpModule(): Spec {
 }
 
 function loadNativeModule(): Spec {
-  const isTurboModuleEnabled = global.__turboModuleProxy != null;
-
-  if (isTurboModuleEnabled) {
-    try {
-      return require('./NativeEdotReactNative').default;
-    } catch (sdkError) {
+  // Try TurboModule first (New Architecture). Fall back to NativeModules for Old Architecture.
+  // __turboModuleProxy alone is unreliable in bridgeless mode, so we attempt the require directly.
+  try {
+    const turboModule: Spec | null = require('./NativeEdotReactNative').default;
+    if (turboModule != null) {
+      return turboModule;
+    }
+  } catch (sdkError) {
+    const message = sdkError instanceof Error ? sdkError.message : String(sdkError);
+    const isNotFound =
+      message.includes('Cannot find module') ||
+      message.includes('Module not found') ||
+      message.includes('could not be found');
+    if (!isNotFound) {
       console.warn(
         '[EDOT] TurboModule load failed, falling back to NativeModules:',
         sdkError,

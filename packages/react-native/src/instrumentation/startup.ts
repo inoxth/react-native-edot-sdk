@@ -1,6 +1,23 @@
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
 
+type IdleHandle = { kind: 'idle'; id: number } | { kind: 'timeout'; id: ReturnType<typeof setTimeout> };
+
+function scheduleIdle(cb: () => void): IdleHandle {
+  if (typeof requestIdleCallback === 'function') {
+    return { kind: 'idle', id: requestIdleCallback(cb) };
+  }
+  return { kind: 'timeout', id: setTimeout(cb, 0) };
+}
+
+function cancelIdle(handle: IdleHandle): void {
+  if (handle.kind === 'idle') {
+    cancelIdleCallback(handle.id);
+  } else {
+    clearTimeout(handle.id);
+  }
+}
+
 export function setupStartupTracing(_config: EdotConfig): () => void {
   const jsBundleLoadedAt = Date.now();
 
@@ -19,7 +36,7 @@ export function setupStartupTracing(_config: EdotConfig): () => void {
 
     const firstRenderSpanId = EdotNativeModule.startSpan('AppStartup: first_render', {}, parentSpanId);
 
-    const handle = requestIdleCallback(() => {
+    const handle = scheduleIdle(() => {
       try {
         const firstRenderAt = Date.now();
         EdotNativeModule.setSpanAttributeNumber(
@@ -41,7 +58,7 @@ export function setupStartupTracing(_config: EdotConfig): () => void {
     });
 
     return () => {
-      cancelIdleCallback(handle);
+      cancelIdle(handle);
     };
   } catch (sdkError) {
     console.warn('[EDOT] Failed to set up startup tracing:', sdkError);

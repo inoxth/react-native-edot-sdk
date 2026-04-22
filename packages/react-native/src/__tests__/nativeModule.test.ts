@@ -47,8 +47,7 @@ describe('nativeModule', () => {
     expect(sessionId).toBe('');
   });
 
-  it('warns and falls back when TurboModule require throws', () => {
-    global.__turboModuleProxy = {};
+  it('warns and falls back when TurboModule require throws non-not-found error', () => {
     jest.doMock('../NativeEdotReactNative', () => {
       throw new Error('TurboModule spec broken');
     });
@@ -95,5 +94,39 @@ describe('nativeModule', () => {
 
     const { EdotNativeModule } = require('../nativeModule');
     expect(EdotNativeModule).toBe(mockModule);
+  });
+
+  // F-25: TurboModule loaded without relying on __turboModuleProxy
+  it('loads TurboModule directly without requiring __turboModuleProxy', () => {
+    // No __turboModuleProxy set — new implementation tries require() directly
+    const turboModule = { startSpan: jest.fn(), endSpan: jest.fn() };
+    jest.doMock('../NativeEdotReactNative', () => ({ default: turboModule }));
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const { EdotNativeModule } = require('../nativeModule');
+
+    expect(EdotNativeModule).toBe(turboModule);
+    expect(warnSpy).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+    jest.dontMock('../NativeEdotReactNative');
+  });
+
+  // F-25: module-not-found errors fall through silently to NativeModules
+  it('silently falls through to NativeModules when TurboModule is not found', () => {
+    const notFound = new Error("Cannot find module './NativeEdotReactNative'");
+    jest.doMock('../NativeEdotReactNative', () => { throw notFound; });
+
+    const fallback = { startSpan: jest.fn() };
+    NativeModules.EdotReactNative = fallback;
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const { EdotNativeModule } = require('../nativeModule');
+
+    expect(EdotNativeModule).toBe(fallback);
+    expect(warnSpy).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+    jest.dontMock('../NativeEdotReactNative');
   });
 });

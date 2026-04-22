@@ -2,12 +2,32 @@ import { EdotNativeModule } from '../nativeModule';
 import { ActiveViewContext } from '../activeViewContext';
 import type { EdotConfig } from '../types';
 
-type ErrorHandler = (error: Error, isFatal?: boolean) => void;
-
-declare const ErrorUtils: {
-  getGlobalHandler: () => ErrorHandler;
-  setGlobalHandler: (handler: ErrorHandler) => void;
+type RejectionTracking = {
+  enable: (opts: RejectionTrackingOptions) => void;
+  disable?: () => void;
 };
+
+type RejectionTrackingOptions = {
+  allRejections: boolean;
+  onUnhandled: (id: number, rejection: unknown) => void;
+};
+
+function isRejectionTracking(value: unknown): value is RejectionTracking {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'enable' in value &&
+    typeof (value as Record<string, unknown>).enable === 'function'
+  );
+}
+
+function hasErrorUtils(): boolean {
+  return (
+    typeof ErrorUtils !== 'undefined' &&
+    typeof ErrorUtils.getGlobalHandler === 'function' &&
+    typeof ErrorUtils.setGlobalHandler === 'function'
+  );
+}
 
 function reportError(error: Error, source: string, isFatal: boolean): void {
   const activeView = ActiveViewContext.getActiveView();
@@ -34,6 +54,11 @@ function reportError(error: Error, source: string, isFatal: boolean): void {
 }
 
 function setupGlobalErrorHandler(): () => void {
+  if (!hasErrorUtils()) {
+    console.warn('[EDOT] ErrorUtils is not available — global error handler not installed');
+    return () => {};
+  }
+
   const previousHandler = ErrorUtils.getGlobalHandler();
 
   ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
@@ -42,7 +67,7 @@ function setupGlobalErrorHandler(): () => void {
     } catch (sdkError) {
       console.warn('[EDOT] Error handler failed:', sdkError);
     }
-    previousHandler(error, isFatal);
+    previousHandler(error, isFatal ?? false);
   });
 
   return () => {
@@ -65,27 +90,43 @@ function setupPromiseRejectionHandler(): () => void {
           }
         },
       });
-    } else {
-      const tracking = require('promise/setimmediate/rejection-tracking');
-      tracking.enable({
-        allRejections: true,
-        onUnhandled: (_id: number, rejection: unknown) => {
-          try {
-            const error = rejection instanceof Error ? rejection : new Error(String(rejection));
-            reportError(error, 'js_promise_rejection', false);
-          } catch (sdkError) {
-            console.warn('[EDOT] Promise rejection handler failed:', sdkError);
-          }
-        },
-      });
+      return () => {};
     }
+
+    const tracking: unknown = require('promise/setimmediate/rejection-tracking');
+
+    if (!isRejectionTracking(tracking)) {
+      console.warn('[EDOT] rejection-tracking module has unexpected shape — promise rejection handler not installed');
+      return () => {};
+    }
+
+    let active = true;
+
+    tracking.enable({
+      allRejections: true,
+      onUnhandled: (_id: number, rejection: unknown) => {
+        if (!active) return;
+        try {
+          const error = rejection instanceof Error ? rejection : new Error(String(rejection));
+          reportError(error, 'js_promise_rejection', false);
+        } catch (sdkError) {
+          console.warn('[EDOT] Promise rejection handler failed:', sdkError);
+        }
+      },
+    });
+
+    return () => {
+      // Prevent stale closure callbacks from running after teardown (avoids cross-test pollution)
+      active = false;
+      if (typeof tracking.disable === 'function') {
+        tracking.disable();
+      }
+    };
   } catch (sdkError) {
     console.warn('[EDOT] Failed to set up promise rejection tracking:', sdkError);
   }
 
-  return () => {
-    // Promise rejection tracker doesn't support teardown
-  };
+  return () => {};
 }
 
 export function setupErrorHandler(_config: EdotConfig): () => void {
