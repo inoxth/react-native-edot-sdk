@@ -3,6 +3,8 @@ import type { EdotConfig, EdotUser, TrackingConsent } from './types';
 import { DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE, EDOT_DEFAULTS } from './defaults';
 import { validateConfig } from './config';
 import { EdotNativeModule } from './nativeModule';
+import { redactedString } from '@inox/react-native-edot-shared';
+import type { RedactedString } from '@inox/react-native-edot-shared';
 import { setupFetchInstrumentation } from './instrumentation/fetch';
 import { setupXhrInstrumentation } from './instrumentation/xhr';
 import { setupErrorHandler } from './instrumentation/errors';
@@ -10,11 +12,27 @@ import { setupLifecycleTracking } from './instrumentation/lifecycle';
 import { setupStartupTracing } from './instrumentation/startup';
 import { setupSpanCleanup } from './instrumentation/spanCleanup';
 
+interface InternalConfig {
+  serverUrl: string;
+  serviceName: string;
+  serviceVersion: string;
+  deploymentEnvironment: string;
+  debug: boolean;
+  userAttributesIncludeInSpans: string;
+  sessionSamplingRate?: number;
+  trackingConsent?: string;
+  secretToken?: RedactedString;
+  apiKey?: RedactedString;
+  exportProtocol?: string;
+  globalAttributes?: Record<string, string | number | boolean>;
+  [key: string]: unknown;
+}
+
 let initialized = false;
 let initPromise: Promise<void> | null = null;
 const teardowns: Array<() => void> = [];
 
-function mergeConfig(config: EdotConfig): Record<string, unknown> {
+function mergeConfig(config: EdotConfig): InternalConfig {
   const platformConfig =
     Platform.OS === 'ios' ? config.ios : Platform.OS === 'android' ? config.android : undefined;
 
@@ -28,11 +46,19 @@ function mergeConfig(config: EdotConfig): Record<string, unknown> {
       config.userAttributes?.includeInSpans ?? DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE,
     ...(config.sessionSamplingRate !== undefined ? { sessionSamplingRate: config.sessionSamplingRate } : {}),
     ...(config.trackingConsent ? { trackingConsent: config.trackingConsent } : {}),
-    ...(config.secretToken ? { secretToken: config.secretToken } : {}),
-    ...(config.apiKey ? { apiKey: config.apiKey } : {}),
+    ...(config.secretToken ? { secretToken: redactedString(config.secretToken) } : {}),
+    ...(config.apiKey ? { apiKey: redactedString(config.apiKey) } : {}),
     ...(config.exportProtocol ? { exportProtocol: config.exportProtocol } : {}),
     ...(config.globalAttributes ? { globalAttributes: config.globalAttributes } : {}),
     ...platformConfig,
+  };
+}
+
+function revealCredentials(config: InternalConfig): Record<string, unknown> {
+  return {
+    ...config,
+    ...(config.secretToken ? { secretToken: config.secretToken.reveal() } : {}),
+    ...(config.apiKey ? { apiKey: config.apiKey.reveal() } : {}),
   };
 }
 
@@ -46,7 +72,7 @@ async function doInitialize(config: EdotConfig): Promise<void> {
   try {
     validateConfig(config);
 
-    const nativeConfig = mergeConfig(config);
+    const internalConfig = mergeConfig(config);
 
     debugLog(config, 'Initializing with config:', {
       serverUrl: config.serverUrl,
@@ -54,7 +80,7 @@ async function doInitialize(config: EdotConfig): Promise<void> {
       debug: config.debug,
     });
 
-    await EdotNativeModule.initialize(nativeConfig);
+    await EdotNativeModule.initialize(revealCredentials(internalConfig));
 
     const merged = { ...EDOT_DEFAULTS, ...config };
 
@@ -158,6 +184,9 @@ export const EdotReactNative = {
 
   /** @internal */
   _resetForTesting(): void {
+    if (!__DEV__) {
+      return;
+    }
     teardowns.forEach((fn) => fn());
     teardowns.length = 0;
     initialized = false;

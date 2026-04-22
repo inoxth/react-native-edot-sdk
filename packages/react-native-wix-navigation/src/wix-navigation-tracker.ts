@@ -58,5 +58,8 @@ export function registerEdotNavigationListener(
 }
 
 export function resetForTesting(): void {
+  if (!__DEV__) {
+    return;
+  }
   ActiveViewContext.clearActiveView();
 }

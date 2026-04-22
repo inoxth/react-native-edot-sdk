@@ -73,5 +73,7 @@ export function EdotExpoNavigationProvider({
 }
 
 export function resetNativeModuleForTesting(): void {
-  // no-op: native module cache is managed by @inox/react-native-edot-shared
+  if (!__DEV__) {
+    return;
+  }
 }
