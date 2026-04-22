@@ -5,25 +5,40 @@ const LINKING_ERROR =
   '[EDOT] Native module not found. Telemetry will be disabled. ' +
   'Run `pod install` (iOS) or sync Gradle (Android).';
 
+function isSpec(x: unknown): x is Spec {
+  return typeof x === 'object' && x !== null;
+}
+
 function createNoOpModule(): Spec {
   let warned = false;
 
-  return new Proxy({} as Spec, {
-    get(_target, prop) {
+  const target: Spec = {
+    initialize: () => Promise.resolve(),
+    getCurrentSessionId: () => Promise.resolve(''),
+    setUser: () => undefined,
+    clearUser: () => undefined,
+    setSessionAttribute: () => undefined,
+    setGlobalAttribute: () => undefined,
+    removeGlobalAttribute: () => undefined,
+    reportJsException: () => undefined,
+    startSpan: () => '',
+    endSpan: () => undefined,
+    setSpanAttribute: () => undefined,
+    setSpanAttributeNumber: () => undefined,
+    setSpanAttributeBoolean: () => undefined,
+    recordSpanException: () => undefined,
+    recordMetric: () => undefined,
+    emitLog: () => undefined,
+    setTrackingConsent: () => undefined,
+  };
+
+  return new Proxy(target, {
+    get(t, prop) {
       if (!warned) {
         console.warn(LINKING_ERROR);
         warned = true;
       }
-
-      return (..._args: unknown[]) => {
-        if (prop === 'initialize' || prop === 'getCurrentSessionId') {
-          return Promise.resolve(prop === 'getCurrentSessionId' ? '' : undefined);
-        }
-        if (prop === 'startSpan') {
-          return '';
-        }
-        return undefined;
-      };
+      return Reflect.get(t, prop);
     },
   });
 }
@@ -50,9 +65,9 @@ function loadNativeModule(): Spec {
     }
   }
 
-  const nativeModule = NativeModules.EdotReactNative;
-  if (nativeModule) {
-    return nativeModule as Spec;
+  const nativeModule: unknown = NativeModules.EdotReactNative;
+  if (isSpec(nativeModule)) {
+    return nativeModule;
   }
 
   return createNoOpModule();

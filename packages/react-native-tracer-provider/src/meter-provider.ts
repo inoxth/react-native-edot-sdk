@@ -1,25 +1,5 @@
+import { getNativeModule } from '@inox/react-native-edot-shared';
 import type { MeterProvider, Meter, Counter, Histogram, UpDownCounter } from './types';
-
-interface NativeModule {
-  recordMetric(
-    name: string,
-    value: number,
-    attributes: Record<string, string | number | boolean>,
-    metricType: string,
-  ): void;
-}
-
-let nativeModule: NativeModule | null = null;
-
-function getNativeModule(): NativeModule {
-  if (!nativeModule) {
-    const mod = require('@inox/react-native-edot-sdk/nativeModule') as {
-      EdotNativeModule: NativeModule;
-    };
-    nativeModule = mod.EdotNativeModule;
-  }
-  return nativeModule;
-}
 
 function resolveAttributes(
   attributes?: Record<string, string | number | boolean>,
@@ -75,5 +55,4 @@ export function getMeterProvider(): MeterProvider {
 
 export function resetMeterForTesting(): void {
   meterProviderInstance = null;
-  nativeModule = null;
 }

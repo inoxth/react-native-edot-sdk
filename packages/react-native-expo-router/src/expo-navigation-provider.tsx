@@ -1,11 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { ActiveViewContext } from '@inox/react-native-edot-shared';
+import { ActiveViewContext, getNativeModule } from '@inox/react-native-edot-shared';
 import type { EdotExpoNavigationProviderProps } from './types';
-
-interface NativeModule {
-  startSpan(name: string, attributes: Record<string, string>, parentSpanId: string | null): string;
-  endSpan(spanId: string, statusCode: number): void;
-}
 
 interface ExpoRouterModule {
   usePathname(): string;
@@ -29,25 +24,6 @@ function resolveUsePathname(): () => string {
 }
 
 const usePathnameHook = resolveUsePathname();
-
-let nativeModule: NativeModule | null = null;
-
-function getNativeModule(): NativeModule {
-  if (!nativeModule) {
-    const mod: unknown = require('@inox/react-native-edot-sdk/nativeModule');
-    if (
-      mod !== null &&
-      typeof mod === 'object' &&
-      'EdotNativeModule' in mod
-    ) {
-      nativeModule = (mod as { EdotNativeModule: NativeModule }).EdotNativeModule;
-    }
-  }
-  if (!nativeModule) {
-    throw new Error('[EDOT] EdotNativeModule not found');
-  }
-  return nativeModule;
-}
 
 export function EdotExpoNavigationProvider({
   screenNameMapper,
@@ -97,5 +73,5 @@ export function EdotExpoNavigationProvider({
 }
 
 export function resetNativeModuleForTesting(): void {
-  nativeModule = null;
+  // no-op: native module cache is managed by @inox/react-native-edot-shared
 }

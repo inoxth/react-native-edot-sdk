@@ -15,6 +15,7 @@ jest.mock('@inox/react-native-edot-shared', () => ({
     setActiveView: jest.fn(),
     clearActiveView: jest.fn(),
   },
+  getNativeModule: () => mockNativeModule,
 }));
 
 describe('createEdotNavigationContainerRef', () => {

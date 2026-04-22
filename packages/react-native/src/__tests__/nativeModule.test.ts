@@ -32,6 +32,23 @@ describe('nativeModule', () => {
     warnSpy.mockRestore();
   });
 
+  // F-32: one-shot warn across N accesses — operators see exactly one signal
+  it('F-32: no-op Proxy warns exactly once across many property accesses', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    const { EdotNativeModule } = require('../nativeModule');
+
+    for (let i = 0; i < 10; i++) {
+      EdotNativeModule.startSpan(`span-${i}`, {}, null);
+    }
+    EdotNativeModule.endSpan('', 1);
+    EdotNativeModule.setSpanAttribute('', 'k', 'v');
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Native module not found'));
+    warnSpy.mockRestore();
+  });
+
   it('no-op initialize resolves without error', async () => {
     jest.spyOn(console, 'warn').mockImplementation();
 

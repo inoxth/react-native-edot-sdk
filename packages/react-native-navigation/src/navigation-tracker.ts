@@ -1,22 +1,5 @@
-import { ActiveViewContext } from '@inox/react-native-edot-shared';
+import { ActiveViewContext, getNativeModule } from '@inox/react-native-edot-shared';
 import type { NavigationContainerRef, EdotNavigationOptions } from './types';
-
-interface NativeModule {
-  startSpan(name: string, attributes: Record<string, string>, parentSpanId: string | null): string;
-  endSpan(spanId: string, statusCode: number): void;
-}
-
-let nativeModule: NativeModule | null = null;
-
-function getNativeModule(): NativeModule {
-  if (!nativeModule) {
-    const mod = require('@inox/react-native-edot-sdk/nativeModule') as {
-      EdotNativeModule: NativeModule;
-    };
-    nativeModule = mod.EdotNativeModule;
-  }
-  return nativeModule;
-}
 
 export function createEdotNavigationContainerRef<
   T extends NavigationContainerRef = NavigationContainerRef,
@@ -91,5 +74,4 @@ export function createEdotNavigationContainerRef<
 
 export function resetForTesting(): void {
   ActiveViewContext.clearActiveView();
-  nativeModule = null;
 }

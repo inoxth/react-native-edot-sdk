@@ -2,6 +2,8 @@ import { getMeterProvider, resetMeterForTesting } from '../meter-provider';
 
 const mockNativeModule = {
   recordMetric: jest.fn(),
+  startSpan: jest.fn(),
+  endSpan: jest.fn(),
 };
 
 jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({

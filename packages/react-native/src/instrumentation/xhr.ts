@@ -21,13 +21,17 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
   const originalSend = XMLHttpRequest.prototype.send;
   const originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
 
-  XMLHttpRequest.prototype.open = function (method: string, url: string, ...args: unknown[]) {
+  XMLHttpRequest.prototype.open = function (
+    this: XMLHttpRequest,
+    ...args: Parameters<typeof originalOpen>
+  ): ReturnType<typeof originalOpen> {
+    const [method, url] = args;
     try {
       xhrStateMap.set(this, { method: method.toUpperCase(), url, spanId: '' });
     } catch (sdkError) {
       console.warn('[EDOT] XHR open instrumentation error:', sdkError);
     }
-    return originalOpen.apply(this, [method, url, ...args] as Parameters<typeof originalOpen>);
+    return originalOpen.apply(this, args);
   };
 
   XMLHttpRequest.prototype.send = function (body?: string | null) {

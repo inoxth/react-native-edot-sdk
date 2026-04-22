@@ -20,7 +20,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@inox/react-native-edot-sdk": "workspace:*"
+    "@inox/react-native-edot-sdk": "workspace:*",
+    "@inox/react-native-edot-shared": "workspace:*"
   },
   "devDependencies": {
     "react": "^19.2.3",

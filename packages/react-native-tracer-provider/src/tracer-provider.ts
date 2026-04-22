@@ -1,3 +1,4 @@
+import { getNativeModule } from '@inox/react-native-edot-shared';
 import type {
   TracerProvider,
   Tracer,
@@ -5,31 +6,6 @@ import type {
   SpanOptions,
   SpanStatusCodeValue,
 } from './types';
-
-interface NativeModule {
-  startSpan(
-    name: string,
-    attributes: Record<string, string | number | boolean>,
-    parentSpanId: string | null,
-  ): string;
-  endSpan(spanId: string, statusCode: number): void;
-  setSpanAttribute(spanId: string, key: string, value: string): void;
-  setSpanAttributeNumber(spanId: string, key: string, value: number): void;
-  setSpanAttributeBoolean(spanId: string, key: string, value: boolean): void;
-  recordSpanException(spanId: string, errorInfo: Record<string, string>): void;
-}
-
-let nativeModule: NativeModule | null = null;
-
-function getNativeModule(): NativeModule {
-  if (!nativeModule) {
-    const mod = require('@inox/react-native-edot-sdk/nativeModule') as {
-      EdotNativeModule: NativeModule;
-    };
-    nativeModule = mod.EdotNativeModule;
-  }
-  return nativeModule;
-}
 
 const contextStack: Span[] = [];
 
@@ -167,7 +143,6 @@ export function withSpanContext<T>(parentSpan: Span, fn: () => T): T {
 export function resetForTesting(): void {
   tracerProviderInstance = null;
   contextStack.length = 0;
-  nativeModule = null;
 }
 
 /** Exposed only for testing the mismatch-detection branch. */
