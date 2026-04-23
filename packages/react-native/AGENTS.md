@@ -66,6 +66,12 @@ The native spec (`NativeEdotReactNative.ts`) exposes three typed setters: `setSp
 2. Fall back to `NativeModules.EdotReactNative` (old bridge)
 3. Return no-op Proxy (all calls silently succeed — `startSpan()` returns `''`)
 
+#### Native Module Wrapper (startSpan Proxy)
+
+The exported `EdotNativeModule` is a `Proxy` around the loaded native module. It intercepts only `startSpan` to avoid passing `null`/`undefined` `parentSpanId` values across the RCTBridge (RCTBridge serializes JS `null` as `NSNull`, which cannot be converted to `NSString`). When `parentSpanId` is nullish, the wrapper calls the 2-arg overload; otherwise it passes all 3 args.
+
+**Critical:** The wrapper must use `Proxy` + `Reflect.get()` — never object spread (`{...module, startSpan() {...}}`). TurboModule instances store methods on the prototype, not as own properties. Object spread silently drops them, causing runtime errors like `EdotNativeModule missing expected methods: endSpan`. The test suite includes a `preserves all Spec methods from prototype-based TurboModule instances` case that guards against this regression.
+
 ### Resource Detection
 
 `resource.ts` detects platform attributes via React Native globals:

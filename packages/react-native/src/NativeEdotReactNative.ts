@@ -11,7 +11,7 @@ export interface Spec extends TurboModule {
   setGlobalAttribute(key: string, value: string): void;
   removeGlobalAttribute(key: string): void;
   reportJsException(errorInfo: Object): void;
-  startSpan(name: string, attributes: Object, parentSpanId: string | null): string;
+  startSpan(name: string, attributes: Object, parentSpanId?: string | null): string;
   endSpan(spanId: string, statusCode: number): void;
   setSpanAttribute(spanId: string, key: string, value: string): void;
   setSpanAttributeNumber(spanId: string, key: string, value: number): void;

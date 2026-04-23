@@ -7,7 +7,7 @@ export interface EdotNativeModule {
   setGlobalAttribute(key: string, value: string): void;
   removeGlobalAttribute(key: string): void;
   reportJsException(errorInfo: Record<string, unknown>): void;
-  startSpan(name: string, attributes: Record<string, string | number | boolean>, parentSpanId: string | null): string;
+  startSpan(name: string, attributes: Record<string, string | number | boolean>, parentSpanId?: string | null): string;
   endSpan(spanId: string, statusCode: number): void;
   setSpanAttribute(spanId: string, key: string, value: string): void;
   setSpanAttributeNumber(spanId: string, key: string, value: number): void;

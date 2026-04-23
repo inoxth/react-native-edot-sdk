@@ -73,4 +73,40 @@ function loadNativeModule(): Spec {
   return createNoOpModule();
 }
 
-export const EdotNativeModule: Spec = loadNativeModule();
+const loadedModule = loadNativeModule();
+
+// WARNING: Never replace the Proxy below with object spread ({...loadedModule, ...}).
+// TurboModule instances store methods on the prototype, not as own properties.
+// Object spread silently drops prototype methods, causing runtime errors like
+// "EdotNativeModule missing expected methods: endSpan".
+// Use Proxy with Reflect.get() to preserve the full prototype chain.
+
+const startSpanWrapper = function (
+  name: string,
+  attributes: Record<string, unknown>,
+  parentSpanId?: string | null,
+): string {
+  if (parentSpanId == null) {
+    return (loadedModule as any).startSpan(name, attributes);
+  }
+  return loadedModule.startSpan(name, attributes, parentSpanId);
+};
+
+/**
+ * Wraps startSpan to avoid passing null/undefined parentSpanId across the
+ * native bridge. RCTBridge serializes JS null as NSNull, which fails when
+ * the native side expects an optional NSString (NSNull cannot be cast to
+ * NSString). By calling the 2-arg overload when parentSpanId is absent,
+ * both Old and New Architecture bridges work correctly.
+ *
+ * A Proxy is used instead of object spread so that prototype methods
+ * (endSpan, initialize, etc.) remain accessible on TurboModule instances.
+ */
+export const EdotNativeModule: Spec = new Proxy(loadedModule, {
+  get(target, prop, receiver) {
+    if (prop === 'startSpan') {
+      return startSpanWrapper;
+    }
+    return Reflect.get(target, prop, receiver);
+  },
+});
