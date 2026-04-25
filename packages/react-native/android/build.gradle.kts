@@ -4,12 +4,19 @@ plugins {
     id("com.facebook.react")
 }
 
+val isNewArchEnabled = project.findProperty("newArchEnabled") == "true"
+
 android {
     namespace = "com.edot.reactnative"
     compileSdk = 36
 
     defaultConfig {
         minSdk = 24
+        buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchEnabled.toString())
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {
@@ -23,7 +30,11 @@ android {
 
     sourceSets {
         getByName("main") {
-            java.srcDirs("src/main/java")
+            if (isNewArchEnabled) {
+                java.srcDirs("src/main/java", "src/newarch/java")
+            } else {
+                java.srcDirs("src/main/java", "src/oldarch/java")
+            }
         }
     }
 }

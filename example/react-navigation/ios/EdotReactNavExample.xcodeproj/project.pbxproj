@@ -12,10 +12,6 @@
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		84EB9810BC5CD83D4C994F35 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		ED0A000100000001000C19C6 /* EdotReactNative.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0A000200000001000C19C6 /* EdotReactNative.swift */; };
-		ED0A000300000001000C19C6 /* EdotReactNativeAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED0A000400000001000C19C6 /* EdotReactNativeAgent.swift */; };
-		ED0A000500000001000C19C6 /* EdotReactNative.m in Sources */ = {isa = PBXBuildFile; fileRef = ED0A000600000001000C19C6 /* EdotReactNative.m */; };
-		ED0A000700000001000C19C6 /* ElasticApm in Frameworks */ = {isa = PBXBuildFile; productRef = ED0A000800000001000C19C6 /* ElasticApm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,10 +24,6 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-EdotReactNavExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-EdotReactNavExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = EdotReactNavExample/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = EdotReactNavExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		ED0A000200000001000C19C6 /* EdotReactNative.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EdotReactNative.swift; path = "../../../packages/react-native/ios/EdotReactNative.swift"; sourceTree = "<group>"; };
-		ED0A000400000001000C19C6 /* EdotReactNativeAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EdotReactNativeAgent.swift; path = "../../../packages/react-native/ios/EdotReactNativeAgent.swift"; sourceTree = "<group>"; };
-		ED0A000600000001000C19C6 /* EdotReactNative.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = EdotReactNative.m; path = "../../../packages/react-native/ios/EdotReactNative.m"; sourceTree = "<group>"; };
-		ED0A000900000001000C19C6 /* EdotReactNative-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "EdotReactNative-Bridging-Header.h"; path = "../../../packages/react-native/ios/EdotReactNative-Bridging-Header.h"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -41,7 +33,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C80B921A6F3F58F76C31292 /* libPods-EdotReactNavExample.a in Frameworks */,
-				ED0A000700000001000C19C6 /* ElasticApm in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -51,10 +42,6 @@
 		13B07FAE1A68108700A75B9A /* EdotReactNavExample */ = {
 			isa = PBXGroup;
 			children = (
-				ED0A000200000001000C19C6 /* EdotReactNative.swift */,
-				ED0A000400000001000C19C6 /* EdotReactNativeAgent.swift */,
-				ED0A000600000001000C19C6 /* EdotReactNative.m */,
-				ED0A000900000001000C19C6 /* EdotReactNative-Bridging-Header.h */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -131,9 +118,6 @@
 			dependencies = (
 			);
 			name = EdotReactNavExample;
-			packageProductDependencies = (
-				ED0A000800000001000C19C6 /* ElasticApm */,
-			);
 			productName = EdotReactNavExample;
 			productReference = 13B07F961A680F5B00A75B9A /* EdotReactNavExample.app */;
 			productType = "com.apple.product-type.application";
@@ -160,9 +144,6 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
-			packageReferences = (
-				ED0A000A00000001000C19C6 /* XCRemoteSwiftPackageReference "apm-agent-ios" */,
-			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -266,9 +247,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
-				ED0A000100000001000C19C6 /* EdotReactNative.swift in Sources */,
-				ED0A000300000001000C19C6 /* EdotReactNativeAgent.swift in Sources */,
-				ED0A000500000001000C19C6 /* EdotReactNative.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -298,8 +276,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = EdotReactNavExample;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ELASTIC_APM_AVAILABLE";
-				SWIFT_OBJC_BRIDGING_HEADER = "../../../packages/react-native/ios/EdotReactNative-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -329,8 +305,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = EdotReactNavExample;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ELASTIC_APM_AVAILABLE";
-				SWIFT_OBJC_BRIDGING_HEADER = "../../../packages/react-native/ios/EdotReactNative-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -515,25 +489,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		ED0A000A00000001000C19C6 /* XCRemoteSwiftPackageReference "apm-agent-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/elastic/apm-agent-ios";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		ED0A000800000001000C19C6 /* ElasticApm */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = ED0A000A00000001000C19C6 /* XCRemoteSwiftPackageReference "apm-agent-ios" */;
-			productName = ElasticApm;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

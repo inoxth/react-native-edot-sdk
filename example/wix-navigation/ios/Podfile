@@ -35,6 +35,7 @@ target 'EdotWixNavExample' do
       content = File.read(fmt_base)
       if content.include?('#elif defined(__cpp_consteval)')
         content.gsub!(/#elif defined\(__cpp_consteval\)\n#  define FMT_USE_CONSTEVAL 1\n/, "#elif defined(__cpp_consteval)\n#  define FMT_USE_CONSTEVAL 0 // Xcode 26 consteval compat\n")
+        File.chmod(0644, fmt_base) unless File.writable?(fmt_base)
         File.write(fmt_base, content)
       end
     end

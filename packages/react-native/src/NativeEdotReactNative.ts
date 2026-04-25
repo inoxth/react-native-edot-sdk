@@ -22,4 +22,4 @@ export interface Spec extends TurboModule {
   setTrackingConsent(consent: string): void;
 }
 
-export default TurboModuleRegistry.getEnforcing<Spec>('EdotReactNative');
+export default TurboModuleRegistry.get<Spec>('EdotReactNative');

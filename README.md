@@ -53,14 +53,9 @@ yarn add @inox/react-native-edot-wix-navigation
 cd ios && pod install
 ```
 
-The EDOT iOS agent (`ElasticApm`) is distributed via Swift Package Manager, not CocoaPods. Add it to your Xcode project:
+That's it. The SDK podspec declares the EDOT iOS agent (`apm-agent-ios`) as a Swift Package dependency via React Native's `spm_dependency` helper, so `pod install` resolves the package and links the `ElasticApm` product onto the SDK's pod target automatically. No manual Xcode SPM configuration is required.
 
-1. Open your iOS workspace in Xcode.
-2. **File → Add Package Dependencies…**
-3. Enter `https://github.com/elastic/apm-agent-ios` and pin to a 2.x tag.
-4. Add the `ElasticApm` product to your app target.
-
-The SDK's native files are conditionally compiled against `ELASTIC_APM_AVAILABLE`; without the SPM package they compile as a no-op.
+Requires React Native 0.75+ and CocoaPods 1.13+. The SDK's native files are conditionally compiled against `ELASTIC_APM_AVAILABLE`, which the podspec enables on its own pod target whenever `spm_dependency` is in scope.
 
 ### 3. Android Setup
 
@@ -297,7 +292,7 @@ npx @inox/react-native-edot-cli upload-sourcemap \
 
 ## Requirements
 
-- React Native >= 0.72
+- React Native >= 0.75 (required for the `spm_dependency` Cocoapods helper)
 - iOS >= 16.0
 - Android minSdk 24
 - Node.js >= 18
