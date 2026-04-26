@@ -86,7 +86,7 @@ describe('setupXhrInstrumentation', () => {
     xhr.send();
 
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'HTTP GET',
+      'GET api.example.com',
       expect.objectContaining({ 'http.request.method': 'GET' }),
       null,
     );

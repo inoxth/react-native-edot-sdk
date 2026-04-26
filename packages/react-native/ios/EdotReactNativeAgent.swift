@@ -4,6 +4,21 @@ import Foundation
 import ElasticApm
 #endif
 
+/// Native-side entry point for starting the Elastic APM agent before the
+/// React Native bridge has loaded.
+///
+/// Responsibilities:
+/// - Provides `preInitialize(...)` for host apps that need the agent running
+///   during early native startup (e.g. from `application(_:didFinishLaunchingWithOptions:)`),
+///   so spans for pre-JS code paths (cold-start, native SDKs) aren't lost.
+/// - Owns the `OTEL_RESOURCE_ATTRIBUTES` env var that carries `service.name`,
+///   `service.version`, and `deployment.environment` into the SDK.
+/// - Exposes `isPreInitialized` so `EdotReactNative.initialize` can detect a
+///   prior native start and merge JS config without restarting the agent.
+///
+/// If the host app does not pre-initialize, `EdotReactNative.initialize`
+/// starts the agent itself from the JS-supplied config — both paths are
+/// supported, but only one starts the agent.
 @objc
 public class EdotReactNativeAgent: NSObject {
 

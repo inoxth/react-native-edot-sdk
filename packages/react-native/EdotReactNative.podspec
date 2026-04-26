@@ -27,6 +27,11 @@ Pod::Spec.new do |s|
       requirement: { kind: 'upToNextMajorVersion', minimumVersion: '2.0.0' },
       products: ['ElasticApm']
     )
+    spm_dependency(s,
+      url: 'https://github.com/open-telemetry/opentelemetry-swift.git',
+      requirement: { kind: 'upToNextMajorVersion', minimumVersion: '2.2.1' },
+      products: ['URLSessionInstrumentation']
+    )
     s.pod_target_xcconfig = base_xcconfig.merge(
       'OTHER_SWIFT_FLAGS' => '$(inherited) -DELASTIC_APM_AVAILABLE',
       'SWIFT_ACTIVE_COMPILATION_CONDITIONS' => '$(inherited) ELASTIC_APM_AVAILABLE'

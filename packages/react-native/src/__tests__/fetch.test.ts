@@ -41,7 +41,7 @@ describe('setupFetchInstrumentation', () => {
     await global.fetch('https://api.example.com/users');
 
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'HTTP GET',
+      'GET api.example.com',
       expect.objectContaining({ 'http.request.method': 'GET' }),
       null,
     );

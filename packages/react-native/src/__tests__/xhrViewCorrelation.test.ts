@@ -65,7 +65,7 @@ describe('XHR view correlation', () => {
     xhr.send();
 
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'HTTP GET',
+      'GET api.example.com',
       expect.objectContaining({
         'view.name': 'HomeScreen',
         'view.id': 'hs1',
@@ -97,7 +97,7 @@ describe('XHR view correlation', () => {
     xhr.send();
 
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'HTTP GET',
+      'GET api.example.com',
       expect.objectContaining({
         'view.name': 'ScreenB',
         'view.id': 'vs-b',

@@ -18,7 +18,7 @@ RCT_EXTERN_METHOD(reportJsException:(NSDictionary *)errorInfo)
 
 RCT_EXTERN__BLOCKING_SYNCHRONOUS_METHOD(startSpan:(NSString *)name
                                         attributes:(NSDictionary *)attributes
-                                        parentSpanId:(NSString *)parentSpanId)
+                                        parentSpanId:(NSString * _Nullable)parentSpanId)
 
 RCT_EXTERN_METHOD(endSpan:(NSString *)spanId statusCode:(NSInteger)statusCode)
 RCT_EXTERN_METHOD(setSpanAttribute:(NSString *)spanId key:(NSString *)key value:(NSString *)value)

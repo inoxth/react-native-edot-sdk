@@ -46,7 +46,7 @@ describe('fetch view correlation', () => {
     await global.fetch('https://api.example.com/products/1');
 
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'HTTP GET',
+      'GET api.example.com',
       expect.objectContaining({
         'view.name': 'ProductDetailScreen',
         'view.id': 'vs1',
@@ -83,7 +83,7 @@ describe('fetch view correlation', () => {
     await fetchPromise;
 
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'HTTP GET',
+      'GET api.example.com',
       expect.objectContaining({
         'view.name': 'ScreenA',
         'view.id': 'vs-a',
