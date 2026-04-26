@@ -7,7 +7,9 @@
   },
   "scripts": {
     "android": "react-native run-android",
+    "android:old-arch": "cd android && ./gradlew installDebug -PnewArchEnabled=false && cd ..",
     "ios": "react-native run-ios --simulator 'iPhone 17 Pro'",
+    "ios:old-arch": "RCT_NEW_ARCH_ENABLED=0 react-native run-ios --simulator 'iPhone 17 Pro'",
     "start": "react-native start",
     "typecheck": "tsc --noEmit"
   },

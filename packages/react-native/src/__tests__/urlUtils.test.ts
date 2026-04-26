@@ -1,4 +1,4 @@
-import { sanitizeUrl, shouldIgnore, shouldPropagate } from '../instrumentation/urlUtils';
+import { extractHost, sanitizeUrl, shouldIgnore, shouldPropagate } from '../instrumentation/urlUtils';
 
 describe('sanitizeUrl', () => {
   it('strips query parameters', () => {
@@ -40,6 +40,20 @@ describe('shouldIgnore', () => {
 
   it('does not ignore when no patterns', () => {
     expect(shouldIgnore('https://api.example.com/users', undefined, serverUrl)).toBe(false);
+  });
+});
+
+describe('extractHost', () => {
+  it('returns the host for a standard URL', () => {
+    expect(extractHost('https://api.example.com/users')).toBe('api.example.com');
+  });
+
+  it('includes port when present', () => {
+    expect(extractHost('https://api.example.com:8443/users')).toBe('api.example.com:8443');
+  });
+
+  it('returns null for malformed URL', () => {
+    expect(extractHost('not a url')).toBeNull();
   });
 });
 

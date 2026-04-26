@@ -32,8 +32,15 @@ src/
 └── interactions/
     ├── use-edot-action.ts      # useEdotAction() hook
     └── with-edot-tracking.tsx  # withEdotTracking() HOC
-ios/                            # Native iOS module (Swift)
+ios/                            # Native iOS sources (Swift + Obj-C bridge .m)
 android/                        # Native Android module (Kotlin)
+├── build.gradle.kts            # arch-conditional sourceSet selection
+└── src/
+    ├── main/java/...           # EdotReactNativeModuleImpl.kt (shared logic) + Package
+    ├── oldarch/java/...        # ReactContextBaseJavaModule subclass (Old Arch)
+    └── newarch/java/...        # NativeEdotReactNativeSpec subclass (New Arch)
+EdotReactNative.podspec         # Real podspec — compiles iOS sources, declares SPM via spm_dependency
+react-native.config.js          # Pod / Gradle autolinking hints
 ```
 
 ## Subpath Exports
@@ -80,10 +87,35 @@ The exported `EdotNativeModule` is a `Proxy` around the loaded native module. It
 - `rn.architecture` from `global.nativeFabricUIManager` (fabric vs bridge)
 - Global type augmentations in `globals.d.ts`
 
+## Native Distribution
+
+### iOS — Self-contained podspec with `spm_dependency`
+
+`apm-agent-ios` (ElasticApm) ships only via Swift Package Manager. React Native 0.75+ exposes a top-level `spm_dependency` Ruby helper (defined in `react_native/scripts/react_native_pods.rb` and applied by `SPMManager` in `cocoapods/spm.rb` during `apply_on_post_install`) that mutates `installer.pods_project` to inject SPM `XCRemoteSwiftPackageReference` + `XCSwiftPackageProductDependency` entries onto the pod target. The SDK uses this directly:
+
+1. **`EdotReactNative.podspec` at the package root** compiles `ios/**/*.{swift,h,m}` as part of the pod target and excludes `EdotReactNative-Bridging-Header.h` (Swift compiles inside the pod's own module, so no bridging header is needed).
+2. **The podspec calls `spm_dependency(s, url: 'https://github.com/elastic/apm-agent-ios.git', requirement: { kind: 'upToNextMajorVersion', minimumVersion: '2.0.0' }, products: ['ElasticApm'])`** when that helper is in scope (RN 0.75+); otherwise it falls back to a pure pod target with no SPM (so non-RN pod consumers still resolve).
+3. **`pod_target_xcconfig` sets `SWIFT_ACTIVE_COMPILATION_CONDITIONS = ELASTIC_APM_AVAILABLE`** (and `OTHER_SWIFT_FLAGS = -DELASTIC_APM_AVAILABLE`) on the pod target, so the gate fires only when SPM is actually available.
+4. **`install_modules_dependencies(s)`** is called when defined (RN 0.71+) to wire React-Core / new-arch headers; otherwise a plain `s.dependency 'React-Core'` fallback runs.
+
+Each example app's `project.pbxproj` is now free of any `XCRemoteSwiftPackageReference`, `XCSwiftPackageProductDependency`, EDOT source-file references, build-phase entries for EDOT files, `SWIFT_OBJC_BRIDGING_HEADER`, or app-level `ELASTIC_APM_AVAILABLE` — pod install handles all of it.
+
+`EdotReactNative.m` uses `RCT_EXTERN_MODULE(EdotReactNative, NSObject)` + `RCT_EXTERN_METHOD(...)` to expose the Swift methods to the legacy bridge. On New Arch, RN's `RCTLegacyInteropModuleProvider` automatically wraps legacy bridge modules so no `.mm` file or hand-written `getTurboModule:` is needed. The Swift `@objc(initialize:resolve:reject:)` selectors match the codegen-emitted Obj-C protocol shape, so the same Swift class works under both architectures.
+
+**Pod consumer requirement:** RN 0.75+ for `spm_dependency`. The peer dep in `package.json` is `react-native >=0.75.0`. Older consumers can still pod-install the package but the ElasticApm gate stays disabled.
+
+### Android — sourceSet split for New Arch / Old Arch
+
+`build.gradle.kts` reads the `newArchEnabled` Gradle property and adds either `src/newarch/java` or `src/oldarch/java` to the `main` sourceSet. Both directories define the same class name `com.edot.reactnative.EdotReactNativeModule` but extend different base classes:
+- Old Arch: `ReactContextBaseJavaModule` with `@ReactMethod` annotations.
+- New Arch: codegen-generated `NativeEdotReactNativeSpec` with `override fun`.
+
+All shared logic lives in `EdotReactNativeModuleImpl.kt` under `src/main/java/...` and both module variants delegate to it. `EdotReactNativePackage` extends `BaseReactPackage` (RN 0.74+) and exposes `getReactModuleInfoProvider()` so the same package class works on both architectures. `BuildConfig.IS_NEW_ARCHITECTURE_ENABLED` is generated from the same Gradle property to feed `ReactModuleInfo`.
+
 ## Dependencies
 
 - `@inox/react-native-edot-shared` (workspace)
-- Peer: `react >=18.0.0`, `react-native >=0.72.0`
+- Peer: `react >=18.0.0`, `react-native >=0.75.0` (required for `spm_dependency`)
 
 ## Testing
 

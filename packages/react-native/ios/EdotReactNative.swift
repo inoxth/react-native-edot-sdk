@@ -5,6 +5,7 @@ import os.log
 #if ELASTIC_APM_AVAILABLE
 import ElasticApm
 import OpenTelemetryApi
+import URLSessionInstrumentation
 #endif
 
 private let log = OSLog(subsystem: "com.edot.react-native", category: "SDK")
@@ -41,6 +42,17 @@ enum TrackingConsent {
   }
 }
 
+/// React Native bridge module that exposes the EDOT SDK to JavaScript.
+///
+/// Responsibilities:
+/// - Starts `ElasticApmAgent` from the JS-supplied config when the agent
+///   has not been pre-initialized natively (see `EdotReactNativeAgent`).
+/// - Installs a filtered `URLSessionInstrumentation` that complements the
+///   JS fetch/XHR instrumentation (see `installURLSessionInstrumentation`).
+/// - Owns the lifetime of spans started from JS (`startSpan` / `endSpan`),
+///   indexed by id and capped at `activeSpansCap`.
+/// - Forwards user/session/global attributes and tracking-consent state
+///   into every span emitted from JS.
 @objc(EdotReactNative)
 class EdotReactNative: NSObject {
 
@@ -58,6 +70,10 @@ class EdotReactNative: NSObject {
   }
 
   private static let activeSpansCap = 512
+
+  #if ELASTIC_APM_AVAILABLE
+  private static var urlSessionInstrumentation: URLSessionInstrumentation?
+  #endif
 
   private let spanLock = NSLock()
   #if ELASTIC_APM_AVAILABLE
@@ -161,9 +177,6 @@ class EdotReactNative: NSObject {
     if let v = config["enableCrashReporting"] as? Bool {
       instrumentationConfig.enableCrashReporting = v
     }
-    if let v = config["enableURLSessionInstrumentation"] as? Bool {
-      instrumentationConfig.enableURLSessionInstrumentation = v
-    }
     if let v = config["enableViewControllerInstrumentation"] as? Bool {
       instrumentationConfig.enableViewControllerInstrumentation = v
     }
@@ -176,6 +189,9 @@ class EdotReactNative: NSObject {
     if let v = config["enableLifecycleEvents"] as? Bool {
       instrumentationConfig.enableLifecycleEvents = v
     }
+    // Force-off here regardless of JS config — we replace it with a filtered
+    // instance below. See `installURLSessionInstrumentation` for the reasoning.
+    instrumentationConfig.enableURLSessionInstrumentation = false
 
     if !EdotReactNativeAgent.isPreInitialized {
       EdotReactNativeAgent.applyResourceAttributes(
@@ -184,6 +200,11 @@ class EdotReactNative: NSObject {
         deploymentEnvironment: config["deploymentEnvironment"] as? String
       )
       ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
+    }
+
+    let urlSessionEnabled = config["enableURLSessionInstrumentation"] as? Bool ?? true
+    if urlSessionEnabled {
+      EdotReactNative.installURLSessionInstrumentation(serverUrl: serverUrl)
     }
 
     EdotReactNative.stateLock.lock()
@@ -517,6 +538,54 @@ class EdotReactNative: NSObject {
   }
 
   #if ELASTIC_APM_AVAILABLE
+  /// Header injected by the JS fetch/XHR instrumentation to mark requests it
+  /// has already produced a span for. The native swizzle skips these to avoid
+  /// emitting a duplicate span for the same HTTP call.
+  private static let dedupHeader = "X-Edot-RN-Traced"
+
+  /// Installs a custom `URLSessionInstrumentation` that replaces the bundled
+  /// one in apm-agent-ios.
+  ///
+  /// We need our own instance because apm-agent-ios's
+  /// `enableURLSessionInstrumentation` is on/off only — it does not expose the
+  /// `shouldInstrument` / `nameSpan` callbacks we need to:
+  ///
+  /// 1. **Avoid an OTLP feedback loop.** The agent's exporter POSTs to the APM
+  ///    Server via `URLSession`. An unfiltered swizzle traces those exporter
+  ///    requests, which produces more spans, which get exported, and so on.
+  /// 2. **Avoid duplicate spans for JS-initiated requests.** React Native's
+  ///    `fetch` and `XMLHttpRequest` go through `NSURLSession` on iOS, so an
+  ///    unfiltered native swizzle would emit a second span for every request
+  ///    our JS instrumentation already traces. The dedup header lets the JS
+  ///    layer claim ownership of a request so the native side stays out of it.
+  /// 3. **Match span naming with the JS layer** (`"METHOD host"`).
+  ///
+  /// Net effect: only non-JS, non-exporter URLSession traffic (e.g. requests
+  /// from third-party native SDKs) is traced natively. Everything originating
+  /// from JS is traced exactly once, in JS.
+  private static func installURLSessionInstrumentation(serverUrl: String) {
+    guard urlSessionInstrumentation == nil else { return }
+
+    let urlSessionConfig = URLSessionInstrumentationConfiguration(
+      shouldInstrument: { request in
+        if let url = request.url?.absoluteString, url.hasPrefix(serverUrl) {
+          return false
+        }
+        if request.value(forHTTPHeaderField: dedupHeader) != nil {
+          return false
+        }
+        return true
+      },
+      nameSpan: { request in
+        guard let host = request.url?.host, let method = request.httpMethod else {
+          return nil
+        }
+        return "\(method) \(host)"
+      }
+    )
+    urlSessionInstrumentation = URLSessionInstrumentation(configuration: urlSessionConfig)
+  }
+
   private static func attributeValue(from raw: Any) -> AttributeValue? {
     if let s = raw as? String {
       return .string(s)

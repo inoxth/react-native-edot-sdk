@@ -4,7 +4,7 @@
 
 EDOT React Native SDK — an OpenTelemetry-compliant observability SDK wrapping native EDOT iOS/Android agents. Auto-instruments network requests (fetch + XHR), JS errors, app lifecycle, startup, and navigation. Published under `@inox/*` scope.
 
-React Native 0.72+, supports both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric).
+React Native 0.75+ (required for the `spm_dependency` Cocoapods helper), supports both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric) from a single codebase via legacy interop.
 
 ## Commands
 
@@ -56,9 +56,9 @@ Each package has its own `CLAUDE.md` and `AGENTS.md` with detailed documentation
 
 ### Native Module — Platform Differences
 
-**iOS** (`packages/react-native/ios/`): Swift implementation gated by `#if ELASTIC_APM_AVAILABLE`. `EdotReactNative.swift` calls `ElasticApmAgent` directly. `EdotReactNativeAgent.swift` allows pre-initialization from AppDelegate before the JS bridge loads — it requires `serviceName`, `serviceVersion`, and `deploymentEnvironment` (all non-blank, no `,` or `=`) and injects them into the OTel `Resource` via `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. Source files are included directly in example app Xcode targets (not as a Pod) because ElasticApm is distributed via SPM and pods cannot declare SPM dependencies.
+**iOS** (`packages/react-native/ios/`): Swift implementation gated by `#if ELASTIC_APM_AVAILABLE`. `EdotReactNative.swift` calls `ElasticApmAgent` directly. `EdotReactNative.m` is the Obj-C bridge (`RCT_EXTERN_MODULE`) — under New Arch, `RCTLegacyInteropModuleProvider` wraps the legacy bridge module so the same `.m`/`.swift` pair drives both architectures. `EdotReactNativeAgent.swift` allows pre-initialization from AppDelegate before the JS bridge loads — it requires `serviceName`, `serviceVersion`, and `deploymentEnvironment` (all non-blank, no `,` or `=`) and injects them into the OTel `Resource` via `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. The `EdotReactNative.podspec` at the package root is a real podspec — it compiles `ios/**/*.{swift,h,m}` and declares the `apm-agent-ios` SPM dependency via React Native's top-level `spm_dependency` helper (RN 0.75+; resolved by `SPMManager#apply_on_post_install` in `react_native/scripts/cocoapods/spm.rb`). The pod target sets `SWIFT_ACTIVE_COMPILATION_CONDITIONS = ELASTIC_APM_AVAILABLE` so example apps need **no** SPM refs, EDOT source-file refs, bridging-header settings, or app-level compilation conditions in their `project.pbxproj`.
 
-**Android** (`packages/react-native/android/`): Kotlin implementation. `initialize()` starts the agent programmatically via `EdotReactNativeAgent.buildFromJsConfig(...)` using the JS-supplied config (serverUrl, tokens, sampling, exportProtocol, diskBufferingEnabled, service identity). `getCurrentSessionId()` returns `""` — ElasticApmAgent 1.5.0 exposes `SessionManager` only as an internal `$agent_sdk` API. The EDOT Gradle plugin (`co.elastic.otel.android.agent`) v1.5.0 is still applied in all example apps (requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36) for build-time code-generation and instrumentation hooks, but the runtime agent is now started from JS config.
+**Android** (`packages/react-native/android/`): Kotlin implementation with arch-conditional source sets. Shared logic lives in `EdotReactNativeModuleImpl.kt` under `src/main/`. `src/oldarch/java/` contains an `EdotReactNativeModule` extending `ReactContextBaseJavaModule` with `@ReactMethod` annotations; `src/newarch/java/` contains one extending the codegen-generated `NativeEdotReactNativeSpec` with `override fun`. Gradle picks the right directory via `IS_NEW_ARCHITECTURE_ENABLED` BuildConfig + sourceSet selection. `EdotReactNativePackage` extends `BaseReactPackage` with `getReactModuleInfoProvider()` so both architectures use the same package class. `initialize()` starts the agent programmatically via `EdotReactNativeAgent.buildFromJsConfig(...)` using the JS-supplied config. `getCurrentSessionId()` returns `""` — ElasticApmAgent 1.5.0 exposes `SessionManager` only as an internal `$agent_sdk` API. The EDOT Gradle plugin (`co.elastic.otel.android.agent`) v1.5.0 is still applied in all example apps (requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36) for build-time code-generation and instrumentation hooks.
 
 ### Initialization Flow
 
@@ -97,8 +97,9 @@ Fetch and XHR are monkey-patched to create OTel spans using v1.23 stable HTTP se
 | Public API surface | `packages/react-native/src/index.ts` |
 | Config shape / defaults | `types.ts`, `defaults.ts`, `config.ts` |
 | Native method signatures | `NativeEdotReactNative.ts` (TurboModule spec) |
-| iOS native implementation | `packages/react-native/ios/EdotReactNative.swift` |
-| Android native implementation | `packages/react-native/android/src/.../EdotReactNativeModule.kt` |
+| iOS native implementation | `packages/react-native/ios/EdotReactNative.swift` (Swift) + `EdotReactNative.m` (RCT_EXTERN_MODULE bridge) |
+| iOS distribution | `packages/react-native/EdotReactNative.podspec` (compiles iOS sources + declares `apm-agent-ios` via `spm_dependency`) |
+| Android native implementation | `packages/react-native/android/src/main/.../EdotReactNativeModuleImpl.kt` (shared) + `src/{newarch,oldarch}/java/.../EdotReactNativeModule.kt` |
 | Add new instrumentation | `packages/react-native/src/instrumentation/` — follow fetch.ts pattern |
 | Add navigation plugin | Copy `packages/react-native-navigation/` — same structure |
 | Shared cross-package types | `packages/shared/src/` |
@@ -143,6 +144,7 @@ Four example apps under `example/`, each a yarn workspace member:
 - Each has `installConfig.hoistingLimits: "workspaces"` so native deps resolve correctly.
 - Metro configs add monorepo root as watch folder + extraNodeModules for `@inox/*` packages.
 - RN versions vary by navigation library compatibility: basic + react-navigation use RN 0.85.1, expo-router + wix-navigation use RN 0.83.4. Min iOS 16.0, min Android SDK 24, compile/target SDK 36.
+- Each app exposes both `ios`/`android` (New Arch, default) and `ios:old-arch`/`android:old-arch` scripts so contributors validate both architectures from the same workspace before shipping changes that touch the native modules.
 
 ### OpenSpec Workflow
 Changes tracked in `openspec/changes/` with proposal -> design -> specs -> tasks artifacts. Archived after implementation to `openspec/changes/archive/`. Main specs live in `openspec/specs/`. Use `/opsx:propose`, `/opsx:apply`, `/opsx:archive` skills.

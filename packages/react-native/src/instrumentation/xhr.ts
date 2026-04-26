@@ -1,7 +1,7 @@
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
 import { ActiveViewContext } from '../activeViewContext';
-import { sanitizeUrl, shouldIgnore, shouldPropagate } from './urlUtils';
+import { sanitizeUrl, shouldIgnore, shouldPropagate, extractHost } from './urlUtils';
 import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
 import { trackSpan, untrackSpan } from './spanCleanup';
@@ -49,8 +49,9 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
       }
 
       const sanitizedUrl = sanitizeUrl(url, config.urlSanitizer);
+      const host = extractHost(url);
 
-      let spanName = `HTTP ${method}`;
+      let spanName = host ? `${method} ${host}` : `HTTP ${method}`;
       const bodyStr = typeof body === 'string' ? body : undefined;
       if (isGraphqlUrl(url, config.graphqlUrls) && bodyStr) {
         const opName = extractGraphqlOperationName(bodyStr);

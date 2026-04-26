@@ -3,6 +3,7 @@ import { NativeModules } from 'react-native';
 describe('nativeModule', () => {
   beforeEach(() => {
     jest.resetModules();
+    jest.unmock('../NativeEdotReactNative');
 
     delete global.__turboModuleProxy;
     NativeModules.EdotReactNative = undefined;
@@ -226,7 +227,7 @@ describe('nativeModule', () => {
       const result = EdotNativeModule.startSpan('test', {}, null);
 
       expect(mockStartSpan).toHaveBeenCalledTimes(1);
-      expect(mockStartSpan).toHaveBeenCalledWith('test', {}); // 2 args only
+      expect(mockStartSpan).toHaveBeenCalledWith('test', {});
       expect(result).toBe('span-1');
     });
 
@@ -284,7 +285,7 @@ describe('nativeModule', () => {
       const { EdotNativeModule } = require('../nativeModule');
       const result = EdotNativeModule.startSpan('test', {});
 
-      expect(mockStartSpan).toHaveBeenCalledWith('test', {}); // 2 args only
+      expect(mockStartSpan).toHaveBeenCalledWith('test', {});
       expect(result).toBe('span-3');
     });
   });

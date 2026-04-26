@@ -1,7 +1,7 @@
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
 import { ActiveViewContext } from '../activeViewContext';
-import { sanitizeUrl, shouldIgnore, shouldPropagate, extractMethod, extractUrl } from './urlUtils';
+import { sanitizeUrl, shouldIgnore, shouldPropagate, extractMethod, extractUrl, extractHost } from './urlUtils';
 import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
 import { trackSpan, untrackSpan } from './spanCleanup';
@@ -22,8 +22,9 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
     try {
       const method = extractMethod(input, init);
       const sanitizedUrl = sanitizeUrl(url, config.urlSanitizer);
+      const host = extractHost(url);
 
-      let spanName = `HTTP ${method}`;
+      let spanName = host ? `${method} ${host}` : `HTTP ${method}`;
       if (isGraphqlUrl(url, config.graphqlUrls) && typeof init?.body === 'string') {
         const opName = extractGraphqlOperationName(init.body);
         if (opName) {

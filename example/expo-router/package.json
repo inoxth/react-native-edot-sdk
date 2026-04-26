@@ -9,7 +9,9 @@
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
+    "android:old-arch": "cd android && ./gradlew installDebug -PnewArchEnabled=false && cd ..",
     "ios": "expo run:ios --device 'iPhone 17 Pro'",
+    "ios:old-arch": "RCT_NEW_ARCH_ENABLED=0 expo run:ios --device 'iPhone 17 Pro'",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -68,3 +68,11 @@ export function extractUrl(input: RequestInfo): string {
   }
   return input.url;
 }
+
+export function extractHost(url: string): string | null {
+  try {
+    return new URL(url).host || null;
+  } catch {
+    return null;
+  }
+}

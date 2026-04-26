@@ -80,6 +80,11 @@ const loadedModule = loadNativeModule();
 // Object spread silently drops prototype methods, causing runtime errors like
 // "EdotNativeModule missing expected methods: endSpan".
 // Use Proxy with Reflect.get() to preserve the full prototype chain.
+//
+// Also: never pass explicit JS `null` for parentSpanId across the bridge.
+// RCTBridge (Old Architecture) converts JS `null` → NSNull, which fails when
+// the native side expects an optional NSString. Omitting the argument entirely
+// (2-arg call) maps `undefined` → nil, which both architectures accept.
 
 const startSpanWrapper = function (
   name: string,
