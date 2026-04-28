@@ -110,7 +110,13 @@ public class EdotReactNativeAgent: NSObject {
       pairs.append("service.version=\(serviceVersion)")
     }
     if let deploymentEnvironment, !deploymentEnvironment.isEmpty {
+      // apm-agent-ios hardcodes deployment.environment.name="default" in
+      // AgentResource.get(); Elastic APM Server 8.16+ maps that new key to
+      // service.environment, so we must override it. We also keep the
+      // legacy deployment.environment for older APM Server versions.
+      // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/registry/attributes/deployment.md
       pairs.append("deployment.environment=\(deploymentEnvironment)")
+      pairs.append("deployment.environment.name=\(deploymentEnvironment)")
     }
     guard !pairs.isEmpty else { return }
     envLock.lock()
