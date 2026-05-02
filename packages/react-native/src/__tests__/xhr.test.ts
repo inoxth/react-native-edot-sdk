@@ -155,4 +155,16 @@ describe('setupXhrInstrumentation', () => {
     expect(EdotNativeModule.endSpan).toHaveBeenCalledTimes(1);
     expect(untrackSpan).toHaveBeenCalledTimes(1);
   });
+
+  it('injects X-Edot-RN-Traced header so native swizzle skips this request', () => {
+    const headerSpy = jest.spyOn(MockXMLHttpRequest.prototype, 'setRequestHeader');
+    teardown = setupXhrInstrumentation(baseConfig);
+
+    const xhr = new XHR();
+    xhr.open('GET', 'https://api.example.com/users');
+    xhr.send();
+
+    expect(headerSpy).toHaveBeenCalledWith('X-Edot-RN-Traced', '1');
+    headerSpy.mockRestore();
+  });
 });

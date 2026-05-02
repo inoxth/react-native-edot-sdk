@@ -103,4 +103,24 @@ describe('setupFetchInstrumentation', () => {
     teardown();
     expect(global.fetch).toBe(originalFetch);
   });
+
+  it('injects X-Edot-RN-Traced header so native swizzle skips this request', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    await global.fetch('https://api.example.com/users');
+
+    const [, init] = (originalFetch as jest.Mock).mock.calls[0];
+    const headers = init.headers as Headers;
+    expect(headers.get('X-Edot-RN-Traced')).toBe('1');
+  });
+
+  it('injects dedup header even when caller passes Headers instance', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    const callerHeaders = new Headers({ 'X-Caller': 'me' });
+    await global.fetch('https://api.example.com/users', { headers: callerHeaders });
+
+    const [, init] = (originalFetch as jest.Mock).mock.calls[0];
+    const headers = init.headers as Headers;
+    expect(headers.get('X-Edot-RN-Traced')).toBe('1');
+    expect(headers.get('X-Caller')).toBe('me');
+  });
 });
