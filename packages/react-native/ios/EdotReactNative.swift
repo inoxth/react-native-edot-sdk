@@ -5,6 +5,7 @@ import os.log
 #if ELASTIC_APM_AVAILABLE
 import ElasticApm
 import OpenTelemetryApi
+import OpenTelemetrySdk
 import URLSessionInstrumentation
 #endif
 
@@ -58,6 +59,7 @@ class EdotReactNative: NSObject {
 
   private static let stateLock = NSLock()
   private static var isInitialized = false
+  private static var isInitializing = false
   private static var debugEnabled = false
   private static var userAttributesSpanScope: UserAttributesSpanScope = .idOnly
   private static var trackingConsent: TrackingConsent = .granted
@@ -73,6 +75,9 @@ class EdotReactNative: NSObject {
 
   #if ELASTIC_APM_AVAILABLE
   private static var urlSessionInstrumentation: URLSessionInstrumentation?
+  private static var meterProvider: (any MeterProvider)?
+  private static var appMetrics: EdotAppMetrics?
+  private static var systemMetrics: EdotSystemMetrics?
   #endif
 
   private let spanLock = NSLock()
@@ -133,12 +138,13 @@ class EdotReactNative: NSObject {
                   resolver resolve: @escaping RCTPromiseResolveBlock,
                   rejecter reject: @escaping RCTPromiseRejectBlock) {
     EdotReactNative.stateLock.lock()
-    if EdotReactNative.isInitialized {
+    if EdotReactNative.isInitialized || EdotReactNative.isInitializing {
       EdotReactNative.stateLock.unlock()
-      debugLog("Already initialized, merging JS config")
+      debugLog("Already initialized or initializing, skipping")
       resolve(nil)
       return
     }
+    EdotReactNative.isInitializing = true
     EdotReactNative.debugEnabled = config["debug"] as? Bool ?? false
     EdotReactNative.userAttributesSpanScope =
       UserAttributesSpanScope.parse(config["userAttributesIncludeInSpans"] as? String)
@@ -150,6 +156,9 @@ class EdotReactNative: NSObject {
     let serverUrl = config["serverUrl"] as? String ?? ""
 
     guard let url = URL(string: serverUrl), !serverUrl.isEmpty else {
+      EdotReactNative.stateLock.lock()
+      EdotReactNative.isInitializing = false
+      EdotReactNative.stateLock.unlock()
       reject("EDOT_INIT_ERROR", "Invalid serverUrl: \(serverUrl)", nil)
       return
     }
@@ -180,15 +189,18 @@ class EdotReactNative: NSObject {
     if let v = config["enableViewControllerInstrumentation"] as? Bool {
       instrumentationConfig.enableViewControllerInstrumentation = v
     }
-    if let v = config["enableAppMetricInstrumentation"] as? Bool {
-      instrumentationConfig.enableAppMetricInstrumentation = v
-    }
-    if let v = config["enableSystemMetrics"] as? Bool {
-      instrumentationConfig.enableSystemMetrics = v
-    }
     if let v = config["enableLifecycleEvents"] as? Bool {
       instrumentationConfig.enableLifecycleEvents = v
     }
+    // apm-agent-ios v2.0.0's OpenTelemetryInitializer builds the global
+    // MeterProvider without setResource(...), so any metrics it emits land
+    // under `unknown_service:*`. We disable its built-in metric sources and
+    // replace them with EdotAppMetrics / EdotSystemMetrics, which use a
+    // local resource-aware MeterProvider built below.
+    instrumentationConfig.enableAppMetricInstrumentation = false
+    instrumentationConfig.enableSystemMetrics = false
+    let userAppMetricsEnabled = config["enableAppMetricInstrumentation"] as? Bool ?? true
+    let userSystemMetricsEnabled = config["enableSystemMetrics"] as? Bool ?? true
     // Force-off here regardless of JS config — we replace it with a filtered
     // instance below. See `installURLSessionInstrumentation` for the reasoning.
     instrumentationConfig.enableURLSessionInstrumentation = false
@@ -202,6 +214,22 @@ class EdotReactNative: NSObject {
       ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
     }
 
+    let meterProvider = EdotMeterProviderFactory.build(
+      serverUrl: url,
+      secretToken: config["secretToken"] as? String,
+      apiKey: config["apiKey"] as? String,
+      debug: EdotReactNative.debugEnabled
+    )
+    EdotReactNative.stateLock.lock()
+    EdotReactNative.meterProvider = meterProvider
+    if userAppMetricsEnabled {
+      EdotReactNative.appMetrics = EdotAppMetrics(meterProvider: meterProvider)
+    }
+    if userSystemMetricsEnabled {
+      EdotReactNative.systemMetrics = EdotSystemMetrics(meterProvider: meterProvider)
+    }
+    EdotReactNative.stateLock.unlock()
+
     let urlSessionEnabled = config["enableURLSessionInstrumentation"] as? Bool ?? true
     if urlSessionEnabled {
       EdotReactNative.installURLSessionInstrumentation(serverUrl: serverUrl)
@@ -209,6 +237,7 @@ class EdotReactNative: NSObject {
 
     EdotReactNative.stateLock.lock()
     EdotReactNative.isInitialized = true
+    EdotReactNative.isInitializing = false
     EdotReactNative.stateLock.unlock()
     debugLog("SDK initialized successfully")
     resolve(nil)
@@ -216,6 +245,7 @@ class EdotReactNative: NSObject {
     debugLog("ElasticApm SDK not available — running as stub")
     EdotReactNative.stateLock.lock()
     EdotReactNative.isInitialized = true
+    EdotReactNative.isInitializing = false
     EdotReactNative.stateLock.unlock()
     resolve(nil)
     #endif
@@ -458,7 +488,14 @@ class EdotReactNative: NSObject {
                     metricType: String) {
     #if ELASTIC_APM_AVAILABLE
     guard EdotReactNative.emissionAllowed() else { return }
-    let meter = OpenTelemetry.instance.meterProvider.get(name: "react-native-edot")
+    EdotReactNative.stateLock.lock()
+    let provider = EdotReactNative.meterProvider
+    EdotReactNative.stateLock.unlock()
+    guard let provider else {
+      debugLog("recordMetric: meterProvider not initialized — skipping")
+      return
+    }
+    let meter = provider.get(name: "react-native-edot")
 
     var otelAttrs: [String: AttributeValue] = [:]
     for (key, val) in attributes {

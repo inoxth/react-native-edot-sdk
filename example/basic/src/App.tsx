@@ -167,6 +167,7 @@ export function App(): React.JSX.Element {
           deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT || 'development',
           secretToken: EDOT_SECRET_TOKEN,
           debug: true,
+          exportProtocol: 'http',
         });
         setStatus('Initialized');
         addLog('SDK initialized');
