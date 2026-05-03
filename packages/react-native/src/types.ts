@@ -41,6 +41,7 @@ export interface EdotIosConfig {
   enableAppMetricInstrumentation?: boolean;
   enableSystemMetrics?: boolean;
   enableLifecycleEvents?: boolean;
+  useOpAMP?: boolean;
 }
 
 export interface EdotAndroidConfig {
