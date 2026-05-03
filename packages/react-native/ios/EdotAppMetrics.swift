@@ -94,11 +94,13 @@ final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
       return
     }
 
-    let instrument = self.histogram ?? meter
-      .histogramBuilder(name: Self.appLaunchTimeMetric)
-      .setExplicitBucketBoundariesAdvice(boundsFromBuckets(buckets))
-      .build()
-    self.histogram = instrument
+    if histogram == nil {
+      histogram = meter
+        .histogramBuilder(name: Self.appLaunchTimeMetric)
+        .setExplicitBucketBoundariesAdvice(boundsFromBuckets(buckets))
+        .build()
+    }
+    guard var instrument = histogram else { return }
 
     var totalRecorded = 0
     for bucket in buckets {
@@ -108,6 +110,7 @@ final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
       }
       totalRecorded += bucket.bucketCount
     }
+    histogram = instrument
 
     os_log(
       "[EDOT-METRICS] application.launch.time recorded %{public}d sample(s) across %{public}d bucket(s)",
