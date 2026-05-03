@@ -15,7 +15,6 @@ Pod::Spec.new do |s|
   s.swift_version = '5.9'
 
   s.source_files = 'ios/**/*.{swift,h,m}'
-  s.exclude_files = 'ios/EdotReactNative-Bridging-Header.h'
 
   base_xcconfig = {
     'DEFINES_MODULE' => 'YES'

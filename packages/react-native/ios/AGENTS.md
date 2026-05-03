@@ -55,7 +55,7 @@ These rules have a documented "why" in source comments. Removing or relaxing any
 ## Distribution
 
 `EdotReactNative.podspec` (one level up at `packages/react-native/EdotReactNative.podspec`):
-- Compiles `ios/**/*.{swift,h,m}` excluding `EdotReactNative-Bridging-Header.h`.
+- Compiles `ios/**/*.{swift,h,m}` (Swift uses the pod's own module — no bridging header needed).
 - Calls `spm_dependency` for `apm-agent-ios >=2.0.0` (`ElasticApm`) and `opentelemetry-swift >=2.2.1` (`URLSessionInstrumentation`, `OpenTelemetryProtocolExporter`, `OpenTelemetryProtocolExporterHTTP`, `PersistenceExporter`) when the helper is in scope (RN 0.75+).
 - Sets `SWIFT_ACTIVE_COMPILATION_CONDITIONS = ELASTIC_APM_AVAILABLE` on the pod target only.
 

@@ -96,7 +96,7 @@ The iOS module replaces apm-agent-ios's global `MeterProvider` with a resource-a
 
 `apm-agent-ios` (ElasticApm) ships only via Swift Package Manager. React Native 0.75+ exposes a top-level `spm_dependency` Ruby helper (defined in `react_native/scripts/react_native_pods.rb` and applied by `SPMManager` in `cocoapods/spm.rb` during `apply_on_post_install`) that mutates `installer.pods_project` to inject SPM `XCRemoteSwiftPackageReference` + `XCSwiftPackageProductDependency` entries onto the pod target. The SDK uses this directly:
 
-1. **`EdotReactNative.podspec` at the package root** compiles `ios/**/*.{swift,h,m}` as part of the pod target and excludes `EdotReactNative-Bridging-Header.h` (Swift compiles inside the pod's own module, so no bridging header is needed).
+1. **`EdotReactNative.podspec` at the package root** compiles `ios/**/*.{swift,h,m}` as part of the pod target. Swift compiles inside the pod's own module, so no bridging header is needed.
 2. **The podspec calls `spm_dependency(s, url: 'https://github.com/elastic/apm-agent-ios.git', requirement: { kind: 'upToNextMajorVersion', minimumVersion: '2.0.0' }, products: ['ElasticApm'])`** when that helper is in scope (RN 0.75+); otherwise it falls back to a pure pod target with no SPM (so non-RN pod consumers still resolve).
 3. **`pod_target_xcconfig` sets `SWIFT_ACTIVE_COMPILATION_CONDITIONS = ELASTIC_APM_AVAILABLE`** (and `OTHER_SWIFT_FLAGS = -DELASTIC_APM_AVAILABLE`) on the pod target, so the gate fires only when SPM is actually available.
 4. **`install_modules_dependencies(s)`** is called when defined (RN 0.71+) to wire React-Core / new-arch headers; otherwise a plain `s.dependency 'React-Core'` fallback runs.
