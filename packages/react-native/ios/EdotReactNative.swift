@@ -182,6 +182,10 @@ class EdotReactNative: NSObject {
       configBuilder = configBuilder.useConnectionType(exportProtocol == "http" ? .http : .grpc)
     }
 
+    if config["useOpAMP"] as? Bool == true {
+      configBuilder = configBuilder.useOpAMP()
+    }
+
     var instrumentationConfig = InstrumentationConfiguration()
     if let v = config["enableCrashReporting"] as? Bool {
       instrumentationConfig.enableCrashReporting = v
@@ -540,9 +544,9 @@ class EdotReactNative: NSObject {
 
     var otelAttrs: [String: AttributeValue] = [:]
     for (key, val) in attributes {
-      if let k = key as? String, let v = val as? String {
-        otelAttrs[k] = .string(v)
-      }
+      guard let k = key as? String,
+            let v = EdotReactNative.attributeValue(from: val) else { continue }
+      otelAttrs[k] = v
     }
 
     logger.logRecordBuilder()
