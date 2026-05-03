@@ -90,3 +90,4 @@ metro.config.js.map
 
 # Claude Code
 .claude/tsc-cache/
+.claude/worktrees/
