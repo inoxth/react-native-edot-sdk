@@ -68,6 +68,16 @@ Example apps' `project.pbxproj` carries **no** SPM refs, EDOT source files, brid
 - `print()` is forbidden — use `os_log` at the appropriate level.
 - Force unwraps (`!`), force casts (`as!`), force tries (`try!`) are forbidden. Use `guard let` / `if let` / `try?`.
 
+## JS-driven HTTP Spans Get Native Enrichment Automatically
+
+`fetch.ts` and `xhr.ts` call `EdotNativeModule.startClientSpan(...)` which routes through `tracer.spanBuilder(...).setSpanKind(spanKind: .client).startSpan()`. Because the tracer comes from `OpenTelemetry.instance.tracerProvider`, every JS HTTP span passes through apm-agent-ios's `ElasticSpanProcessor` and picks up the same enrichment as native `URLSession` spans:
+
+- **`type=mobile`** and **`session.id`** — set on every span by the universal attribute interceptor (`ElasticSpanProcessor.swift:67-75`).
+- **`network.connection.type` (rich, via `NetworkStatusInjector`)** — set when `isHttpSpan() == true`, which keys on the presence of the `http.url` (legacy) OR `url.full` (v1.23 stable) attribute (`TransactionHelper.swift:19-25`). Our JS spans emit `http.url` per the Elastic mobile spec.
+- **Synthetic parent transaction** — created automatically when an HTTP span has `parentSpanId == nil` (which is the default for `startClientSpan(name, attrs, null)`), so JS HTTP calls appear in APM as `transaction → child span` rather than flat root spans (`ElasticSpanProcessor.swift:102-138`).
+
+**Implication:** anyone updating `startClientSpan` or fetch/XHR attributes must keep `http.url` (or `url.full`) in the emitted attribute set, otherwise `isHttpSpan()` returns false and JS HTTP spans silently lose `network.connection.type` and synthetic-parent wrapping.
+
 ## Anti-Patterns
 
 - **Don't use `OpenTelemetry.instance.meterProvider`** — it's resource-less. Use `EdotMeterProviderFactory.build(...)` and store the returned provider on `EdotReactNative.meterProvider`.
