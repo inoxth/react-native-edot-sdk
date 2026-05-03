@@ -16,7 +16,6 @@ src/
 ├── types.ts                    # EdotConfig, EdotUser, platform config types
 ├── defaults.ts                 # EDOT_DEFAULTS for instrumentation toggles
 ├── activeViewContext.ts        # Re-export from @inox/react-native-edot-shared
-├── resource.ts                 # Resource attribute detection
 ├── instrumentation/
 │   ├── fetch.ts                # fetch() monkey-patch with span creation
 │   ├── xhr.ts                  # XMLHttpRequest monkey-patch
@@ -72,23 +71,42 @@ The native spec (`NativeEdotReactNative.ts`) exposes three typed setters: `setSp
 2. Fall back to `NativeModules.EdotReactNative` (old bridge)
 3. Return no-op Proxy (all calls silently succeed — `startSpan()` returns `''`)
 
-#### Native Module Wrapper (startSpan Proxy)
+#### Native Module Wrapper (startSpan / startClientSpan Proxy)
 
-The exported `EdotNativeModule` is a `Proxy` around the loaded native module. It intercepts only `startSpan` to avoid passing `null`/`undefined` `parentSpanId` values across the RCTBridge (RCTBridge serializes JS `null` as `NSNull`, which cannot be converted to `NSString`). When `parentSpanId` is nullish, the wrapper calls the 2-arg overload; otherwise it passes all 3 args.
+The exported `EdotNativeModule` is a `Proxy` around the loaded native module. It intercepts both `startSpan` and `startClientSpan` to avoid passing `null`/`undefined` `parentSpanId` values across the RCTBridge (RCTBridge serializes JS `null` as `NSNull`, which cannot be converted to `NSString`). When `parentSpanId` is nullish, the wrapper calls the 2-arg overload; otherwise it passes all 3 args.
+
+`startSpan` creates `kind=INTERNAL` spans (used by errors, startup, view, action, custom JS-driven spans). `startClientSpan` creates `kind=CLIENT` spans and is used by `fetch.ts` / `xhr.ts` so HTTP spans match what apm-agent-ios's native `URLSessionInstrumentation` emits.
 
 **Critical:** The wrapper must use `Proxy` + `Reflect.get()` — never object spread (`{...module, startSpan() {...}}`). TurboModule instances store methods on the prototype, not as own properties. Object spread silently drops them, causing runtime errors like `EdotNativeModule missing expected methods: endSpan`. The test suite includes a `preserves all Spec methods from prototype-based TurboModule instances` case that guards against this regression.
 
-### Resource Detection
+### Resource Attributes
 
-`resource.ts` detects platform attributes via React Native globals:
-- `os.type` from `Platform.OS`
-- `rn.hermes` from `global.HermesInternal`
-- `rn.architecture` from `global.nativeFabricUIManager` (fabric vs bridge)
-- Global type augmentations in `globals.d.ts`
+Resource attributes (`service.name`, `service.version`, `os.*`, `device.id`, `process.runtime.*`, `telemetry.sdk.*`, etc.) are auto-injected by apm-agent-ios's `AgentResource` and OpenTelemetry-Swift's `SDKResourceExtension` when `ElasticApmAgent.start(...)` runs. JS supplies service identity (`serviceName`, `serviceVersion`, `deploymentEnvironment`) via `OTEL_RESOURCE_ATTRIBUTES` env var (set in `EdotReactNativeAgent.swift` before agent start). No JS-side resource detection — see `ios/AGENTS.md`.
 
 ### iOS Metrics Pipeline
 
 The iOS module replaces apm-agent-ios's global `MeterProvider` with a resource-aware one (`EdotMeterProviderFactory`). Pipeline: `PeriodicMetricReader (60s) → Logging? → Persistence (Caches/elastic/) → CentralConfigGate → HTTP|gRPC`. Default transport gRPC; `exportProtocol: "http"` overrides. `EdotAppMetrics` (MetricKit `application.launch.time`) and `EdotSystemMetrics` (CPU/memory observable gauges) replace apm-agent-ios's reimplementations because they emit through the resource-less global. The `CentralConfigGate` (`EdotCentralConfigMetricExporter`) is a deliberate divergence — upstream v2.0.0 doesn't gate metrics on the central-config `recording` flag. See `ios/AGENTS.md` for the full set of load-bearing rules.
+
+### HTTP Span Attribute Convention
+
+`fetch.ts` and `xhr.ts` emit **legacy** HTTP semantic-conv attribute names (`http.method`, `http.url`, `http.status_code`, `http.scheme`, `http.target`, `net.peer.name`, `net.peer.port`, `http.request_body.size`, `http.response_body.size`) — NOT the v1.23 stable names (`http.request.method`, `url.full`, `http.response.status_code`, …). This matches:
+
+1. The Elastic mobile attributes spec (`https://github.com/elastic/apm/blob/main/specs/agents/mobile/README.md`) — which documents legacy names as the "OTel Convention" agents should send; APM Server remaps to ECS field names internally.
+2. apm-agent-ios v2.0.0 via opentelemetry-swift v2.2.1's `URLSessionLogger` (which emits the same legacy names on native HTTP spans).
+
+This alignment lets apm-agent-ios's `ElasticSpanProcessor` recognize JS HTTP spans as HTTP via `isHttpSpan()` (which keys on `http.url` presence) and apply the same enrichment as native: `network.connection.type` via `NetworkStatusInjector`, synthetic-parent transaction wrapping for orphan spans. See `ios/AGENTS.md` "JS-driven HTTP Spans Get Native Enrichment Automatically".
+
+### Configuration Surface (recent additions)
+
+JS-callable config knobs that pass through to apm-agent-ios v2.0.0's builder:
+- `disableAgent` — fully suppresses native agent startup
+- `persistencePreset: 'default' | 'lowUsage' | 'highVolume'` — tunes `PersistencePerformancePreset`
+- `managementUrl` + `remoteManagement` — separate central-config endpoint
+- `ios.useOpAMP` — opt-in OpAMP central-config protocol
+- `attributeRedactions: { spans, logs }` with `drop` / `dropPattern` / `mask` / `maskPattern` — declarative attribute redaction (Option B; serializes across the bridge)
+- `ignoreSpanNames` and `ignoreLogPatterns` — predicate filters via `addSpanFilter` / `addLogFilter`
+
+Validation lives in `config.ts` and throws at `validateConfig` time on invalid input. Native compilation (regex compilation, predicate building) happens in `EdotReactNative.swift:initialize`.
 
 ## Native Distribution
 
