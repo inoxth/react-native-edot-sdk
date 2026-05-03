@@ -76,3 +76,45 @@ export function extractHost(url: string): string | null {
     return null;
   }
 }
+
+export function extractHostname(url: string): string | null {
+  try {
+    return new URL(url).hostname || null;
+  } catch {
+    return null;
+  }
+}
+
+export function extractPort(url: string): number | null {
+  try {
+    const parsed = new URL(url);
+    if (parsed.port) {
+      const value = Number(parsed.port);
+      return Number.isFinite(value) ? value : null;
+    }
+    if (parsed.protocol === 'http:') return 80;
+    if (parsed.protocol === 'https:') return 443;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function extractScheme(url: string): string | null {
+  try {
+    const protocol = new URL(url).protocol;
+    return protocol ? protocol.replace(/:$/, '') : null;
+  } catch {
+    return null;
+  }
+}
+
+export function extractTarget(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    const target = `${parsed.pathname}${parsed.search}`;
+    return target || null;
+  } catch {
+    return null;
+  }
+}

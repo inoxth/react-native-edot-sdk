@@ -1,4 +1,13 @@
-import { extractHost, sanitizeUrl, shouldIgnore, shouldPropagate } from '../instrumentation/urlUtils';
+import {
+  extractHost,
+  extractHostname,
+  extractPort,
+  extractScheme,
+  extractTarget,
+  sanitizeUrl,
+  shouldIgnore,
+  shouldPropagate,
+} from '../instrumentation/urlUtils';
 
 describe('sanitizeUrl', () => {
   it('strips query parameters', () => {
@@ -68,5 +77,73 @@ describe('shouldPropagate', () => {
 
   it('returns false for non-matching target', () => {
     expect(shouldPropagate('https://other.example.com/data', [/api\.example\.com/])).toBe(false);
+  });
+});
+
+describe('extractHostname', () => {
+  it('returns hostname without port', () => {
+    expect(extractHostname('https://api.example.com:8443/users')).toBe('api.example.com');
+  });
+
+  it('returns hostname for plain URL', () => {
+    expect(extractHostname('https://api.example.com/users')).toBe('api.example.com');
+  });
+
+  it('returns null for malformed URL', () => {
+    expect(extractHostname('not a url')).toBeNull();
+  });
+});
+
+describe('extractPort', () => {
+  it('returns explicit port when set', () => {
+    expect(extractPort('https://api.example.com:8443/x')).toBe(8443);
+  });
+
+  it('returns 443 for https URLs without explicit port', () => {
+    expect(extractPort('https://api.example.com/users')).toBe(443);
+  });
+
+  it('returns 80 for http URLs without explicit port', () => {
+    expect(extractPort('http://api.example.com/users')).toBe(80);
+  });
+
+  it('returns null for unknown scheme without explicit port', () => {
+    expect(extractPort('ftp://example.com/file')).toBeNull();
+  });
+
+  it('returns null for malformed URL', () => {
+    expect(extractPort('not a url')).toBeNull();
+  });
+});
+
+describe('extractScheme', () => {
+  it('returns https for https URLs (no trailing colon)', () => {
+    expect(extractScheme('https://api.example.com/users')).toBe('https');
+  });
+
+  it('returns http for http URLs', () => {
+    expect(extractScheme('http://api.example.com/users')).toBe('http');
+  });
+
+  it('returns null for malformed URL', () => {
+    expect(extractScheme('not a url')).toBeNull();
+  });
+});
+
+describe('extractTarget', () => {
+  it('returns path + query', () => {
+    expect(extractTarget('https://api.example.com/users?id=1')).toBe('/users?id=1');
+  });
+
+  it('returns path alone when no query', () => {
+    expect(extractTarget('https://api.example.com/users')).toBe('/users');
+  });
+
+  it('returns "/" for root path', () => {
+    expect(extractTarget('https://api.example.com')).toBe('/');
+  });
+
+  it('returns null for malformed URL', () => {
+    expect(extractTarget('not a url')).toBeNull();
   });
 });

@@ -32,12 +32,16 @@ class MockXMLHttpRequest {
   readyState = 0;
   responseText = '';
   private _listeners: Record<string, Array<() => void>> = {};
+  private _responseHeaders: Record<string, string> = {};
 
   open(_method: string, _url: string): void {}
   send(_body?: string | null): void {}
   setRequestHeader(_key: string, _value: string): void {}
-  getResponseHeader(_name: string): string | null {
-    return null;
+  getResponseHeader(name: string): string | null {
+    return this._responseHeaders[name.toLowerCase()] ?? null;
+  }
+  setMockResponseHeader(name: string, value: string): void {
+    this._responseHeaders[name.toLowerCase()] = value;
   }
   addEventListener(event: string, handler: () => void): void {
     if (!this._listeners[event]) {
@@ -87,8 +91,87 @@ describe('setupXhrInstrumentation', () => {
 
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
       'GET api.example.com',
-      expect.objectContaining({ 'http.request.method': 'GET' }),
+      expect.objectContaining({ 'http.method': 'GET' }),
       null,
+    );
+  });
+
+  it('uses legacy HTTP attribute names per Elastic mobile spec', () => {
+    teardown = setupXhrInstrumentation(baseConfig);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://api.example.com/users?token=abc');
+    xhr.send();
+
+    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+      'GET api.example.com',
+      expect.objectContaining({
+        'http.method': 'GET',
+        'http.url': 'https://api.example.com/users',
+        'http.scheme': 'https',
+        'http.target': '/users',
+        'net.peer.name': 'api.example.com',
+        'net.peer.port': 443,
+      }),
+      null,
+    );
+  });
+
+  it('does NOT emit v1.23 stable HTTP attribute names', () => {
+    teardown = setupXhrInstrumentation(baseConfig);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://api.example.com/users');
+    xhr.send();
+
+    const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
+    expect(attrs).not.toHaveProperty('http.request.method');
+    expect(attrs).not.toHaveProperty('url.full');
+  });
+
+  it('records request body size as http.request_body.size', () => {
+    teardown = setupXhrInstrumentation(baseConfig);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.example.com/submit');
+    xhr.send('hello');
+
+    expect(EdotNativeModule.setSpanAttributeNumber).toHaveBeenCalledWith(
+      'span-1',
+      'http.request_body.size',
+      5,
+    );
+  });
+
+  it('records status code as http.status_code on load', () => {
+    teardown = setupXhrInstrumentation(baseConfig);
+
+    const xhr = new XHR();
+    xhr.open('GET', 'https://api.example.com/data');
+    xhr.send();
+    xhr.status = 200;
+    xhr.dispatch('load');
+
+    expect(EdotNativeModule.setSpanAttributeNumber).toHaveBeenCalledWith(
+      'span-1',
+      'http.status_code',
+      200,
+    );
+  });
+
+  it('records response body size as http.response_body.size on load', () => {
+    teardown = setupXhrInstrumentation(baseConfig);
+
+    const xhr = new XHR();
+    xhr.open('GET', 'https://api.example.com/data');
+    xhr.send();
+    xhr.setMockResponseHeader('content-length', '42');
+    xhr.dispatch('load');
+
+    expect(EdotNativeModule.setSpanAttributeNumber).toHaveBeenCalledWith(
+      'span-1',
+      'http.response_body.size',
+      42,
     );
   });
 

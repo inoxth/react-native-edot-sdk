@@ -42,10 +42,95 @@ describe('setupFetchInstrumentation', () => {
 
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
       'GET api.example.com',
-      expect.objectContaining({ 'http.request.method': 'GET' }),
+      expect.objectContaining({ 'http.method': 'GET' }),
       null,
     );
     expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('span-1', 1);
+  });
+
+  it('uses legacy HTTP attribute names per Elastic mobile spec', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    await global.fetch('https://api.example.com/users?token=abc');
+
+    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+      'GET api.example.com',
+      expect.objectContaining({
+        'http.method': 'GET',
+        'http.url': 'https://api.example.com/users',
+        'http.scheme': 'https',
+        'http.target': '/users',
+        'net.peer.name': 'api.example.com',
+        'net.peer.port': 443,
+      }),
+      null,
+    );
+  });
+
+  it('does NOT emit v1.23 stable HTTP attribute names', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    await global.fetch('https://api.example.com/users');
+
+    const [, attrs] = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0];
+    expect(attrs).not.toHaveProperty('http.request.method');
+    expect(attrs).not.toHaveProperty('url.full');
+  });
+
+  it('records request body size as http.request_body.size (legacy underscore form)', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    await global.fetch('https://api.example.com/users', { method: 'POST', body: 'hello' });
+
+    expect(EdotNativeModule.setSpanAttributeNumber).toHaveBeenCalledWith(
+      'span-1',
+      'http.request_body.size',
+      5,
+    );
+  });
+
+  it('records response status code as http.status_code (legacy)', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    await global.fetch('https://api.example.com/users');
+
+    expect(EdotNativeModule.setSpanAttributeNumber).toHaveBeenCalledWith(
+      'span-1',
+      'http.status_code',
+      200,
+    );
+  });
+
+  it('records response body size as http.response_body.size (legacy)', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    await global.fetch('https://api.example.com/users');
+
+    expect(EdotNativeModule.setSpanAttributeNumber).toHaveBeenCalledWith(
+      'span-1',
+      'http.response_body.size',
+      2,
+    );
+  });
+
+  it('uses default port 80 for http URLs', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    await global.fetch('http://api.example.com/users');
+
+    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        'http.scheme': 'http',
+        'net.peer.port': 80,
+      }),
+      null,
+    );
+  });
+
+  it('uses explicit port when set in URL', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    await global.fetch('https://api.example.com:8443/users');
+
+    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ 'net.peer.port': 8443 }),
+      null,
+    );
   });
 
   it('skips EDOT server URL', async () => {
@@ -68,8 +153,8 @@ describe('setupFetchInstrumentation', () => {
     teardown = setupFetchInstrumentation(baseConfig);
 
     const mockFetch = jest.fn().mockRejectedValue(new Error('Network error'));
-    global.fetch = originalFetch; // Reset before setup patches
-    teardown(); // teardown previous
+    global.fetch = originalFetch;
+    teardown();
     global.fetch = mockFetch;
     teardown = setupFetchInstrumentation(baseConfig);
 

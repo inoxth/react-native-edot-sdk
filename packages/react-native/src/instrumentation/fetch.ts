@@ -1,7 +1,18 @@
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
 import { ActiveViewContext } from '../activeViewContext';
-import { sanitizeUrl, shouldIgnore, shouldPropagate, extractMethod, extractUrl, extractHost } from './urlUtils';
+import {
+  sanitizeUrl,
+  shouldIgnore,
+  shouldPropagate,
+  extractMethod,
+  extractUrl,
+  extractHost,
+  extractHostname,
+  extractPort,
+  extractScheme,
+  extractTarget,
+} from './urlUtils';
 import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
 import { trackSpan, untrackSpan } from './spanCleanup';
@@ -37,10 +48,18 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
 
       const activeView = ActiveViewContext.getActiveView();
 
-      const spanAttributes: Record<string, string> = {
-        'http.request.method': method,
-        'url.full': sanitizedUrl,
+      const spanAttributes: Record<string, string | number> = {
+        'http.method': method,
+        'http.url': sanitizedUrl,
       };
+      const scheme = extractScheme(url);
+      if (scheme) spanAttributes['http.scheme'] = scheme;
+      const target = extractTarget(sanitizedUrl);
+      if (target) spanAttributes['http.target'] = target;
+      const peerName = extractHostname(url);
+      if (peerName) spanAttributes['net.peer.name'] = peerName;
+      const peerPort = extractPort(url);
+      if (peerPort != null) spanAttributes['net.peer.port'] = peerPort;
       if (activeView) {
         spanAttributes['view.name'] = activeView.name;
         spanAttributes['view.id'] = activeView.spanId;
@@ -59,18 +78,18 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       const patchedInit: RequestInit = { ...init, headers };
 
       if (typeof init?.body === 'string') {
-        EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.request.body.size', init.body.length);
+        EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.request_body.size', init.body.length);
       }
 
       const response = await originalFetch(input, patchedInit);
 
-      EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.response.status_code', response.status);
+      EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.status_code', response.status);
 
       const responseContentLength = response.headers.get('content-length');
       if (responseContentLength) {
         const parsed = Number(responseContentLength);
         if (Number.isFinite(parsed)) {
-          EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.response.body.size', parsed);
+          EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.response_body.size', parsed);
         }
       }
 

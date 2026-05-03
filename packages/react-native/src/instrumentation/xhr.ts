@@ -1,7 +1,16 @@
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
 import { ActiveViewContext } from '../activeViewContext';
-import { sanitizeUrl, shouldIgnore, shouldPropagate, extractHost } from './urlUtils';
+import {
+  sanitizeUrl,
+  shouldIgnore,
+  shouldPropagate,
+  extractHost,
+  extractHostname,
+  extractPort,
+  extractScheme,
+  extractTarget,
+} from './urlUtils';
 import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
 import { trackSpan, untrackSpan } from './spanCleanup';
@@ -62,10 +71,18 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
 
       const activeView = ActiveViewContext.getActiveView();
 
-      const spanAttributes: Record<string, string> = {
-        'http.request.method': method,
-        'url.full': sanitizedUrl,
+      const spanAttributes: Record<string, string | number> = {
+        'http.method': method,
+        'http.url': sanitizedUrl,
       };
+      const scheme = extractScheme(url);
+      if (scheme) spanAttributes['http.scheme'] = scheme;
+      const target = extractTarget(sanitizedUrl);
+      if (target) spanAttributes['http.target'] = target;
+      const peerName = extractHostname(url);
+      if (peerName) spanAttributes['net.peer.name'] = peerName;
+      const peerPort = extractPort(url);
+      if (peerPort != null) spanAttributes['net.peer.port'] = peerPort;
       if (activeView) {
         spanAttributes['view.name'] = activeView.name;
         spanAttributes['view.id'] = activeView.spanId;
@@ -85,7 +102,7 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
       if (bodyStr) {
         EdotNativeModule.setSpanAttributeNumber(
           nativeSpanId,
-          'http.request.body.size',
+          'http.request_body.size',
           bodyStr.length,
         );
       }
@@ -95,14 +112,14 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
           return;
         }
         const currentSpanId = state.spanId;
-        EdotNativeModule.setSpanAttributeNumber(currentSpanId, 'http.response.status_code', this.status);
+        EdotNativeModule.setSpanAttributeNumber(currentSpanId, 'http.status_code', this.status);
         const responseLength = this.getResponseHeader('content-length');
         if (responseLength) {
           const parsed = Number(responseLength);
           if (Number.isFinite(parsed)) {
             EdotNativeModule.setSpanAttributeNumber(
               currentSpanId,
-              'http.response.body.size',
+              'http.response_body.size',
               parsed,
             );
           }
