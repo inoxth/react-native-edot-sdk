@@ -4,7 +4,7 @@ High-level overview of the EDOT React Native SDK. For user-facing setup see [REA
 
 ## Purpose
 
-`@inox/react-native-edot-sdk` wraps the native EDOT iOS and Android agents (Elastic Distribution of OpenTelemetry) behind a unified JavaScript/TypeScript API. It provides auto-instrumentation (network, errors, lifecycle, startup, navigation, user actions) and manual OTel-style instrumentation (tracer, meter, logger), and emits OTLP-compliant telemetry to an Elastic APM Server or any OTLP-compatible backend.
+`@inox/react-native-edot-sdk` wraps the native EDOT iOS and Android agents (Elastic Distribution of OpenTelemetry) behind a unified JavaScript/TypeScript API. It provides auto-instrumentation (network, errors, startup, navigation, user actions) and manual OTel-style instrumentation (tracer, meter, logger), and emits OTLP-compliant telemetry to an Elastic APM Server or any OTLP-compatible backend. App lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec.
 
 ## Goals
 
@@ -32,8 +32,8 @@ High-level overview of the EDOT React Native SDK. For user-facing setup see [REA
 │  │  Auto-instrumentation       Manual API                         │  │
 │  │  • fetch / XHR              • getTracerProvider                │  │
 │  │  • JS errors                • getMeterProvider                 │  │
-│  │  • AppState lifecycle       • EdotReactNative.log              │  │
-│  │  • Cold-start tracing       • useEdotAction / withEdotTracking │  │
+│  │  • Cold-start tracing       • EdotReactNative.log              │  │
+│  │  • Navigation plugins       • useEdotAction / withEdotTracking │  │
 │  │  • Navigation plugins                                          │  │
 │  │           │                          │                         │  │
 │  │           └────────────┬─────────────┘                         │  │

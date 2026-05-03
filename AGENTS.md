@@ -2,7 +2,7 @@
 
 ## Overview
 
-EDOT React Native SDK — an OpenTelemetry-compliant observability SDK wrapping native EDOT iOS/Android agents. Auto-instruments network requests (fetch + XHR), JS errors, app lifecycle, startup, and navigation. Published under `@inox/*` scope.
+EDOT React Native SDK — an OpenTelemetry-compliant observability SDK wrapping native EDOT iOS/Android agents. Auto-instruments network requests (fetch + XHR), JS errors, startup, and navigation. App lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec. Published under `@inox/*` scope.
 
 React Native 0.75+ (required for the `spm_dependency` Cocoapods helper), supports both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric) from a single codebase via legacy interop.
 
@@ -66,7 +66,7 @@ Each package has its own `CLAUDE.md` and `AGENTS.md` with detailed documentation
 1. Validates config via `validateConfig()` — required fields (`serverUrl`, `serviceName`, `serviceVersion`, `deploymentEnvironment`), resource-identity character restrictions (no `,` or `=`), `secretToken`/`apiKey` mutual exclusivity, `sessionSamplingRate` range
 2. Flattens the native config (spreads `config.ios` or `config.android` onto the top-level payload sent to the bridge)
 3. Calls `EdotNativeModule.initialize()` — on Android this starts the agent programmatically via `EdotReactNativeAgent.buildFromJsConfig(...)` unless pre-initialized; on iOS this calls `ElasticApmAgent.start(...)` unless `EdotReactNativeAgent.preInitialize(...)` was called earlier from AppDelegate
-4. Sets up JS-side instrumentation based on `EDOT_DEFAULTS`-merged toggles (fetch, XHR, errors, lifecycle, startup) plus unconditional `setupSpanCleanup`
+4. Sets up JS-side instrumentation based on `EDOT_DEFAULTS`-merged toggles (fetch, XHR, errors, startup) plus unconditional `setupSpanCleanup`
 5. Each setup function returns a teardown function stored in `teardowns[]`; `_resetForTesting()` drains them
 
 ### ActiveViewContext

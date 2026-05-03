@@ -2,7 +2,7 @@
 
 ## Overview
 
-Core EDOT React Native SDK. Config validation, native bridge (TurboModule + NativeModules + no-op fallback), auto-instrumentation (fetch, XHR, errors, lifecycle, startup, span cleanup), public API, and React components.
+Core EDOT React Native SDK. Config validation, native bridge (TurboModule + NativeModules + no-op fallback), auto-instrumentation (fetch, XHR, errors, startup, span cleanup), public API, and React components. Lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec — not by JS.
 
 ## Structure
 
@@ -21,7 +21,6 @@ src/
 │   ├── fetch.ts                # fetch() monkey-patch with span creation
 │   ├── xhr.ts                  # XMLHttpRequest monkey-patch
 │   ├── errors.ts               # Global error + promise rejection handlers
-│   ├── lifecycle.ts            # AppState change tracking
 │   ├── startup.ts              # Cold/warm start tracing
 │   ├── spanCleanup.ts          # Span lifecycle management
 │   ├── traceContext.ts         # W3C traceparent generation
@@ -54,7 +53,7 @@ This package exposes subpath imports used by sibling packages:
 ### Initialization Flow
 
 `EdotReactNative.initialize(config)`:
-1. Validates config (required fields, resource-identity chars, token mutual exclusivity, sampling range) → 2. Flattens platform overrides onto the native payload → 3. Calls native `initialize()` → 4. Sets up JS instrumentation (fetch, XHR, errors, lifecycle, startup) based on `EDOT_DEFAULTS`-merged toggles, plus unconditional `setupSpanCleanup` → 5. Stores teardown functions; `_resetForTesting()` drains them.
+1. Validates config (required fields, resource-identity chars, token mutual exclusivity, sampling range) → 2. Flattens platform overrides onto the native payload → 3. Calls native `initialize()` → 4. Sets up JS instrumentation (fetch, XHR, errors, startup) based on `EDOT_DEFAULTS`-merged toggles, plus unconditional `setupSpanCleanup` → 5. Stores teardown functions; `_resetForTesting()` drains them.
 
 On iOS, `EdotReactNativeAgent.preInitialize(...)` (from `ios/EdotReactNativeAgent.swift`) can be called from AppDelegate before the JS bridge loads. It enforces the same resource-identity rules as JS `validateConfig` and injects `service.name`/`service.version`/`deployment.environment` into the OTel `Resource` via `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. If `isPreInitialized`, the JS-side `initialize()` skips `ElasticApmAgent.start` and only records config for the bridge.
 

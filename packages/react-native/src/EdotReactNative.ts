@@ -8,7 +8,6 @@ import type { RedactedString } from '@inox/react-native-edot-shared';
 import { setupFetchInstrumentation } from './instrumentation/fetch';
 import { setupXhrInstrumentation } from './instrumentation/xhr';
 import { setupErrorHandler } from './instrumentation/errors';
-import { setupLifecycleTracking } from './instrumentation/lifecycle';
 import { setupStartupTracing } from './instrumentation/startup';
 import { setupSpanCleanup } from './instrumentation/spanCleanup';
 
@@ -93,11 +92,6 @@ async function doInitialize(config: EdotConfig): Promise<void> {
     if (merged.instrumentJsErrors) {
       teardowns.push(setupErrorHandler(config));
       debugLog(config, 'JS error tracking enabled');
-    }
-
-    if (merged.instrumentAppLifecycle) {
-      teardowns.push(setupLifecycleTracking(config));
-      debugLog(config, 'Lifecycle tracking enabled');
     }
 
     if (merged.instrumentAppStartup) {

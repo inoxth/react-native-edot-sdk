@@ -7,7 +7,7 @@ OpenTelemetry-compliant observability SDK for React Native. Wraps the native [ED
 - **Network instrumentation** — automatic span creation for `fetch` and `XMLHttpRequest` (including Axios) with W3C trace context propagation
 - **Error tracking** — captures uncaught JS exceptions, unhandled Promise rejections, and React render errors via `EdotErrorBoundary`
 - **Navigation tracking** — view spans for React Navigation, Expo Router, and Wix react-native-navigation
-- **Lifecycle tracking** — foreground/background/inactive state transitions
+- **Lifecycle tracking** — foreground/background/inactive/terminate state transitions emitted natively per Elastic mobile agents spec
 - **Startup tracing** — cold and warm start performance with JS bundle load and first render phases
 - **User interactions** — `withEdotTracking` HOC and `useEdotAction` hook for tap/action tracking
 - **Manual instrumentation** — custom spans, metrics (Counter, Histogram, UpDownCounter), and structured logs
@@ -97,7 +97,7 @@ await EdotReactNative.initialize({
 });
 ```
 
-All auto-instrumentation (network, errors, lifecycle, startup) is enabled by default.
+All auto-instrumentation (network, errors, startup) is enabled by default. Lifecycle events (`event.name="lifecycle"`, `event.domain="device"`) are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec.
 
 ## Configuration
 
@@ -118,7 +118,6 @@ await EdotReactNative.initialize({
   // Auto-instrumentation toggles (all default to true)
   instrumentNetworkRequests: true,
   instrumentJsErrors: true,
-  instrumentAppLifecycle: true,
   instrumentAppStartup: true,
 
   // Network

@@ -3,18 +3,13 @@ import type { EdotConfig, UserAttributesSpanScope } from './types';
 type EdotDefaults = Required<
   Pick<
     EdotConfig,
-    | 'instrumentNetworkRequests'
-    | 'instrumentJsErrors'
-    | 'instrumentAppLifecycle'
-    | 'instrumentAppStartup'
-    | 'debug'
+    'instrumentNetworkRequests' | 'instrumentJsErrors' | 'instrumentAppStartup' | 'debug'
   >
 >;
 
 export const EDOT_DEFAULTS: EdotDefaults = {
   instrumentNetworkRequests: true,
   instrumentJsErrors: true,
-  instrumentAppLifecycle: true,
   instrumentAppStartup: true,
   debug: false,
 };
