@@ -78,6 +78,8 @@ class EdotReactNative: NSObject {
   private static var meterProvider: (any MeterProvider)?
   private static var appMetrics: EdotAppMetrics?
   private static var systemMetrics: EdotSystemMetrics?
+  private static var centralConfigObserver: NSObjectProtocol?
+  private static var lastSeenCentralConfig: String?
   #endif
 
   private let spanLock = NSLock()
@@ -232,6 +234,8 @@ class EdotReactNative: NSObject {
         )
         ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
       }
+
+      EdotReactNative.installCentralConfigSampleRateObserver()
 
       let metricTransport: EdotMetricTransport =
         (config["exportProtocol"] as? String) == "http" ? .http : .grpc
@@ -651,6 +655,39 @@ class EdotReactNative: NSObject {
     switch raw {
     case "highVolume": return .instantDataDelivery
     default: return .default
+    }
+  }
+
+  /// Observes UserDefaults for changes to the apm-agent-ios central-config key.
+  ///
+  /// When `CentralConfigFetcher` writes a new config payload, UserDefaults posts
+  /// `.didChangeNotification`. We detect the change and re-post
+  /// `.elasticSessionManagerDidRefreshSession` so that `SessionSampler` re-runs
+  /// its `sampleRateResolver` closure — which reads `CentralConfig().data.sampleRate`
+  /// — and updates its cached `shouldSample` flag. This makes central-config
+  /// `sampleRate` changes apply at the next polling boundary rather than only at
+  /// the next session refresh.
+  private static func installCentralConfigSampleRateObserver() {
+    guard centralConfigObserver == nil else { return }
+    let key = "elastic.central.configuration"
+    lastSeenCentralConfig = UserDefaults.standard.object(forKey: key) as? String
+    centralConfigObserver = NotificationCenter.default.addObserver(
+      forName: UserDefaults.didChangeNotification,
+      object: UserDefaults.standard,
+      queue: nil
+    ) { _ in
+      let current = UserDefaults.standard.object(forKey: key) as? String
+      stateLock.lock()
+      let previous = lastSeenCentralConfig
+      if current != previous {
+        lastSeenCentralConfig = current
+      }
+      stateLock.unlock()
+      guard current != previous else { return }
+      NotificationCenter.default.post(
+        name: .elasticSessionManagerDidRefreshSession,
+        object: nil
+      )
     }
   }
 
