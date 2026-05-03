@@ -33,7 +33,8 @@ Pod::Spec.new do |s|
       products: [
         'URLSessionInstrumentation',
         'OpenTelemetryProtocolExporter',
-        'OpenTelemetryProtocolExporterHTTP'
+        'OpenTelemetryProtocolExporterHTTP',
+        'PersistenceExporter'
       ]
     )
     s.pod_target_xcconfig = base_xcconfig.merge(

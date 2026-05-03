@@ -2,11 +2,20 @@ import Foundation
 
 #if ELASTIC_APM_AVAILABLE
 import ElasticApm
+import GRPC
+import NIO
 import OpenTelemetryApi
 import OpenTelemetryProtocolExporterCommon
+import OpenTelemetryProtocolExporterGrpc
 import OpenTelemetryProtocolExporterHttp
 import OpenTelemetrySdk
+import PersistenceExporter
 import os.log
+
+enum EdotMetricTransport {
+  case http
+  case grpc
+}
 
 /// Builds a resource-aware `MeterProvider` that we use in place of
 /// `OpenTelemetry.instance.meterProvider` for our own metric emission paths
@@ -26,16 +35,21 @@ import os.log
 ///
 /// `PeriodicMetricReaderBuilder` defaults to a 1s export interval. We pin
 /// it to 60s here to match the OTel SDK spec recommended default and avoid
-/// hammering the APM Server. apm-agent-ios uses the same 1s default but
-/// masks it with `PersistenceMetricExporterDecorator`; we don't have that
-/// decorator yet, so we slow the cadence directly.
+/// hammering the APM Server.
 ///
-/// The exporter is HTTP-only: cleanest path that avoids pulling in NIO/GRPC
-/// transitively. The endpoint is `<serverUrl>/v1/metrics`. For an Elastic
-/// Cloud APM endpoint that already accepts OTLP HTTP (`:443`), this works
-/// regardless of whether apm-agent-ios is configured for gRPC for traces
-/// and logs. Self-hosted setups with a gRPC-only port for metrics are not
-/// supported by this workaround.
+/// Exporter pipeline (outer → inner):
+///   `PeriodicMetricReader → Logging? → Persistence → CentralConfigGate → HTTP|gRPC`
+///
+/// `Persistence` matches apm-agent-ios's default for traces and logs; failed
+/// exports buffer to `Caches/elastic/` and replay on success. The central
+/// config gate sits inside persistence so the kill-switch is honored at
+/// flush time.
+///
+/// `CentralConfigGate` is a deliberate divergence from apm-agent-ios v2.0.0,
+/// which does not honor `recording: Bool` on metrics. Keep it: removing it
+/// re-introduces the bug where toggling "stop recording" in Kibana central
+/// config silently fails to stop our metrics. Track upstream parity at
+/// elastic/apm-agent-ios.
 enum EdotMeterProviderFactory {
   static let exportIntervalSeconds: TimeInterval = 60
 
@@ -43,26 +57,34 @@ enum EdotMeterProviderFactory {
     serverUrl: URL,
     secretToken: String?,
     apiKey: String?,
-    debug: Bool
+    debug: Bool,
+    transport: EdotMetricTransport
   ) -> any MeterProvider {
-    let endpoint = metricsEndpoint(from: serverUrl)
     let config = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
       headers: headers(secretToken: secretToken, apiKey: apiKey)
     )
-    let httpExporter = OtlpHttpMetricExporter(endpoint: endpoint, config: config)
-    let exporter: any MetricExporter = debug
-      ? LoggingMetricExporter(inner: httpExporter, endpoint: endpoint)
-      : httpExporter
     let resource = AgentResource.get().merging(other: AgentEnvResource.get())
+
+    let (baseExporter, logEndpoint) = makeBaseExporter(
+      transport: transport,
+      serverUrl: serverUrl,
+      config: config
+    )
+    let gated: any MetricExporter = EdotCentralConfigMetricExporter(inner: baseExporter)
+    let persisted = wrapWithPersistence(gated)
+    let exporter: any MetricExporter = debug
+      ? LoggingMetricExporter(inner: persisted, endpoint: logEndpoint)
+      : persisted
 
     if debug {
       os_log(
-        "[EDOT-METRICS] build endpoint=%{public}@ interval=%.0fs",
+        "[EDOT-METRICS] build endpoint=%{public}@ interval=%.0fs transport=%{public}@",
         log: log,
         type: .info,
-        endpoint.absoluteString,
-        exportIntervalSeconds
+        logEndpoint.absoluteString,
+        exportIntervalSeconds,
+        transport.label
       )
     }
 
@@ -82,7 +104,99 @@ enum EdotMeterProviderFactory {
 
   private static let log = OSLog(subsystem: "co.elastic.edot", category: "metrics")
 
-  private static func metricsEndpoint(from serverUrl: URL) -> URL {
+  /// Strong reference to the gRPC event loop group + channel created when
+  /// `transport == .grpc`. Held for the process lifetime so the channel
+  /// outlives the returned `MeterProvider`. Matches apm-agent-ios's
+  /// internal NIO group lifetime — neither side exposes an explicit
+  /// teardown; the OS reclaims threads and sockets at process exit.
+  ///
+  /// If a teardown path is ever needed (SDK reinit, App Clip cleanup),
+  /// the correct shutdown sequence is:
+  ///   `_ = try? channel.close().wait()`
+  ///   `try? group.syncShutdownGracefully()`
+  /// Order matters: closing the channel first lets in-flight RPCs drain.
+  /// Shutting down the group while RPCs are alive trips a NIO precondition.
+  private static var grpcResources: GrpcResources?
+
+  private struct GrpcResources {
+    let group: EventLoopGroup
+    let channel: GRPCChannel
+  }
+
+  private static func makeBaseExporter(
+    transport: EdotMetricTransport,
+    serverUrl: URL,
+    config: OtlpConfiguration
+  ) -> (any MetricExporter, URL) {
+    switch transport {
+    case .http:
+      let endpoint = metricsHttpEndpoint(from: serverUrl)
+      return (OtlpHttpMetricExporter(endpoint: endpoint, config: config), endpoint)
+    case .grpc:
+      // Reassigning grpcResources would drop the previous EventLoopGroup
+      // without `syncShutdownGracefully()`, which trips a NIO precondition
+      // in debug and leaks threads in release. `EdotReactNative.initialize`
+      // guards against double-build, so this should never fire.
+      assert(grpcResources == nil, "EdotMeterProviderFactory.build called twice with .grpc; gRPC channel would leak")
+      let group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+      let channel = makeGrpcChannel(serverUrl: serverUrl, group: group)
+      grpcResources = GrpcResources(group: group, channel: channel)
+      return (OtlpMetricExporter(channel: channel, config: config), serverUrl)
+    }
+  }
+
+  private static func makeGrpcChannel(serverUrl: URL, group: EventLoopGroup) -> GRPCChannel {
+    let host = serverUrl.host ?? "localhost"
+    let port = serverUrl.port ?? (serverUrl.scheme == "https" ? 443 : 80)
+    let keepalive = ClientConnectionKeepalive(
+      interval: .seconds(60),
+      timeout: .seconds(20)
+    )
+
+    if serverUrl.scheme == "https" {
+      return ClientConnection
+        .usingPlatformAppropriateTLS(for: group)
+        .withKeepalive(keepalive)
+        .connect(host: host, port: port)
+    }
+    return ClientConnection
+      .insecure(group: group)
+      .withKeepalive(keepalive)
+      .connect(host: host, port: port)
+  }
+
+  private static func wrapWithPersistence(_ inner: any MetricExporter) -> any MetricExporter {
+    guard let folder = persistenceFolder() else { return inner }
+    do {
+      return try PersistenceMetricExporterDecorator(
+        metricExporter: inner,
+        storageURL: folder
+      )
+    } catch {
+      return inner
+    }
+  }
+
+  /// Mirrors apm-agent-ios's persistence root for traces and logs.
+  /// `PersistenceExporter` segregates by signal type internally, so sharing
+  /// the directory with apm-agent-ios's persisted traces and logs is safe.
+  private static func persistenceFolder() -> URL? {
+    do {
+      let caches = try FileManager.default.url(
+        for: .cachesDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: true
+      )
+      let dir = caches.appendingPathComponent("elastic")
+      try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+      return dir
+    } catch {
+      return nil
+    }
+  }
+
+  private static func metricsHttpEndpoint(from serverUrl: URL) -> URL {
     let trimmed = serverUrl.absoluteString.hasSuffix("/")
       ? String(serverUrl.absoluteString.dropLast())
       : serverUrl.absoluteString
@@ -97,6 +211,15 @@ enum EdotMeterProviderFactory {
       headers.append(("Authorization", "ApiKey \(key)"))
     }
     return headers
+  }
+}
+
+private extension EdotMetricTransport {
+  var label: String {
+    switch self {
+    case .http: return "http"
+    case .grpc: return "grpc"
+    }
   }
 }
 

@@ -214,11 +214,14 @@ class EdotReactNative: NSObject {
       ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
     }
 
+    let metricTransport: EdotMetricTransport =
+      (config["exportProtocol"] as? String) == "http" ? .http : .grpc
     let meterProvider = EdotMeterProviderFactory.build(
       serverUrl: url,
       secretToken: config["secretToken"] as? String,
       apiKey: config["apiKey"] as? String,
-      debug: EdotReactNative.debugEnabled
+      debug: EdotReactNative.debugEnabled,
+      transport: metricTransport
     )
     EdotReactNative.stateLock.lock()
     EdotReactNative.meterProvider = meterProvider
