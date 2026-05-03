@@ -1,4 +1,5 @@
 import Foundation
+import os.log
 
 #if ELASTIC_APM_AVAILABLE
 import OpenTelemetryApi
@@ -13,12 +14,20 @@ import MetricKit
 /// `application.launch.time` histogram derived from
 /// `MXAppLaunchMetric.histogrammedTimeToFirstDraw`. All other `recordX`
 /// methods in upstream are commented out, so we don't replicate them.
+///
+/// **MetricKit delivery cadence:** Apple delivers `MXMetricPayload`
+/// approximately once every 24 hours per device, typically when the
+/// device is plugged in and on Wi-Fi. In-Xcode debug builds may not
+/// receive payloads at all. To verify in development, use Xcode's
+/// `Debug → Simulate Metric Payload` while the simulator is running.
 final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
   private static let instrumentationName = "ApplicationMetrics"
   private static let instrumentationVersion = "0.0.3"
   private static let appLaunchTimeMetric = "application.launch.time"
+  private static let log = OSLog(subsystem: "co.elastic.edot", category: "metrics")
 
   private let meter: any Meter
+  private var histogram: (any DoubleHistogram)?
 
   init(meterProvider: any MeterProvider) {
     self.meter = meterProvider
@@ -27,6 +36,11 @@ final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
       .build()
     super.init()
     MXMetricManager.shared.add(self)
+    os_log(
+      "[EDOT-METRICS] EdotAppMetrics subscribed to MXMetricManager (delivery cadence ≈ 24h)",
+      log: Self.log,
+      type: .info
+    )
   }
 
   deinit {
@@ -34,6 +48,12 @@ final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
   }
 
   func didReceive(_ payloads: [MXMetricPayload]) {
+    os_log(
+      "[EDOT-METRICS] didReceive %{public}d MXMetricPayload(s)",
+      log: Self.log,
+      type: .info,
+      payloads.count
+    )
     for payload in payloads {
       recordTimeToFirstDraw(metric: payload)
     }
@@ -43,35 +63,67 @@ final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
   func didReceive(_ payloads: [MXDiagnosticPayload]) {}
 
   private func recordTimeToFirstDraw(metric: MXMetricPayload) {
-    guard
-      let enumerator = metric.applicationLaunchMetrics?
-        .histogrammedTimeToFirstDraw
-        .bucketEnumerator,
-      let buckets = enumerator.allObjects as? [MXHistogramBucket]
-    else { return }
-
-    var bounds: [Double] = []
-    var counts: [Int] = []
-    var values: [Double] = []
-    for bucket in buckets {
-      bounds.append(bucket.bucketStart.value)
-      bounds.append(bucket.bucketEnd.value)
-      counts.append(0)
-      counts.append(bucket.bucketCount)
-      values.append(bucket.bucketStart.value + bucket.bucketEnd.value / 2)
+    guard let appLaunchMetrics = metric.applicationLaunchMetrics else {
+      os_log(
+        "[EDOT-METRICS] payload had no applicationLaunchMetrics — skipping",
+        log: Self.log,
+        type: .info
+      )
+      return
     }
-    counts.append(0)
 
-    var histogram = meter
+    guard let buckets = appLaunchMetrics
+      .histogrammedTimeToFirstDraw
+      .bucketEnumerator
+      .allObjects as? [MXHistogramBucket<UnitDuration>]
+    else {
+      os_log(
+        "[EDOT-METRICS] histogrammedTimeToFirstDraw bucketEnumerator returned no buckets",
+        log: Self.log,
+        type: .info
+      )
+      return
+    }
+
+    if buckets.isEmpty {
+      os_log(
+        "[EDOT-METRICS] histogrammedTimeToFirstDraw is empty (no launches captured)",
+        log: Self.log,
+        type: .info
+      )
+      return
+    }
+
+    let instrument = self.histogram ?? meter
       .histogramBuilder(name: Self.appLaunchTimeMetric)
-      .setExplicitBucketBoundariesAdvice(bounds)
+      .setExplicitBucketBoundariesAdvice(boundsFromBuckets(buckets))
       .build()
+    self.histogram = instrument
 
-    for (index, count) in counts.enumerated() where index < values.count {
-      for _ in 0 ..< count {
-        histogram.record(value: values[index])
+    var totalRecorded = 0
+    for bucket in buckets {
+      let midpoint = (bucket.bucketStart.value + bucket.bucketEnd.value) / 2
+      for _ in 0..<bucket.bucketCount {
+        instrument.record(value: midpoint)
       }
+      totalRecorded += bucket.bucketCount
     }
+
+    os_log(
+      "[EDOT-METRICS] application.launch.time recorded %{public}d sample(s) across %{public}d bucket(s)",
+      log: Self.log,
+      type: .info,
+      totalRecorded,
+      buckets.count
+    )
+  }
+
+  /// Inner bucket boundaries for OTel histogram advice — the upper bound of
+  /// every bucket except the last. With N source buckets, this yields N-1
+  /// boundaries and N OTel histogram buckets that mirror MetricKit's shape.
+  private func boundsFromBuckets(_ buckets: [MXHistogramBucket<UnitDuration>]) -> [Double] {
+    guard buckets.count > 1 else { return [] }
+    return buckets.dropLast().map { $0.bucketEnd.value }
   }
 }
 #else
