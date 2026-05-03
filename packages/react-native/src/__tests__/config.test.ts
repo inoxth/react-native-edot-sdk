@@ -130,4 +130,177 @@ describe('validateConfig', () => {
     expect(() => validateConfig({ ...validConfig, disableAgent: true })).not.toThrow();
     expect(() => validateConfig({ ...validConfig, disableAgent: false })).not.toThrow();
   });
+
+  describe('attributeRedactions', () => {
+    it('accepts valid drop rules', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          attributeRedactions: { spans: { drop: ['password', 'secret'] } },
+        }),
+      ).not.toThrow();
+    });
+
+    it('accepts valid dropPattern rule', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          attributeRedactions: { logs: { dropPattern: { source: '^internal\\..*', flags: 'i' } } },
+        }),
+      ).not.toThrow();
+    });
+
+    it('accepts valid mask rules', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          attributeRedactions: { spans: { mask: { 'user.token': '***' } } },
+        }),
+      ).not.toThrow();
+    });
+
+    it('accepts valid maskPattern rules', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          attributeRedactions: {
+            spans: {
+              maskPattern: [{ source: 'token.*', replacement: '[redacted]' }],
+            },
+          },
+        }),
+      ).not.toThrow();
+    });
+
+    it('accepts combined redaction rules on spans and logs', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          attributeRedactions: {
+            spans: { drop: ['x-api-key'], mask: { 'user.email': '***' } },
+            logs: {
+              dropPattern: { source: '^debug\\..*' },
+              maskPattern: [{ source: 'auth.*', replacement: '[masked]' }],
+            },
+          },
+        }),
+      ).not.toThrow();
+    });
+
+    it('rejects empty drop array item', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          attributeRedactions: { spans: { drop: ['valid', ''] } },
+        }),
+      ).toThrow('drop[1]: must be a non-empty string');
+    });
+
+    it('rejects malformed dropPattern regex source', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          attributeRedactions: { spans: { dropPattern: { source: '[invalid(' } } },
+        }),
+      ).toThrow('invalid regex source');
+    });
+
+    it('rejects non-string mask value', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          attributeRedactions: {
+            spans: { mask: { 'user.email': 123 as unknown as string } },
+          },
+        }),
+      ).toThrow('value must be a string');
+    });
+
+    it('rejects malformed maskPattern regex source', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          attributeRedactions: {
+            spans: { maskPattern: [{ source: '(bad[', replacement: '***' }] },
+          },
+        }),
+      ).toThrow('invalid regex source');
+    });
+  });
+
+  describe('ignoreSpanNames', () => {
+    it('accepts exact string rules', () => {
+      expect(() =>
+        validateConfig({ ...validConfig, ignoreSpanNames: ['health-check', 'ping'] }),
+      ).not.toThrow();
+    });
+
+    it('accepts regex source rules', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          ignoreSpanNames: [{ source: '^internal/.*', flags: 'i' }, 'exact-name'],
+        }),
+      ).not.toThrow();
+    });
+
+    it('rejects empty array', () => {
+      expect(() => validateConfig({ ...validConfig, ignoreSpanNames: [] })).toThrow(
+        'ignoreSpanNames must not be an empty array',
+      );
+    });
+
+    it('rejects malformed regex source in ignoreSpanNames', () => {
+      expect(() =>
+        validateConfig({ ...validConfig, ignoreSpanNames: [{ source: '[bad(' }] }),
+      ).toThrow('invalid regex source');
+    });
+  });
+
+  describe('ignoreLogPatterns', () => {
+    it('accepts name string rule', () => {
+      expect(() =>
+        validateConfig({ ...validConfig, ignoreLogPatterns: [{ name: 'debug-heartbeat' }] }),
+      ).not.toThrow();
+    });
+
+    it('accepts name regex source rule', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          ignoreLogPatterns: [{ name: { source: '^heartbeat.*' } }],
+        }),
+      ).not.toThrow();
+    });
+
+    it('accepts minSeverity rule', () => {
+      expect(() =>
+        validateConfig({ ...validConfig, ignoreLogPatterns: [{ minSeverity: 'warn' }] }),
+      ).not.toThrow();
+    });
+
+    it('accepts combined name + minSeverity rule', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          ignoreLogPatterns: [{ name: 'noisy-log', minSeverity: 'info' }],
+        }),
+      ).not.toThrow();
+    });
+
+    it('rejects empty array', () => {
+      expect(() => validateConfig({ ...validConfig, ignoreLogPatterns: [] })).toThrow(
+        'ignoreLogPatterns must not be an empty array',
+      );
+    });
+
+    it('rejects malformed regex source in ignoreLogPatterns', () => {
+      expect(() =>
+        validateConfig({
+          ...validConfig,
+          ignoreLogPatterns: [{ name: { source: '(broken[' } }],
+        }),
+      ).toThrow('invalid regex source');
+    });
+  });
 });

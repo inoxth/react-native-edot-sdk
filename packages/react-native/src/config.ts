@@ -1,4 +1,11 @@
-import type { EdotConfig } from './types';
+import type {
+  AttributeRedactions,
+  EdotConfig,
+  IgnoreLogRule,
+  IgnoreSpanRule,
+  RedactionRules,
+  RegexSource,
+} from './types';
 
 const REQUIRED_FIELDS: (keyof EdotConfig)[] = [
   'serverUrl',
@@ -12,6 +19,78 @@ const RESOURCE_IDENTITY_FIELDS: (keyof EdotConfig)[] = [
   'serviceVersion',
   'deploymentEnvironment',
 ];
+
+function assertValidRegexSource(source: string, flags: string | undefined, field: string): void {
+  try {
+    new RegExp(source, flags);
+  } catch {
+    throw new Error(
+      `[EDOT] ${field}: invalid regex source ${JSON.stringify(source)}` +
+        (flags !== undefined ? ` with flags ${JSON.stringify(flags)}` : ''),
+    );
+  }
+}
+
+function validateRegexSource(value: RegexSource, field: string): void {
+  assertValidRegexSource(value.source, value.flags, field);
+}
+
+function validateRedactionRules(rules: RedactionRules, prefix: string): void {
+  if (rules.drop !== undefined) {
+    for (let i = 0; i < rules.drop.length; i++) {
+      const key = rules.drop[i];
+      if (typeof key !== 'string' || key.length === 0) {
+        throw new Error(`[EDOT] ${prefix}.drop[${i}]: must be a non-empty string`);
+      }
+    }
+  }
+
+  if (rules.dropPattern !== undefined) {
+    validateRegexSource(rules.dropPattern, `${prefix}.dropPattern`);
+  }
+
+  if (rules.mask !== undefined) {
+    for (const [key, value] of Object.entries(rules.mask)) {
+      if (key.length === 0) {
+        throw new Error(`[EDOT] ${prefix}.mask: keys must be non-empty strings`);
+      }
+      if (typeof value !== 'string') {
+        throw new Error(`[EDOT] ${prefix}.mask[${JSON.stringify(key)}]: value must be a string`);
+      }
+    }
+  }
+
+  if (rules.maskPattern !== undefined) {
+    for (let i = 0; i < rules.maskPattern.length; i++) {
+      const entry = rules.maskPattern[i];
+      validateRegexSource(entry, `${prefix}.maskPattern[${i}]`);
+    }
+  }
+}
+
+function validateAttributeRedactions(redactions: AttributeRedactions): void {
+  if (redactions.spans !== undefined) {
+    validateRedactionRules(redactions.spans, 'attributeRedactions.spans');
+  }
+  if (redactions.logs !== undefined) {
+    validateRedactionRules(redactions.logs, 'attributeRedactions.logs');
+  }
+}
+
+function validateIgnoreSpanRule(rule: IgnoreSpanRule, field: string): void {
+  if (typeof rule === 'string') {
+    return;
+  }
+  validateRegexSource(rule, field);
+}
+
+function validateIgnoreLogRule(rule: IgnoreLogRule, field: string): void {
+  if (rule.name !== undefined) {
+    if (typeof rule.name !== 'string') {
+      validateRegexSource(rule.name, `${field}.name`);
+    }
+  }
+}
 
 export function validateConfig(config: EdotConfig): void {
   for (const field of REQUIRED_FIELDS) {
@@ -60,6 +139,28 @@ export function validateConfig(config: EdotConfig): void {
       throw new Error(
         `[EDOT] managementUrl must use http or https (got: ${parsed.protocol.replace(':', '')})`,
       );
+    }
+  }
+
+  if (config.attributeRedactions !== undefined) {
+    validateAttributeRedactions(config.attributeRedactions);
+  }
+
+  if (config.ignoreSpanNames !== undefined) {
+    if (config.ignoreSpanNames.length === 0) {
+      throw new Error('[EDOT] ignoreSpanNames must not be an empty array');
+    }
+    for (let i = 0; i < config.ignoreSpanNames.length; i++) {
+      validateIgnoreSpanRule(config.ignoreSpanNames[i], `ignoreSpanNames[${i}]`);
+    }
+  }
+
+  if (config.ignoreLogPatterns !== undefined) {
+    if (config.ignoreLogPatterns.length === 0) {
+      throw new Error('[EDOT] ignoreLogPatterns must not be an empty array');
+    }
+    for (let i = 0; i < config.ignoreLogPatterns.length; i++) {
+      validateIgnoreLogRule(config.ignoreLogPatterns[i], `ignoreLogPatterns[${i}]`);
     }
   }
 }

@@ -223,6 +223,39 @@ class EdotReactNative: NSObject {
     // instance below. See `installURLSessionInstrumentation` for the reasoning.
     instrumentationConfig.enableURLSessionInstrumentation = false
 
+    if let redactions = config["attributeRedactions"] as? [String: Any] {
+      if let spanRules = redactions["spans"] as? [String: Any],
+         let spanRedactor = Self.compileAttributeRedactor(spanRules) {
+        configBuilder = configBuilder.addSpanAttributeInterceptor(
+          ClosureInterceptor<[String: AttributeValue]>(spanRedactor)
+        )
+      }
+      if let logRules = redactions["logs"] as? [String: Any],
+         let logRedactor = Self.compileAttributeRedactor(logRules) {
+        configBuilder = configBuilder.addLogRecordAttributeInterceptor(
+          ClosureInterceptor<[String: AttributeValue]>(logRedactor)
+        )
+      }
+    }
+
+    if let spanNameRules = config["ignoreSpanNames"] as? [Any] {
+      let predicates = Self.compileSpanNamePredicates(spanNameRules)
+      if !predicates.isEmpty {
+        configBuilder = configBuilder.addSpanFilter { span in
+          !predicates.contains { $0(span.name) }
+        }
+      }
+    }
+
+    if let logPatternRules = config["ignoreLogPatterns"] as? [[String: Any]] {
+      let predicates = Self.compileLogPredicates(logPatternRules)
+      if !predicates.isEmpty {
+        configBuilder = configBuilder.addLogFilter { record in
+          !predicates.contains { $0(record) }
+        }
+      }
+    }
+
     let agentDisabled = config["disableAgent"] as? Bool ?? false
 
     if !agentDisabled {
@@ -688,6 +721,158 @@ class EdotReactNative: NSObject {
         name: .elasticSessionManagerDidRefreshSession,
         object: nil
       )
+    }
+  }
+
+
+  private static func compileAttributeRedactor(
+    _ rules: [String: Any]
+  ) -> (([String: AttributeValue]) -> [String: AttributeValue])? {
+    let dropExact = (rules["drop"] as? [String]) ?? []
+    let masks = (rules["mask"] as? [String: String]) ?? [:]
+
+    let dropPattern: NSRegularExpression? = {
+      guard let patternObj = rules["dropPattern"] as? [String: Any],
+            let source = patternObj["source"] as? String else { return nil }
+      let flags = patternObj["flags"] as? String ?? ""
+      var options: NSRegularExpression.Options = []
+      if flags.contains("i") { options.insert(.caseInsensitive) }
+      if flags.contains("m") { options.insert(.anchorsMatchLines) }
+      if flags.contains("s") { options.insert(.dotMatchesLineSeparators) }
+      return try? NSRegularExpression(pattern: source, options: options)
+    }()
+
+    let maskPatterns: [(NSRegularExpression, String)] = {
+      guard let entries = rules["maskPattern"] as? [[String: Any]] else { return [] }
+      return entries.compactMap { entry in
+        guard let source = entry["source"] as? String,
+              let replacement = entry["replacement"] as? String else { return nil }
+        let flags = entry["flags"] as? String ?? ""
+        var options: NSRegularExpression.Options = []
+        if flags.contains("i") { options.insert(.caseInsensitive) }
+        if flags.contains("m") { options.insert(.anchorsMatchLines) }
+        if flags.contains("s") { options.insert(.dotMatchesLineSeparators) }
+        guard let regex = try? NSRegularExpression(pattern: source, options: options) else {
+          return nil
+        }
+        return (regex, replacement)
+      }
+    }()
+
+    let hasWork = !dropExact.isEmpty || dropPattern != nil || !masks.isEmpty || !maskPatterns.isEmpty
+    guard hasWork else { return nil }
+
+    return { input in
+      var attrs = input
+
+      for key in dropExact {
+        attrs.removeValue(forKey: key)
+      }
+
+      if let regex = dropPattern {
+        for key in Array(attrs.keys) {
+          let range = NSRange(key.startIndex..., in: key)
+          if regex.firstMatch(in: key, range: range) != nil {
+            attrs.removeValue(forKey: key)
+          }
+        }
+      }
+
+      for (key, replacement) in masks {
+        if attrs[key] != nil {
+          attrs[key] = .string(replacement)
+        }
+      }
+
+      for (regex, replacement) in maskPatterns {
+        for key in Array(attrs.keys) {
+          let range = NSRange(key.startIndex..., in: key)
+          if regex.firstMatch(in: key, range: range) != nil {
+            attrs[key] = .string(replacement)
+          }
+        }
+      }
+
+      return attrs
+    }
+  }
+
+  private static func compileSpanNamePredicates(_ rules: [Any]) -> [(String) -> Bool] {
+    return rules.compactMap { rule in
+      if let exact = rule as? String {
+        return { name in name == exact }
+      }
+      if let patternObj = rule as? [String: Any],
+         let source = patternObj["source"] as? String {
+        let flags = patternObj["flags"] as? String ?? ""
+        var options: NSRegularExpression.Options = []
+        if flags.contains("i") { options.insert(.caseInsensitive) }
+        if flags.contains("m") { options.insert(.anchorsMatchLines) }
+        if flags.contains("s") { options.insert(.dotMatchesLineSeparators) }
+        guard let regex = try? NSRegularExpression(pattern: source, options: options) else {
+          return nil
+        }
+        return { name in
+          let range = NSRange(name.startIndex..., in: name)
+          return regex.firstMatch(in: name, range: range) != nil
+        }
+      }
+      return nil
+    }
+  }
+
+  private static func compileLogPredicates(
+    _ rules: [[String: Any]]
+  ) -> [(ReadableLogRecord) -> Bool] {
+    return rules.compactMap { rule in
+      var namePredicate: ((String?) -> Bool)?
+      var minSeverity: Severity?
+
+      if let nameVal = rule["name"] as? String {
+        namePredicate = { eventName in eventName == nameVal }
+      } else if let patternObj = rule["name"] as? [String: Any],
+                let source = patternObj["source"] as? String {
+        let flags = patternObj["flags"] as? String ?? ""
+        var options: NSRegularExpression.Options = []
+        if flags.contains("i") { options.insert(.caseInsensitive) }
+        if flags.contains("m") { options.insert(.anchorsMatchLines) }
+        if flags.contains("s") { options.insert(.dotMatchesLineSeparators) }
+        if let regex = try? NSRegularExpression(pattern: source, options: options) {
+          namePredicate = { eventName in
+            guard let n = eventName else { return false }
+            let range = NSRange(n.startIndex..., in: n)
+            return regex.firstMatch(in: n, range: range) != nil
+          }
+        }
+      }
+
+      if let severityStr = rule["minSeverity"] as? String {
+        minSeverity = Self.parseSeverity(severityStr)
+      }
+
+      guard namePredicate != nil || minSeverity != nil else { return nil }
+
+      return { record in
+        if let predicate = namePredicate, predicate(record.eventName) {
+          return true
+        }
+        if let min = minSeverity, let recordSeverity = record.severity {
+          return recordSeverity < min
+        }
+        return false
+      }
+    }
+  }
+
+  private static func parseSeverity(_ raw: String) -> Severity? {
+    switch raw {
+    case "trace": return .trace
+    case "debug": return .debug
+    case "info": return .info
+    case "warn": return .warn
+    case "error": return .error
+    case "fatal": return .fatal
+    default: return nil
     }
   }
 

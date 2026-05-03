@@ -1,3 +1,67 @@
+/**
+ * Serialisable regex pattern — used in place of a `RegExp` object so the
+ * config can cross the React Native bridge without loss.
+ */
+export interface RegexSource {
+  source: string;
+  flags?: string;
+}
+
+/**
+ * Rules for dropping or masking individual attributes on a single signal type
+ * (spans OR logs — not both simultaneously).
+ *
+ * Application order per signal: `drop` → `dropPattern` → `mask` → `maskPattern`.
+ */
+export interface RedactionRules {
+  /** Exact attribute keys to remove. */
+  drop?: string[];
+  /**
+   * Regex whose full match against an attribute key causes that key to be
+   * removed. Specified as a `{ source, flags? }` object because `RegExp`
+   * values do not survive the React Native bridge.
+   */
+  dropPattern?: RegexSource;
+  /** Exact attribute keys whose values are replaced by the given string. */
+  mask?: Record<string, string>;
+  /**
+   * Regex patterns whose full match against an attribute key causes the
+   * value to be replaced by `replacement`.
+   */
+  maskPattern?: Array<RegexSource & { replacement: string }>;
+}
+
+/**
+ * Per-signal attribute redaction rules applied before export.
+ *
+ * Spans and logs have independent rule sets; metrics are out of v1 scope.
+ * Omitting `attributeRedactions` (or any nested key) means no redaction is
+ * applied to that signal.
+ */
+export interface AttributeRedactions {
+  spans?: RedactionRules;
+  logs?: RedactionRules;
+}
+
+/**
+ * A rule for ignoring spans by name. Either an exact string match or a
+ * serialisable regex source.
+ */
+export type IgnoreSpanRule = string | RegexSource;
+
+/**
+ * A rule for ignoring log records. A record is dropped if ANY rule matches:
+ * - `name` matches the record's event name (exact or regex)
+ * - the record's severity is below `minSeverity`
+ *
+ * Filters run after sampling at the apm-agent-ios level — do not use these
+ * as a sampling mechanism.
+ */
+export interface IgnoreLogRule {
+  name?: string | RegexSource;
+  minSeverity?: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+}
+
 export interface EdotConfig {
   serverUrl: string;
   serviceName: string;
@@ -71,6 +135,26 @@ export interface EdotConfig {
    * iOS only. Has no effect on Android.
    */
   remoteManagement?: boolean;
+
+  /**
+   * Drop or mask span / log attributes before export.
+   * Metrics are not in scope for v1.
+   */
+  attributeRedactions?: AttributeRedactions;
+
+  /**
+   * Drop entire spans whose name matches any rule.
+   * Supports exact strings and serialisable regex sources.
+   * Filters run after sampling at the apm-agent-ios level.
+   */
+  ignoreSpanNames?: IgnoreSpanRule[];
+
+  /**
+   * Drop entire log records matching any rule.
+   * A record is dropped if ANY rule matches (name OR minSeverity).
+   * Filters run after sampling at the apm-agent-ios level.
+   */
+  ignoreLogPatterns?: IgnoreLogRule[];
 
   ios?: EdotIosConfig;
   android?: EdotAndroidConfig;
