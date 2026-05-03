@@ -6,6 +6,7 @@ import os.log
 import ElasticApm
 import OpenTelemetryApi
 import OpenTelemetrySdk
+import PersistenceExporter
 import URLSessionInstrumentation
 #endif
 
