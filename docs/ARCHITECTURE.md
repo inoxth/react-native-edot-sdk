@@ -11,7 +11,7 @@ High-level overview of the EDOT React Native SDK. For user-facing setup see [REA
 - Drop-in observability for React Native 0.75+ on both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric).
 - Feature parity with the DataDog React Native RUM SDK, so existing adopters can migrate.
 - OpenTelemetry semantic conventions for spans, metrics, and logs — HTTP attributes follow OTel v1.23 (`http.request.method`, `url.full`, `http.response.status_code`, etc.).
-- Delegate native telemetry collection entirely to EDOT iOS and EDOT Android; do not re-implement collection.
+- Delegate native telemetry collection to EDOT iOS and EDOT Android wherever possible. Apply targeted local patches only when upstream behavior diverges from spec or breaks RN integration — see `packages/react-native/ios/AGENTS.md` for the documented set of iOS divergences.
 
 ## Non-goals
 
@@ -109,12 +109,16 @@ Numeric attributes cross the bridge through the typed `setSpanAttributeNumber` m
 
 ### iOS (`packages/react-native/ios/`)
 
-Swift, gated by `#if ELASTIC_APM_AVAILABLE`. Two entry points:
+Swift, gated by `#if ELASTIC_APM_AVAILABLE`. Entry points:
 
-- **`EdotReactNative.swift`** — the RN TurboModule. Calls `ElasticApmAgent.start(...)` unless `EdotReactNativeAgent.isPreInitialized` is true.
-- **`EdotReactNativeAgent.swift`** — optional pre-init for AppDelegate, before the JS bridge loads. Enforces resource-identity validation (`serviceName`, `serviceVersion`, `deploymentEnvironment` must be non-blank and must not contain `,` or `=`) and injects them into the OTel `Resource` via `OTEL_RESOURCE_ATTRIBUTES` before starting the agent.
+- **`EdotReactNative.swift`** — the RN TurboModule. Calls `ElasticApmAgent.start(...)` unless `EdotReactNativeAgent.isPreInitialized` is true. Disables apm-agent-ios's URLSession swizzle and reinstalls a filtered `URLSessionInstrumentation` keyed off the `X-Edot-RN-Traced` header so JS-driven `fetch`/`XHR` aren't double-spanned.
+- **`EdotReactNativeAgent.swift`** — optional pre-init for AppDelegate, before the JS bridge loads. Enforces resource-identity validation (`serviceName`, `serviceVersion`, `deploymentEnvironment` must be non-blank and must not contain `,` or `=`) and double-sets both `deployment.environment` and `deployment.environment.name` in `OTEL_RESOURCE_ATTRIBUTES` to override apm-agent-ios's hardcoded `"default"` for APM Server 8.16+ semantic conventions.
+- **`EdotMeterProviderFactory.swift`** — builds a resource-aware `MeterProvider` that replaces apm-agent-ios's upstream global (which is constructed without `.setResource(...)` and exports under `unknown_service:*`). Pipeline: `PeriodicMetricReader (60s) → Logging? → Persistence (Caches/elastic/) → CentralConfigGate → HTTP|gRPC`. Default transport is gRPC. The `CentralConfigGate` (`EdotCentralConfigMetricExporter`) gates metric export on the `recording: Bool` central-config flag — apm-agent-ios v2.0.0 doesn't honor it for metrics.
+- **`EdotAppMetrics.swift`** + **`EdotSystemMetrics.swift`** — local reimplementations of MetricKit launch-time and CPU/memory observable gauges. Required because apm-agent-ios's versions emit through the resource-less global meter provider.
 
-The SDK ships a real podspec (`packages/react-native/EdotReactNative.podspec`) that compiles its iOS sources and declares the `apm-agent-ios` Swift Package as a dependency via React Native's top-level `spm_dependency` helper (RN 0.75+; resolved by `SPMManager#apply_on_post_install` in `react_native/scripts/cocoapods/spm.rb`). `pod install` mutates `installer.pods_project` to add the SPM package reference and link the `ElasticApm` product onto the EdotReactNative pod target — no per-app Xcode SPM configuration is required. The pod target sets `SWIFT_ACTIVE_COMPILATION_CONDITIONS = ELASTIC_APM_AVAILABLE` so the `#if ELASTIC_APM_AVAILABLE` gate fires only when SPM is actually wired up.
+See `packages/react-native/ios/AGENTS.md` for the full set of load-bearing rules and the upstream issues these workarounds track.
+
+The SDK ships a real podspec (`packages/react-native/EdotReactNative.podspec`) that compiles its iOS sources and declares the `apm-agent-ios` Swift Package as a dependency via React Native's top-level `spm_dependency` helper (RN 0.75+; resolved by `SPMManager#apply_on_post_install` in `react_native/scripts/cocoapods/spm.rb`). `pod install` mutates `installer.pods_project` to add the SPM package reference and link the `ElasticApm` and `OpenTelemetryProtocolExporter` / `OpenTelemetryProtocolExporterHTTP` / `PersistenceExporter` products onto the EdotReactNative pod target — no per-app Xcode SPM configuration is required. The pod target sets `SWIFT_ACTIVE_COMPILATION_CONDITIONS = ELASTIC_APM_AVAILABLE` so the `#if ELASTIC_APM_AVAILABLE` gate fires only when SPM is actually wired up.
 
 ### Android (`packages/react-native/android/`)
 
@@ -140,4 +144,5 @@ The EDOT Gradle plugin (`co.elastic.otel.android.agent` v1.5.0) must be applied 
 | Native method signatures | [`packages/react-native/src/NativeEdotReactNative.ts`](../packages/react-native/src/NativeEdotReactNative.ts) |
 | Per-capability specs | [`openspec/specs/`](../openspec/specs/) (fetch instrumentation, error tracking, startup tracing, etc.) |
 | Per-package architecture | `packages/*/AGENTS.md` |
+| iOS load-bearing rules and upstream divergences | [`packages/react-native/ios/AGENTS.md`](../packages/react-native/ios/AGENTS.md) |
 | Per-example integration notes | [`example/AGENTS.md`](../example/AGENTS.md) |

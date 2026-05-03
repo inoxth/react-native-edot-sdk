@@ -87,6 +87,10 @@ The exported `EdotNativeModule` is a `Proxy` around the loaded native module. It
 - `rn.architecture` from `global.nativeFabricUIManager` (fabric vs bridge)
 - Global type augmentations in `globals.d.ts`
 
+### iOS Metrics Pipeline
+
+The iOS module replaces apm-agent-ios's global `MeterProvider` with a resource-aware one (`EdotMeterProviderFactory`). Pipeline: `PeriodicMetricReader (60s) → Logging? → Persistence (Caches/elastic/) → CentralConfigGate → HTTP|gRPC`. Default transport gRPC; `exportProtocol: "http"` overrides. `EdotAppMetrics` (MetricKit `application.launch.time`) and `EdotSystemMetrics` (CPU/memory observable gauges) replace apm-agent-ios's reimplementations because they emit through the resource-less global. The `CentralConfigGate` (`EdotCentralConfigMetricExporter`) is a deliberate divergence — upstream v2.0.0 doesn't gate metrics on the central-config `recording` flag. See `ios/AGENTS.md` for the full set of load-bearing rules.
+
 ## Native Distribution
 
 ### iOS — Self-contained podspec with `spm_dependency`

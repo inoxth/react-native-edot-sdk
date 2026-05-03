@@ -86,6 +86,14 @@ All three plugins (`react-native-navigation`, `react-native-expo-router`, `react
 
 Fetch and XHR are monkey-patched to create OTel spans using v1.23 stable HTTP semantic conventions: `http.request.method`, `url.full` (sanitized via `config.urlSanitizer`), `http.request.body.size`, `http.response.status_code`, `http.response.body.size`. They inject a W3C `traceparent` header for URLs matching `tracePropagationTargets` and add an `X-Edot-RN-Traced: 1` dedup header on every traced request. When an active view exists, spans include `view.name` and `view.id` attributes. Body/response sizes and status code are written via the typed `setSpanAttributeNumber` bridge method to preserve numeric type end-to-end.
 
+### iOS Metrics Pipeline (Custom MeterProvider)
+
+apm-agent-ios v2.0.0 builds the global `MeterProvider` without `.setResource(...)`, so its metrics export under `unknown_service:*`. The iOS module bypasses the global and builds its own resource-aware `MeterProvider` via `EdotMeterProviderFactory` for `recordMetric`, `EdotAppMetrics`, and `EdotSystemMetrics`. Pipeline: `PeriodicMetricReader (60s) → Logging? → Persistence (Caches/elastic/) → CentralConfigGate → HTTP|gRPC`. Default transport is gRPC (matches apm-agent-ios trace/log default); set `exportProtocol: "http"` to override. The `CentralConfigGate` is a deliberate divergence — apm-agent-ios v2.0.0 does not honor `recording: Bool` on metrics, so we gate at the exporter boundary. See `packages/react-native/ios/AGENTS.md` for load-bearing rules.
+
+### Credentials Redaction
+
+`secretToken` and `apiKey` are wrapped in `redactedString(value)` from `@inox/react-native-edot-shared` immediately on `mergeConfig` (commit `e5f612f`). The wrapper's `toString()` / `toJSON()` return `"[REDACTED]"`, preventing accidental logging. `revealCredentials()` unwraps them just before the `EdotNativeModule.initialize(...)` call.
+
 ### Error Tracking
 
 `errors.ts` installs two handlers: `ErrorUtils.setGlobalHandler()` for uncaught JS exceptions and Hermes `enablePromiseRejectionTracker` (with `promise/setimmediate/rejection-tracking` fallback for non-Hermes engines). Each reported error opens a short-lived span with `exception.type`/`exception.message`/`exception.stacktrace`/`error.source` and also calls `reportJsException` so the native side emits a structured error event. React render errors are captured separately by the opt-in `EdotErrorBoundary` component exported from `@inox/react-native-edot-sdk`. Service identity (`service.name`, `service.version`, `deployment.environment`) is carried on the OTel Resource (set by the native agent at start), not on each span.
@@ -148,6 +156,9 @@ Four example apps under `example/`, each a yarn workspace member:
 
 ### OpenSpec Workflow
 Changes tracked in `openspec/changes/` with proposal -> design -> specs -> tasks artifacts. Archived after implementation to `openspec/changes/archive/`. Main specs live in `openspec/specs/`. Use `/opsx:propose`, `/opsx:apply`, `/opsx:archive` skills.
+
+### Repo-Enforced Hooks
+`.claude/hooks/` blocks: `eslint`/`prettier` invocations (oxlint/oxfmt only), `rm -rf`/`rm -r` (use `trash`), `git push` (developer pushes), `git -C`, and chained `git add && git commit`. `.claude/rules/typescript.md` adds: explicit return types on exports, `unknown` only at system boundaries with immediate Zod `.parse()`, Zod imports must be `from "zod/v4"`.
 
 ## Anti-Patterns
 

@@ -19,3 +19,7 @@ yarn build              # bob build for all @inox/* packages
 - **No commented-out code** — delete it
 - **Named exports only**
 - **No `any`/`unknown`/`as Type`/`!`/`@ts-ignore`** — define proper types
+
+## Repo-Enforced Rules
+
+`.claude/hooks/` blocks `eslint`/`prettier`, `rm -rf`/`rm -r` (use `trash`), `git push`, `git -C`, and chained `git add && git commit`. Additional TS rules in `.claude/rules/typescript.md` (Zod imports from `zod/v4`, explicit return types on exports, `unknown` only at system boundaries with immediate `.parse()`).
