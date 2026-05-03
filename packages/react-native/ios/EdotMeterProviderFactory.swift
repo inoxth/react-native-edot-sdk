@@ -58,7 +58,8 @@ enum EdotMeterProviderFactory {
     secretToken: String?,
     apiKey: String?,
     debug: Bool,
-    transport: EdotMetricTransport
+    transport: EdotMetricTransport,
+    persistencePreset: String? = nil
   ) -> any MeterProvider {
     let config = OtlpConfiguration(
       timeout: OtlpConfiguration.DefaultTimeoutInterval,
@@ -72,7 +73,8 @@ enum EdotMeterProviderFactory {
       config: config
     )
     let gated: any MetricExporter = EdotCentralConfigMetricExporter(inner: baseExporter)
-    let persisted = wrapWithPersistence(gated)
+    let preset = resolvePreset(persistencePreset)
+    let persisted = wrapWithPersistence(gated, preset: preset)
     let exporter: any MetricExporter = debug
       ? LoggingMetricExporter(inner: persisted, endpoint: logEndpoint)
       : persisted
@@ -165,12 +167,24 @@ enum EdotMeterProviderFactory {
       .connect(host: host, port: port)
   }
 
-  private static func wrapWithPersistence(_ inner: any MetricExporter) -> any MetricExporter {
+  private static func resolvePreset(_ raw: String?) -> PersistencePerformancePreset {
+    guard let raw else { return .default }
+    switch raw {
+    case "highVolume": return .instantDataDelivery
+    default: return .default
+    }
+  }
+
+  private static func wrapWithPersistence(
+    _ inner: any MetricExporter,
+    preset: PersistencePerformancePreset = .default
+  ) -> any MetricExporter {
     guard let folder = persistenceFolder() else { return inner }
     do {
       return try PersistenceMetricExporterDecorator(
         metricExporter: inner,
-        storageURL: folder
+        storageURL: folder,
+        performancePreset: preset
       )
     } catch {
       return inner

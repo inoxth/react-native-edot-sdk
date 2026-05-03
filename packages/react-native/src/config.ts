@@ -38,4 +38,28 @@ export function validateConfig(config: EdotConfig): void {
       throw new Error('[EDOT] sessionSamplingRate must be between 0.0 and 1.0');
     }
   }
+
+  const PERSISTENCE_PRESETS = ['default', 'lowUsage', 'highVolume'] as const;
+  if (
+    config.persistencePreset !== undefined &&
+    !PERSISTENCE_PRESETS.includes(config.persistencePreset)
+  ) {
+    throw new Error(
+      `[EDOT] persistencePreset must be one of: ${PERSISTENCE_PRESETS.join(', ')}`,
+    );
+  }
+
+  if (config.managementUrl !== undefined) {
+    let parsed: URL;
+    try {
+      parsed = new URL(config.managementUrl);
+    } catch {
+      throw new Error(`[EDOT] managementUrl is not a valid URL: ${config.managementUrl}`);
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new Error(
+        `[EDOT] managementUrl must use http or https (got: ${parsed.protocol.replace(':', '')})`,
+      );
+    }
+  }
 }

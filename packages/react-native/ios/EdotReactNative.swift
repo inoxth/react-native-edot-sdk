@@ -186,6 +186,15 @@ class EdotReactNative: NSObject {
       configBuilder = configBuilder.useOpAMP()
     }
 
+    if let managementUrlString = config["managementUrl"] as? String,
+       let managementUrl = URL(string: managementUrlString) {
+      configBuilder = configBuilder.withManagementUrl(managementUrl)
+    }
+
+    if let remoteManagement = config["remoteManagement"] as? Bool {
+      configBuilder = configBuilder.withRemoteManagement(remoteManagement)
+    }
+
     var instrumentationConfig = InstrumentationConfiguration()
     if let v = config["enableCrashReporting"] as? Bool {
       instrumentationConfig.enableCrashReporting = v
@@ -195,6 +204,9 @@ class EdotReactNative: NSObject {
     }
     if let v = config["enableLifecycleEvents"] as? Bool {
       instrumentationConfig.enableLifecycleEvents = v
+    }
+    if let preset = config["persistencePreset"] as? String {
+      instrumentationConfig.storageConfiguration = EdotReactNative.persistencePreset(from: preset)
     }
     // apm-agent-ios v2.0.0's OpenTelemetryInitializer builds the global
     // MeterProvider without setResource(...), so any metrics it emits land
@@ -209,37 +221,42 @@ class EdotReactNative: NSObject {
     // instance below. See `installURLSessionInstrumentation` for the reasoning.
     instrumentationConfig.enableURLSessionInstrumentation = false
 
-    if !EdotReactNativeAgent.isPreInitialized {
-      EdotReactNativeAgent.applyResourceAttributes(
-        serviceName: config["serviceName"] as? String,
-        serviceVersion: config["serviceVersion"] as? String,
-        deploymentEnvironment: config["deploymentEnvironment"] as? String
+    let agentDisabled = config["disableAgent"] as? Bool ?? false
+
+    if !agentDisabled {
+      if !EdotReactNativeAgent.isPreInitialized {
+        EdotReactNativeAgent.applyResourceAttributes(
+          serviceName: config["serviceName"] as? String,
+          serviceVersion: config["serviceVersion"] as? String,
+          deploymentEnvironment: config["deploymentEnvironment"] as? String
+        )
+        ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
+      }
+
+      let metricTransport: EdotMetricTransport =
+        (config["exportProtocol"] as? String) == "http" ? .http : .grpc
+      let meterProvider = EdotMeterProviderFactory.build(
+        serverUrl: url,
+        secretToken: config["secretToken"] as? String,
+        apiKey: config["apiKey"] as? String,
+        debug: EdotReactNative.debugEnabled,
+        transport: metricTransport,
+        persistencePreset: config["persistencePreset"] as? String
       )
-      ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
-    }
+      EdotReactNative.stateLock.lock()
+      EdotReactNative.meterProvider = meterProvider
+      if userAppMetricsEnabled {
+        EdotReactNative.appMetrics = EdotAppMetrics(meterProvider: meterProvider)
+      }
+      if userSystemMetricsEnabled {
+        EdotReactNative.systemMetrics = EdotSystemMetrics(meterProvider: meterProvider)
+      }
+      EdotReactNative.stateLock.unlock()
 
-    let metricTransport: EdotMetricTransport =
-      (config["exportProtocol"] as? String) == "http" ? .http : .grpc
-    let meterProvider = EdotMeterProviderFactory.build(
-      serverUrl: url,
-      secretToken: config["secretToken"] as? String,
-      apiKey: config["apiKey"] as? String,
-      debug: EdotReactNative.debugEnabled,
-      transport: metricTransport
-    )
-    EdotReactNative.stateLock.lock()
-    EdotReactNative.meterProvider = meterProvider
-    if userAppMetricsEnabled {
-      EdotReactNative.appMetrics = EdotAppMetrics(meterProvider: meterProvider)
-    }
-    if userSystemMetricsEnabled {
-      EdotReactNative.systemMetrics = EdotSystemMetrics(meterProvider: meterProvider)
-    }
-    EdotReactNative.stateLock.unlock()
-
-    let urlSessionEnabled = config["enableURLSessionInstrumentation"] as? Bool ?? true
-    if urlSessionEnabled {
-      EdotReactNative.installURLSessionInstrumentation(serverUrl: serverUrl)
+      let urlSessionEnabled = config["enableURLSessionInstrumentation"] as? Bool ?? true
+      if urlSessionEnabled {
+        EdotReactNative.installURLSessionInstrumentation(serverUrl: serverUrl)
+      }
     }
 
     EdotReactNative.stateLock.lock()
@@ -628,6 +645,13 @@ class EdotReactNative: NSObject {
       }
     )
     urlSessionInstrumentation = URLSessionInstrumentation(configuration: urlSessionConfig)
+  }
+
+  private static func persistencePreset(from raw: String) -> PersistencePerformancePreset {
+    switch raw {
+    case "highVolume": return .instantDataDelivery
+    default: return .default
+    }
   }
 
   private static func attributeValue(from raw: Any) -> AttributeValue? {
