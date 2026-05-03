@@ -408,9 +408,23 @@ class EdotReactNative: NSObject {
   func startSpan(_ name: String,
                  attributes: NSDictionary,
                  parentSpanId: NSString?) -> String {
+    return makeSpan(name: name, attributes: attributes, parentSpanId: parentSpanId, kind: .internal)
+  }
+
+  @objc
+  func startClientSpan(_ name: String,
+                       attributes: NSDictionary,
+                       parentSpanId: NSString?) -> String {
+    return makeSpan(name: name, attributes: attributes, parentSpanId: parentSpanId, kind: .client)
+  }
+
+  private func makeSpan(name: String,
+                        attributes: NSDictionary,
+                        parentSpanId: NSString?,
+                        kind: SpanKind) -> String {
     #if ELASTIC_APM_AVAILABLE
     guard EdotReactNative.emissionAllowed() else { return "" }
-    var builder = tracer.spanBuilder(spanName: name)
+    var builder = tracer.spanBuilder(spanName: name).setSpanKind(spanKind: kind)
 
     if let parentId = parentSpanId as? String {
       spanLock.lock()

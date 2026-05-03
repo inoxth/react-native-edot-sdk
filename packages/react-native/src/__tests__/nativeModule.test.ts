@@ -289,4 +289,73 @@ describe('nativeModule', () => {
       expect(result).toBe('span-3');
     });
   });
+
+  describe('startClientSpan wrapper', () => {
+    function makeFullModule(startClientSpan: jest.Mock): Record<string, jest.Mock> {
+      return {
+        initialize: jest.fn(),
+        getCurrentSessionId: jest.fn(),
+        setUser: jest.fn(),
+        clearUser: jest.fn(),
+        setSessionAttribute: jest.fn(),
+        setGlobalAttribute: jest.fn(),
+        removeGlobalAttribute: jest.fn(),
+        reportJsException: jest.fn(),
+        startSpan: jest.fn(),
+        startClientSpan,
+        endSpan: jest.fn(),
+        setSpanAttribute: jest.fn(),
+        setSpanAttributeNumber: jest.fn(),
+        setSpanAttributeBoolean: jest.fn(),
+        recordSpanException: jest.fn(),
+        recordMetric: jest.fn(),
+        emitLog: jest.fn(),
+        setTrackingConsent: jest.fn(),
+      };
+    }
+
+    it('calls 2-arg startClientSpan when parentSpanId is null (avoids NSNull bridge error)', () => {
+      const mockStartClientSpan = jest.fn().mockReturnValue('client-1');
+      NativeModules.EdotReactNative = makeFullModule(mockStartClientSpan);
+
+      const { EdotNativeModule } = require('../nativeModule');
+      const result = EdotNativeModule.startClientSpan('GET api.example.com', { 'http.method': 'GET' }, null);
+
+      expect(mockStartClientSpan).toHaveBeenCalledTimes(1);
+      expect(mockStartClientSpan).toHaveBeenCalledWith('GET api.example.com', { 'http.method': 'GET' });
+      expect(result).toBe('client-1');
+    });
+
+    it('calls 3-arg startClientSpan when parentSpanId is provided', () => {
+      const mockStartClientSpan = jest.fn().mockReturnValue('client-2');
+      NativeModules.EdotReactNative = makeFullModule(mockStartClientSpan);
+
+      const { EdotNativeModule } = require('../nativeModule');
+      const result = EdotNativeModule.startClientSpan('GET api.example.com', {}, 'parent-id');
+
+      expect(mockStartClientSpan).toHaveBeenCalledWith('GET api.example.com', {}, 'parent-id');
+      expect(result).toBe('client-2');
+    });
+
+    it('calls 2-arg startClientSpan when parentSpanId is undefined', () => {
+      const mockStartClientSpan = jest.fn().mockReturnValue('client-3');
+      NativeModules.EdotReactNative = makeFullModule(mockStartClientSpan);
+
+      const { EdotNativeModule } = require('../nativeModule');
+      const result = EdotNativeModule.startClientSpan('GET api.example.com', {});
+
+      expect(mockStartClientSpan).toHaveBeenCalledWith('GET api.example.com', {});
+      expect(result).toBe('client-3');
+    });
+
+    it('no-op fallback returns empty string when native module is missing', () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+      const { EdotNativeModule } = require('../nativeModule');
+      const result = EdotNativeModule.startClientSpan('GET api.example.com', {}, null);
+
+      expect(result).toBe('');
+      warnSpy.mockRestore();
+    });
+  });
 });

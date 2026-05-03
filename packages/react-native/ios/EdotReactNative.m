@@ -20,6 +20,10 @@ RCT_EXTERN__BLOCKING_SYNCHRONOUS_METHOD(startSpan:(NSString *)name
                                         attributes:(NSDictionary *)attributes
                                         parentSpanId:(NSString * _Nullable)parentSpanId)
 
+RCT_EXTERN__BLOCKING_SYNCHRONOUS_METHOD(startClientSpan:(NSString *)name
+                                        attributes:(NSDictionary *)attributes
+                                        parentSpanId:(NSString * _Nullable)parentSpanId)
+
 RCT_EXTERN_METHOD(endSpan:(NSString *)spanId statusCode:(NSInteger)statusCode)
 RCT_EXTERN_METHOD(setSpanAttribute:(NSString *)spanId key:(NSString *)key value:(NSString *)value)
 RCT_EXTERN_METHOD(setSpanAttributeNumber:(NSString *)spanId key:(NSString *)key value:(nonnull NSNumber *)value)

@@ -5,6 +5,7 @@ import type { EdotConfig } from '../types';
 jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
     startSpan: jest.fn().mockReturnValue('span-1'),
+    startClientSpan: jest.fn().mockReturnValue('span-1'),
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
     setSpanAttributeNumber: jest.fn(),
@@ -36,11 +37,13 @@ describe('setupFetchInstrumentation', () => {
     teardown?.();
   });
 
-  it('creates span for fetch request', async () => {
+  it('creates HTTP CLIENT span via startClientSpan, not startSpan', async () => {
     teardown = setupFetchInstrumentation(baseConfig);
     await global.fetch('https://api.example.com/users');
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledTimes(1);
+    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({ 'http.method': 'GET' }),
       null,
@@ -52,7 +55,7 @@ describe('setupFetchInstrumentation', () => {
     teardown = setupFetchInstrumentation(baseConfig);
     await global.fetch('https://api.example.com/users?token=abc');
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
         'http.method': 'GET',
@@ -70,7 +73,7 @@ describe('setupFetchInstrumentation', () => {
     teardown = setupFetchInstrumentation(baseConfig);
     await global.fetch('https://api.example.com/users');
 
-    const [, attrs] = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0];
+    const [, attrs] = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0];
     expect(attrs).not.toHaveProperty('http.request.method');
     expect(attrs).not.toHaveProperty('url.full');
   });
@@ -112,7 +115,7 @@ describe('setupFetchInstrumentation', () => {
     teardown = setupFetchInstrumentation(baseConfig);
     await global.fetch('http://api.example.com/users');
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         'http.scheme': 'http',
@@ -126,7 +129,7 @@ describe('setupFetchInstrumentation', () => {
     teardown = setupFetchInstrumentation(baseConfig);
     await global.fetch('https://api.example.com:8443/users');
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({ 'net.peer.port': 8443 }),
       null,
@@ -137,7 +140,7 @@ describe('setupFetchInstrumentation', () => {
     teardown = setupFetchInstrumentation(baseConfig);
     await global.fetch('https://apm.example.com:8200/intake');
 
-    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.startClientSpan).not.toHaveBeenCalled();
     expect(originalFetch).toHaveBeenCalled();
   });
 
@@ -145,7 +148,7 @@ describe('setupFetchInstrumentation', () => {
     teardown = setupFetchInstrumentation({ ...baseConfig, ignoreUrls: [/\/health$/] });
     await global.fetch('https://api.example.com/health');
 
-    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.startClientSpan).not.toHaveBeenCalled();
   });
 
   it('records error span on network failure', async () => {
@@ -174,7 +177,7 @@ describe('setupFetchInstrumentation', () => {
       body: JSON.stringify({ operationName: 'GetUser', query: 'query GetUser { user { id } }' }),
     });
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GraphQL: GetUser',
       expect.anything(),
       null,

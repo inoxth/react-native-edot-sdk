@@ -88,7 +88,7 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         spanAttributes['view.id'] = activeView.spanId;
       }
 
-      const nativeSpanId = EdotNativeModule.startSpan(spanName, spanAttributes, null);
+      const nativeSpanId = EdotNativeModule.startClientSpan(spanName, spanAttributes, null);
       state.spanId = nativeSpanId;
       trackSpan(nativeSpanId);
 

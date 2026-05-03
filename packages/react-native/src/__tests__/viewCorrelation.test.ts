@@ -8,6 +8,7 @@ import type { EdotConfig } from '../types';
 jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
     startSpan: jest.fn().mockReturnValue('span-1'),
+    startClientSpan: jest.fn().mockReturnValue('span-1'),
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
     setSpanAttributeNumber: jest.fn(),
@@ -45,7 +46,7 @@ describe('view correlation on fetch', () => {
 
     await global.fetch('https://api.example.com/products/42');
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
         'view.name': 'ProductDetail',
@@ -60,7 +61,7 @@ describe('view correlation on fetch', () => {
 
     await global.fetch('https://api.example.com/products/42');
 
-    const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
+    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
     expect(attrs['view.name']).toBeUndefined();
     expect(attrs['view.id']).toBeUndefined();
   });
@@ -108,7 +109,7 @@ describe('view correlation on XHR', () => {
     xhr.open('GET', 'https://api.example.com/data');
     xhr.send();
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
         'view.name': 'HomeScreen',
@@ -125,7 +126,7 @@ describe('view correlation on XHR', () => {
     xhr.open('GET', 'https://api.example.com/data');
     xhr.send();
 
-    const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
+    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
     expect(attrs['view.name']).toBeUndefined();
     expect(attrs['view.id']).toBeUndefined();
   });

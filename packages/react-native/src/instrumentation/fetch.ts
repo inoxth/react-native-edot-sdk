@@ -65,7 +65,7 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
         spanAttributes['view.id'] = activeView.spanId;
       }
 
-      nativeSpanId = EdotNativeModule.startSpan(spanName, spanAttributes, null);
+      nativeSpanId = EdotNativeModule.startClientSpan(spanName, spanAttributes, null);
       trackSpan(nativeSpanId);
 
       const headers = new Headers(init?.headers);

@@ -6,6 +6,7 @@ import type { EdotConfig } from '../types';
 jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
     startSpan: jest.fn().mockReturnValue('xhr-span-1'),
+    startClientSpan: jest.fn().mockReturnValue('xhr-span-1'),
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
     setSpanAttributeNumber: jest.fn(),
@@ -64,7 +65,7 @@ describe('XHR view correlation', () => {
     xhr.open('GET', 'https://api.example.com/feed');
     xhr.send();
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
         'view.name': 'HomeScreen',
@@ -81,7 +82,7 @@ describe('XHR view correlation', () => {
     xhr.open('GET', 'https://api.example.com/data');
     xhr.send();
 
-    const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
+    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
     expect(attrs).not.toHaveProperty('view.name');
     expect(attrs).not.toHaveProperty('view.id');
   });
@@ -96,7 +97,7 @@ describe('XHR view correlation', () => {
     ActiveViewContext.setActiveView({ name: 'ScreenB', spanId: 'vs-b' });
     xhr.send();
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
         'view.name': 'ScreenB',

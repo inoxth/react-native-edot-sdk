@@ -6,6 +6,7 @@ import type { EdotConfig } from '../types';
 jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
     startSpan: jest.fn().mockReturnValue('span-1'),
+    startClientSpan: jest.fn().mockReturnValue('span-1'),
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
     setSpanAttributeNumber: jest.fn(),
@@ -82,14 +83,16 @@ describe('setupXhrInstrumentation', () => {
     expect(XMLHttpRequest.prototype.open).toBe(openBefore);
   });
 
-  it('creates span when open + send are called', () => {
+  it('creates HTTP CLIENT span via startClientSpan, not startSpan', () => {
     teardown = setupXhrInstrumentation(baseConfig);
 
     const xhr = new XMLHttpRequest();
     xhr.open('GET', 'https://api.example.com/users');
     xhr.send();
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledTimes(1);
+    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({ 'http.method': 'GET' }),
       null,
@@ -103,7 +106,7 @@ describe('setupXhrInstrumentation', () => {
     xhr.open('GET', 'https://api.example.com/users?token=abc');
     xhr.send();
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
         'http.method': 'GET',
@@ -124,7 +127,7 @@ describe('setupXhrInstrumentation', () => {
     xhr.open('GET', 'https://api.example.com/users');
     xhr.send();
 
-    const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
+    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
     expect(attrs).not.toHaveProperty('http.request.method');
     expect(attrs).not.toHaveProperty('url.full');
   });
@@ -182,7 +185,7 @@ describe('setupXhrInstrumentation', () => {
     xhr.open('GET', 'https://api.example.com/health');
     xhr.send();
 
-    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.startClientSpan).not.toHaveBeenCalled();
   });
 
   it('skips EDOT server URL', () => {
@@ -192,7 +195,7 @@ describe('setupXhrInstrumentation', () => {
     xhr.open('GET', 'https://apm.example.com:8200/intake');
     xhr.send();
 
-    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.startClientSpan).not.toHaveBeenCalled();
   });
 
   it('tracks span on send and untracks on load', () => {
