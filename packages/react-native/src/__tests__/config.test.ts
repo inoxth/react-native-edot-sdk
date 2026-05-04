@@ -115,9 +115,9 @@ describe('validateConfig', () => {
   });
 
   it('throws on non-parseable managementUrl', () => {
-    expect(() =>
-      validateConfig({ ...validConfig, managementUrl: 'not a url' }),
-    ).toThrow('managementUrl is not a valid URL');
+    expect(() => validateConfig({ ...validConfig, managementUrl: 'not a url' })).toThrow(
+      'managementUrl is not a valid URL',
+    );
   });
 
   it('throws when managementUrl uses a non-http scheme', () => {

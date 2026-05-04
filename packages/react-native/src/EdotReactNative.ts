@@ -9,6 +9,7 @@ import { setupFetchInstrumentation } from './instrumentation/fetch';
 import { setupXhrInstrumentation } from './instrumentation/xhr';
 import { setupErrorHandler } from './instrumentation/errors';
 import { setupStartupTracing } from './instrumentation/startup';
+import { setupAppStateTracking } from './instrumentation/app-state';
 import { setupSpanCleanup } from './instrumentation/spanCleanup';
 
 interface InternalConfig {
@@ -43,7 +44,9 @@ function mergeConfig(config: EdotConfig): InternalConfig {
     debug: config.debug ?? EDOT_DEFAULTS.debug,
     userAttributesIncludeInSpans:
       config.userAttributes?.includeInSpans ?? DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE,
-    ...(config.sessionSamplingRate !== undefined ? { sessionSamplingRate: config.sessionSamplingRate } : {}),
+    ...(config.sessionSamplingRate !== undefined
+      ? { sessionSamplingRate: config.sessionSamplingRate }
+      : {}),
     ...(config.trackingConsent ? { trackingConsent: config.trackingConsent } : {}),
     ...(config.secretToken ? { secretToken: redactedString(config.secretToken) } : {}),
     ...(config.apiKey ? { apiKey: redactedString(config.apiKey) } : {}),
@@ -97,6 +100,11 @@ async function doInitialize(config: EdotConfig): Promise<void> {
     if (merged.instrumentAppStartup) {
       teardowns.push(setupStartupTracing(config));
       debugLog(config, 'Startup tracing enabled');
+    }
+
+    if (merged.appStateTracking) {
+      teardowns.push(setupAppStateTracking());
+      debugLog(config, 'App-state tracking enabled');
     }
 
     teardowns.push(setupSpanCleanup());

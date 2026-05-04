@@ -38,8 +38,20 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     fun reportJsException(errorInfo: ReadableMap) = impl.reportJsException(errorInfo)
 
     @ReactMethod(isBlockingSynchronousMethod = true)
-    fun startSpan(name: String, attributes: ReadableMap, parentSpanId: String?): String =
-        impl.startSpan(name, attributes, parentSpanId)
+    fun startSpan(
+        name: String,
+        attributes: ReadableMap,
+        parentSpanId: String?,
+        instrumentationName: String?,
+    ): String = impl.startSpan(name, attributes, parentSpanId, instrumentationName)
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    fun startClientSpan(
+        name: String,
+        attributes: ReadableMap,
+        parentSpanId: String?,
+        instrumentationName: String?,
+    ): String = impl.startClientSpan(name, attributes, parentSpanId, instrumentationName)
 
     @ReactMethod
     fun endSpan(spanId: String, statusCode: Double) = impl.endSpan(spanId, statusCode)

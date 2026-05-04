@@ -6,10 +6,10 @@ Pod::Spec.new do |s|
   s.name         = 'EdotReactNative'
   s.version      = package['version']
   s.summary      = package['description']
-  s.homepage     = 'https://github.com/anthropic-edot/react-native'
+  s.homepage     = 'https://github.com/inoxth/react-native-edot-sdk'
   s.license      = package['license']
-  s.author       = 'Anthropic'
-  s.source       = { :git => 'https://github.com/anthropic-edot/react-native.git', :tag => s.version }
+  s.author       = 'INOX'
+  s.source       = { :git => 'https://github.com/inoxth/react-native-edot-sdk.git', :tag => s.version }
 
   s.platform     = :ios, '16.0'
   s.swift_version = '5.9'
@@ -25,6 +25,14 @@ Pod::Spec.new do |s|
       url: 'https://github.com/elastic/apm-agent-ios.git',
       requirement: { kind: 'upToNextMajorVersion', minimumVersion: '2.0.0' },
       products: ['ElasticApm']
+    )
+    spm_dependency(s,
+      url: 'https://github.com/open-telemetry/opentelemetry-swift-core.git',
+      requirement: { kind: 'upToNextMajorVersion', minimumVersion: '2.3.0' },
+      products: [
+        'OpenTelemetryApi',
+        'OpenTelemetrySdk'
+      ]
     )
     spm_dependency(s,
       url: 'https://github.com/open-telemetry/opentelemetry-swift.git',

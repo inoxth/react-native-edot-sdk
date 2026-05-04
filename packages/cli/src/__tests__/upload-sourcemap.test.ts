@@ -64,10 +64,14 @@ beforeEach(() => {
 afterEach(() => {
   try {
     fs.unlinkSync(BASE_OPTIONS.bundlePath);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   try {
     fs.unlinkSync(BASE_OPTIONS.sourcemapPath);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 });
 
 describe('uploadSourcemap', () => {
@@ -204,7 +208,9 @@ describe('uploadSourcemap', () => {
   it('rejects with timeout error when server never responds', async () => {
     // A server that accepts the connection but never sends a response
     const hangServer = net.createServer((socket) => {
-      socket.on('data', () => { /* intentionally consume and ignore */ });
+      socket.on('data', () => {
+        /* intentionally consume and ignore */
+      });
     });
 
     await new Promise<void>((resolve) => hangServer.listen(0, resolve));

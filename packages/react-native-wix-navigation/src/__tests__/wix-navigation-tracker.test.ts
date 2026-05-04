@@ -7,6 +7,8 @@ const mockNativeModule = {
   endSpan: jest.fn(),
 };
 
+const reEmitters: Array<() => void> = [];
+
 jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
 }));
@@ -15,9 +17,22 @@ jest.mock('@inox/react-native-edot-shared', () => ({
   ActiveViewContext: {
     setActiveView: jest.fn(),
     clearActiveView: jest.fn(),
+    registerForegroundReEmitter: jest.fn((fn: () => void) => {
+      reEmitters.push(fn);
+      return () => {
+        const index = reEmitters.indexOf(fn);
+        if (index !== -1) reEmitters.splice(index, 1);
+      };
+    }),
   },
   getNativeModule: () => mockNativeModule,
 }));
+
+function triggerForegroundReEmit(): void {
+  for (const fn of reEmitters.slice()) {
+    fn();
+  }
+}
 
 function createMockNavigation(): {
   navigation: WixNavigation;
@@ -46,30 +61,33 @@ function createMockNavigation(): {
 describe('registerEdotNavigationListener', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockNativeModule.startSpan.mockReturnValue('view-span-1');
+    reEmitters.length = 0;
     resetForTesting();
   });
 
-  it('creates span on ComponentDidAppear', () => {
+  it('creates span on ComponentDidAppear with screen.name', () => {
     const { navigation, fireEvent } = createMockNavigation();
     registerEdotNavigationListener(navigation);
 
     fireEvent({ componentName: 'CartScreen', componentId: 'cart-1' });
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'Navigation: CartScreen',
-      expect.objectContaining({
-        'view.name': 'CartScreen',
-        'view.transition_type': 'initial',
-      }),
+      'CartScreen',
+      { 'screen.name': 'CartScreen' },
       null,
+      '@inox/react-native-edot-wix-navigation',
     );
+    const attrs = mockNativeModule.startSpan.mock.calls[0]?.[1] as Record<string, string>;
+    expect(attrs).not.toHaveProperty('last.screen.name');
+    expect(attrs).not.toHaveProperty('view.transition_type');
     expect(ActiveViewContext.setActiveView).toHaveBeenCalledWith({
       name: 'CartScreen',
       spanId: 'view-span-1',
     });
   });
 
-  it('ends previous span on new screen', () => {
+  it('ends previous span on new screen with last.screen.name', () => {
     const { navigation, fireEvent } = createMockNavigation();
     registerEdotNavigationListener(navigation);
 
@@ -81,9 +99,10 @@ describe('registerEdotNavigationListener', () => {
 
     expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'Navigation: CartScreen',
-      expect.objectContaining({ 'view.previous': 'HomeScreen' }),
+      'CartScreen',
+      { 'screen.name': 'CartScreen', 'last.screen.name': 'HomeScreen' },
       null,
+      '@inox/react-native-edot-wix-navigation',
     );
   });
 
@@ -96,9 +115,10 @@ describe('registerEdotNavigationListener', () => {
     fireEvent({ componentName: 'CartScreen', componentId: 'cart-1' });
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'Navigation: Cart',
-      expect.objectContaining({ 'view.name': 'Cart' }),
+      'Cart',
+      { 'screen.name': 'Cart' },
       null,
+      '@inox/react-native-edot-wix-navigation',
     );
   });
 
@@ -122,34 +142,50 @@ describe('registerEdotNavigationListener', () => {
     expect(mockNativeModule.startSpan).toHaveBeenCalledTimes(1);
   });
 
-  it('emits initial transition_type on first event, push on subsequent', () => {
+  it('foreground re-emit replays last component without last.screen.name', () => {
     const { navigation, fireEvent } = createMockNavigation();
     registerEdotNavigationListener(navigation);
 
     fireEvent({ componentName: 'HomeScreen', componentId: 'home-1' });
-
-    expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'Navigation: HomeScreen',
-      expect.objectContaining({ 'view.transition_type': 'initial' }),
-      null,
-    );
-
     jest.clearAllMocks();
     mockNativeModule.startSpan.mockReturnValue('view-span-2');
 
-    fireEvent({ componentName: 'CartScreen', componentId: 'cart-1' });
+    triggerForegroundReEmit();
 
+    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'Navigation: CartScreen',
-      expect.objectContaining({ 'view.transition_type': 'push' }),
+      'HomeScreen',
+      { 'screen.name': 'HomeScreen' },
       null,
+      '@inox/react-native-edot-wix-navigation',
     );
+    const attrs = mockNativeModule.startSpan.mock.calls[0]?.[1] as Record<string, string>;
+    expect(attrs).not.toHaveProperty('last.screen.name');
+  });
+
+  it('foreground re-emit without prior event is a no-op', () => {
+    const { navigation } = createMockNavigation();
+    registerEdotNavigationListener(navigation);
+
+    expect(() => triggerForegroundReEmit()).not.toThrow();
+    expect(mockNativeModule.startSpan).not.toHaveBeenCalled();
+  });
+
+  it('cleanup unregisters foreground re-emitter and clears stashed event', () => {
+    const { navigation, fireEvent } = createMockNavigation();
+    const cleanup = registerEdotNavigationListener(navigation);
+
+    fireEvent({ componentName: 'HomeScreen', componentId: 'home-1' });
+    cleanup();
+    jest.clearAllMocks();
+
+    triggerForegroundReEmit();
+
+    expect(mockNativeModule.startSpan).not.toHaveBeenCalled();
   });
 
   it('keeps span state isolated between concurrent listeners', () => {
-    mockNativeModule.startSpan
-      .mockReturnValueOnce('wix-a-1')
-      .mockReturnValueOnce('wix-b-1');
+    mockNativeModule.startSpan.mockReturnValueOnce('wix-a-1').mockReturnValueOnce('wix-b-1');
 
     const first = createMockNavigation();
     const second = createMockNavigation();

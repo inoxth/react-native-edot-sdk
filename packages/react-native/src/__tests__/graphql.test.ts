@@ -2,7 +2,10 @@ import { extractGraphqlOperationName, isGraphqlUrl } from '../instrumentation/gr
 
 describe('extractGraphqlOperationName', () => {
   it('extracts operationName from JSON body', () => {
-    const body = JSON.stringify({ operationName: 'GetUser', query: 'query GetUser { user { id } }' });
+    const body = JSON.stringify({
+      operationName: 'GetUser',
+      query: 'query GetUser { user { id } }',
+    });
     expect(extractGraphqlOperationName(body)).toBe('GetUser');
   });
 

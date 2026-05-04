@@ -57,7 +57,7 @@ describe('XHR view correlation', () => {
     ActiveViewContext._resetForTesting();
   });
 
-  it('includes view.name and view.id when active view exists', () => {
+  it('includes screen.name and screen.id when active view exists', () => {
     ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'hs1' });
     teardown = setupXhrInstrumentation(baseConfig);
 
@@ -68,10 +68,11 @@ describe('XHR view correlation', () => {
     expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
-        'view.name': 'HomeScreen',
-        'view.id': 'hs1',
+        'screen.name': 'HomeScreen',
+        'screen.id': 'hs1',
       }),
       null,
+      '@inox/react-native-edot-sdk/xhr',
     );
   });
 
@@ -83,6 +84,8 @@ describe('XHR view correlation', () => {
     xhr.send();
 
     const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
+    expect(attrs).not.toHaveProperty('screen.name');
+    expect(attrs).not.toHaveProperty('screen.id');
     expect(attrs).not.toHaveProperty('view.name');
     expect(attrs).not.toHaveProperty('view.id');
   });
@@ -100,10 +103,11 @@ describe('XHR view correlation', () => {
     expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
-        'view.name': 'ScreenB',
-        'view.id': 'vs-b',
+        'screen.name': 'ScreenB',
+        'screen.id': 'vs-b',
       }),
       null,
+      '@inox/react-native-edot-sdk/xhr',
     );
   });
 });

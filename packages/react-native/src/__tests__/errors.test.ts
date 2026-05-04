@@ -54,6 +54,7 @@ describe('setupErrorHandler', () => {
         'error.source': 'js_uncaught',
       }),
       null,
+      '@inox/react-native-edot-sdk/errors',
     );
     expect(EdotNativeModule.reportJsException).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'TypeError', isFatal: true }),
@@ -92,9 +93,7 @@ describe('setupErrorHandler', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const teardown = setupErrorHandler(baseConfig);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('ErrorUtils is not available'),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ErrorUtils is not available'));
     expect(() => teardown()).not.toThrow();
 
     warnSpy.mockRestore();
@@ -106,9 +105,7 @@ describe('setupErrorHandler', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const teardown = setupErrorHandler(baseConfig);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('ErrorUtils is not available'),
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ErrorUtils is not available'));
     expect(() => teardown()).not.toThrow();
 
     warnSpy.mockRestore();

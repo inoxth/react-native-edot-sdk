@@ -39,10 +39,16 @@ function reportError(error: Error, source: string, isFatal: boolean): void {
     'error.source': source,
   };
   if (activeView) {
-    attributes['view.name'] = activeView.name;
+    attributes['screen.name'] = activeView.name;
+    attributes['screen.id'] = activeView.spanId;
   }
 
-  const spanId = EdotNativeModule.startSpan('JS Error', attributes, null);
+  const spanId = EdotNativeModule.startSpan(
+    'JS Error',
+    attributes,
+    null,
+    '@inox/react-native-edot-sdk/errors',
+  );
   EdotNativeModule.endSpan(spanId, 2);
 
   EdotNativeModule.reportJsException({
@@ -96,7 +102,9 @@ function setupPromiseRejectionHandler(): () => void {
     const tracking: unknown = require('promise/setimmediate/rejection-tracking');
 
     if (!isRejectionTracking(tracking)) {
-      console.warn('[EDOT] rejection-tracking module has unexpected shape — promise rejection handler not installed');
+      console.warn(
+        '[EDOT] rejection-tracking module has unexpected shape — promise rejection handler not installed',
+      );
       return () => {};
     }
 

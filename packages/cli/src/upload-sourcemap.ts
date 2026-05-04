@@ -62,15 +62,8 @@ function containsControlChars(value: string): boolean {
 }
 
 export function uploadSourcemap(options: UploadOptions): Promise<void> {
-  const {
-    serverUrl,
-    serviceName,
-    serviceVersion,
-    bundlePath,
-    sourcemapPath,
-    secretToken,
-    apiKey,
-  } = options;
+  const { serverUrl, serviceName, serviceVersion, bundlePath, sourcemapPath, secretToken, apiKey } =
+    options;
 
   if (!fs.existsSync(bundlePath)) {
     return Promise.reject(new Error(`Bundle file not found: ${bundlePath}`));
@@ -111,9 +104,7 @@ export function uploadSourcemap(options: UploadOptions): Promise<void> {
     // to prevent HTTP header injection via corrupted CI env vars.
     const trimmed = secretToken.trim();
     if (containsControlChars(trimmed)) {
-      return Promise.reject(
-        new Error('secretToken contains invalid control characters'),
-      );
+      return Promise.reject(new Error('secretToken contains invalid control characters'));
     }
     headers['Authorization'] = `Bearer ${trimmed}`;
   } else if (apiKey) {
@@ -150,11 +141,7 @@ export function uploadSourcemap(options: UploadOptions): Promise<void> {
           if (statusCode >= 200 && statusCode < 300) {
             resolve();
           } else {
-            reject(
-              new Error(
-                `Upload failed with status ${statusCode}: ${responseBody}`,
-              ),
-            );
+            reject(new Error(`Upload failed with status ${statusCode}: ${responseBody}`));
           }
         });
       },

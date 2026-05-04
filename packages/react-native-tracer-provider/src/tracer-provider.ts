@@ -1,11 +1,5 @@
 import { getNativeModule } from '@inox/react-native-edot-shared';
-import type {
-  TracerProvider,
-  Tracer,
-  Span,
-  SpanOptions,
-  SpanStatusCodeValue,
-} from './types';
+import type { TracerProvider, Tracer, Span, SpanOptions, SpanStatusCodeValue } from './types';
 
 const contextStack: Span[] = [];
 
@@ -127,9 +121,7 @@ export function withSpanContext<T>(parentSpan: Span, fn: () => T): T {
   } finally {
     const top = contextStack[contextStack.length - 1];
     if (top !== expectedTop) {
-      console.warn(
-        '[EDOT] withSpanContext stack mismatch — use explicit parentSpan for async fn',
-      );
+      console.warn('[EDOT] withSpanContext stack mismatch — use explicit parentSpan for async fn');
       const idx = contextStack.lastIndexOf(expectedTop);
       if (idx !== -1) {
         contextStack.splice(idx, 1);

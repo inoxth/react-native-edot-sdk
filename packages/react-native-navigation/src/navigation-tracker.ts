@@ -1,6 +1,8 @@
 import { ActiveViewContext, getNativeModule } from '@inox/react-native-edot-shared';
 import type { NavigationContainerRef, EdotNavigationOptions } from './types';
 
+const INSTRUMENTATION_NAME = '@inox/react-native-edot-navigation';
+
 export function createEdotNavigationContainerRef<
   T extends NavigationContainerRef = NavigationContainerRef,
 >(
@@ -24,18 +26,17 @@ export function createEdotNavigationContainerRef<
     }
   }
 
-  function startViewSpan(screenName: string, transitionType: string): void {
+  function startViewSpan(screenName: string): void {
     endCurrentSpan();
 
     const attributes: Record<string, string> = {
-      'view.name': screenName,
-      'view.transition_type': transitionType,
+      'screen.name': screenName,
     };
-    if (previousScreenName) {
-      attributes['view.previous'] = previousScreenName;
+    if (previousScreenName && previousScreenName !== screenName) {
+      attributes['last.screen.name'] = previousScreenName;
     }
 
-    currentSpanId = getNativeModule().startSpan(`Navigation: ${screenName}`, attributes, null);
+    currentSpanId = getNativeModule().startSpan(screenName, attributes, null, INSTRUMENTATION_NAME);
 
     ActiveViewContext.setActiveView({ name: screenName, spanId: currentSpanId });
     previousScreenName = screenName;
@@ -51,7 +52,7 @@ export function createEdotNavigationContainerRef<
     if (!navigationRef.current) return;
     const screenName = getScreenName(navigationRef.current);
     if (screenName) {
-      startViewSpan(screenName, 'initial');
+      startViewSpan(screenName);
     }
   }
 
@@ -59,11 +60,20 @@ export function createEdotNavigationContainerRef<
     if (!navigationRef.current) return;
     const screenName = getScreenName(navigationRef.current);
     if (screenName && screenName !== previousScreenName) {
-      startViewSpan(screenName, 'push');
+      startViewSpan(screenName);
     }
   }
 
+  const unregisterReEmitter = ActiveViewContext.registerForegroundReEmitter(() => {
+    if (!navigationRef.current) return;
+    const screenName = getScreenName(navigationRef.current);
+    if (!screenName) return;
+    previousScreenName = null;
+    startViewSpan(screenName);
+  });
+
   function cleanup(): void {
+    unregisterReEmitter();
     endCurrentSpan();
     ActiveViewContext.clearActiveView();
     previousScreenName = null;

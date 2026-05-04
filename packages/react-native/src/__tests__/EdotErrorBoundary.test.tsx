@@ -61,6 +61,7 @@ describe('EdotErrorBoundary', () => {
       'JS Error',
       expect.objectContaining({ 'error.source': 'js_render_error' }),
       null,
+      '@inox/react-native-edot-sdk/errors',
     );
   });
 

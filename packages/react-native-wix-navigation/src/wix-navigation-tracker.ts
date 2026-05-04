@@ -1,6 +1,8 @@
 import { ActiveViewContext, getNativeModule } from '@inox/react-native-edot-shared';
 import type { WixNavigation, EdotWixNavigationOptions, ComponentDidAppearEvent } from './types';
 
+const INSTRUMENTATION_NAME = '@inox/react-native-edot-wix-navigation';
+
 export function registerEdotNavigationListener(
   Navigation: WixNavigation,
   options?: EdotWixNavigationOptions,
@@ -9,7 +11,7 @@ export function registerEdotNavigationListener(
 
   let currentSpanId: string | null = null;
   let previousScreenName: string | null = null;
-  let hasEmittedFirst = false;
+  let lastEvent: ComponentDidAppearEvent | null = null;
 
   function endCurrentSpan(): void {
     if (currentSpanId) {
@@ -18,42 +20,46 @@ export function registerEdotNavigationListener(
     }
   }
 
+  function emitForEvent(event: ComponentDidAppearEvent): void {
+    const screenName = mapper ? mapper(event.componentName) : event.componentName;
+
+    if (screenName === previousScreenName) return;
+
+    endCurrentSpan();
+
+    const attributes: Record<string, string> = {
+      'screen.name': screenName,
+    };
+    if (previousScreenName && previousScreenName !== screenName) {
+      attributes['last.screen.name'] = previousScreenName;
+    }
+
+    currentSpanId = getNativeModule().startSpan(screenName, attributes, null, INSTRUMENTATION_NAME);
+
+    ActiveViewContext.setActiveView({ name: screenName, spanId: currentSpanId });
+    previousScreenName = screenName;
+  }
+
   const subscription = Navigation.events().registerComponentDidAppearListener(
     (event: ComponentDidAppearEvent) => {
-      const screenName = mapper ? mapper(event.componentName) : event.componentName;
-
-      if (screenName === previousScreenName) return;
-
-      endCurrentSpan();
-
-      const transitionType = hasEmittedFirst ? 'push' : 'initial';
-      hasEmittedFirst = true;
-
-      const attributes: Record<string, string> = {
-        'view.name': screenName,
-        'view.transition_type': transitionType,
-      };
-      if (previousScreenName) {
-        attributes['view.previous'] = previousScreenName;
-      }
-
-      currentSpanId = getNativeModule().startSpan(
-        `Navigation: ${screenName}`,
-        attributes,
-        null,
-      );
-
-      ActiveViewContext.setActiveView({ name: screenName, spanId: currentSpanId });
-      previousScreenName = screenName;
+      lastEvent = event;
+      emitForEvent(event);
     },
   );
 
+  const unregisterReEmitter = ActiveViewContext.registerForegroundReEmitter(() => {
+    if (!lastEvent) return;
+    previousScreenName = null;
+    emitForEvent(lastEvent);
+  });
+
   return () => {
+    unregisterReEmitter();
     subscription.remove();
     endCurrentSpan();
     ActiveViewContext.clearActiveView();
     previousScreenName = null;
-    hasEmittedFirst = false;
+    lastEvent = null;
   };
 }
 

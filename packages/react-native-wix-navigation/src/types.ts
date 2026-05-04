@@ -5,9 +5,9 @@ export interface ComponentDidAppearEvent {
 }
 
 export interface NavigationEvents {
-  registerComponentDidAppearListener(
-    callback: (event: ComponentDidAppearEvent) => void,
-  ): { remove(): void };
+  registerComponentDidAppearListener(callback: (event: ComponentDidAppearEvent) => void): {
+    remove(): void;
+  };
 }
 
 export interface WixNavigation {

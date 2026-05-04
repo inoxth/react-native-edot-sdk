@@ -11,10 +11,7 @@ export function withEdotTracking<P extends TrackableProps>(
   actionName?: string,
 ): React.ComponentType<P> {
   const displayName =
-    actionName ??
-    WrappedComponent.displayName ??
-    WrappedComponent.name ??
-    'Unknown';
+    actionName ?? WrappedComponent.displayName ?? WrappedComponent.name ?? 'Unknown';
 
   function TrackedComponent(props: P): React.ReactElement {
     const handlePress = useCallback(
@@ -22,7 +19,7 @@ export function withEdotTracking<P extends TrackableProps>(
         const activeView = ActiveViewContext.getActiveView();
         const attributes: Record<string, string> = {};
         if (activeView) {
-          attributes['view.name'] = activeView.name;
+          attributes['screen.name'] = activeView.name;
         }
 
         EdotNativeModule.emitLog('info', `UserAction: ${displayName}`, {

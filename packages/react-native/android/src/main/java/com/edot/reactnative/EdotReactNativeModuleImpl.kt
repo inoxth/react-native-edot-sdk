@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.logs.Severity
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanBuilder
+import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import java.util.Collections
 import java.util.LinkedHashMap
@@ -180,16 +181,37 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         span.end()
     }
 
-    fun startSpan(name: String, attributes: ReadableMap, parentSpanId: String?): String {
+    fun startSpan(
+        name: String,
+        attributes: ReadableMap,
+        parentSpanId: String?,
+        instrumentationName: String?,
+    ): String = makeSpan(name, attributes, parentSpanId, instrumentationName, SpanKind.INTERNAL)
+
+    fun startClientSpan(
+        name: String,
+        attributes: ReadableMap,
+        parentSpanId: String?,
+        instrumentationName: String?,
+    ): String = makeSpan(name, attributes, parentSpanId, instrumentationName, SpanKind.CLIENT)
+
+    private fun makeSpan(
+        name: String,
+        attributes: ReadableMap,
+        parentSpanId: String?,
+        instrumentationName: String?,
+        kind: SpanKind,
+    ): String {
         if (!emissionAllowed()) return ""
-        val tracer = EdotReactNativeAgent.openTelemetry?.getTracer("react-native-edot") ?: run {
+        val tracerName = instrumentationName?.takeIf { it.isNotEmpty() } ?: "react-native-edot"
+        val tracer = EdotReactNativeAgent.openTelemetry?.getTracer(tracerName) ?: run {
             debugLog("OpenTelemetry not available; returning stub span id")
             return UUID.randomUUID().toString()
         }
 
-        val spanBuilder = tracer.spanBuilder(name)
+        val spanBuilder = tracer.spanBuilder(name).setSpanKind(kind)
 
-        if (parentSpanId != null) {
+        if (!parentSpanId.isNullOrEmpty()) {
             val parentSpan = activeSpans[parentSpanId]
             if (parentSpan != null) {
                 spanBuilder.setParent(

@@ -37,10 +37,7 @@ export function shouldIgnore(
   });
 }
 
-export function shouldPropagate(
-  url: string,
-  targets: (string | RegExp)[] | undefined,
-): boolean {
+export function shouldPropagate(url: string, targets: (string | RegExp)[] | undefined): boolean {
   if (!targets || targets.length === 0) {
     return false;
   }

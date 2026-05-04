@@ -15,10 +15,13 @@ src/
 ## Key API
 
 `ActiveViewContext` singleton with:
+
 - `setActiveView({ name, spanId })` — called by navigation plugins on screen change
 - `getActiveView()` — called by instrumentation modules to correlate spans to views
 - `clearActiveView()` — called on navigation cleanup/unmount
 - `addListener(callback)` — returns unsubscribe function for view change events
+- `registerForegroundReEmitter(fn)` — navigation plugins register a re-emitter at construction. Returns an idempotent unregister function. The SDK's app-state listener invokes `notifyForegroundReEmitters()` after `AppState` returns to `'active'` from a real `'background'` so plugins can re-emit the current screen with `previousScreenName = null` (omitting `last.screen.name` to mark it as a fresh foreground visit).
+- `notifyForegroundReEmitters()` — invokes registered re-emitters in registration order, swallowing per-callback exceptions
 
 ## Dependencies
 
@@ -27,8 +30,9 @@ None (pure JS/TS).
 ## Consumers
 
 - `@inox/react-native-edot-sdk` — re-exports `ActiveViewContext` at `/active-view-context`
-- All 3 navigation plugins — import `ActiveViewContext` directly to set/clear active view
-- Instrumentation modules (fetch, XHR, errors) — read `getActiveView()` to correlate spans
+- All 3 navigation plugins — import `ActiveViewContext` directly to set/clear active view and register foreground re-emitters
+- Instrumentation modules (fetch, XHR, errors, interactions) — read `getActiveView()` to correlate spans (emit `screen.name` and `screen.id`)
+- `app-state.ts` instrumentation — calls `notifyForegroundReEmitters()` on `'background' → 'active'` transitions
 
 ## Anti-Patterns
 

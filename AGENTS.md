@@ -78,13 +78,14 @@ Singleton in `@inox/react-native-edot-shared` — navigation plugins write to it
 All three plugins (`react-native-navigation`, `react-native-expo-router`, `react-native-wix-navigation`) follow the same structure:
 1. Listen for screen changes (library-specific API)
 2. End previous view span via `EdotNativeModule.endSpan()`
-3. Start new span via `EdotNativeModule.startSpan()` with `view.name`, `view.previous`, `view.transition_type` attributes
+3. Start new span via `EdotNativeModule.startSpan()` with `screen.name` (and `last.screen.name` when the prior screen exists and differs). Span name is the plain screen name. Span kind is INTERNAL (default). Each plugin passes its own `instrumentationName` (`@inox/react-native-edot-navigation`, `@inox/react-native-edot-expo-router`, or `@inox/react-native-edot-wix-navigation`) so spans carry distinguishable `instrumentation.scope.name` on the wire.
 4. Update `ActiveViewContext.setActiveView()`
 5. Lazy-require `@inox/react-native-edot-sdk/nativeModule` to avoid circular deps
+6. Register a foreground re-emitter via `ActiveViewContext.registerForegroundReEmitter(fn)` — fires after `AppState` returns to `'active'` from `'background'`. The re-emitter resets the plugin's `previousScreenName` to `null` and re-runs first-emission for the current screen (so `last.screen.name` is omitted). Wix replays the last `componentDidAppear` event from module state; React Navigation reads `navigationRef.current.getCurrentRoute()` live; Expo Router reads from a stashed pathname ref.
 
 ### Network Instrumentation
 
-Fetch and XHR are monkey-patched to create OTel spans using v1.23 stable HTTP semantic conventions: `http.request.method`, `url.full` (sanitized via `config.urlSanitizer`), `http.request.body.size`, `http.response.status_code`, `http.response.body.size`. They inject a W3C `traceparent` header for URLs matching `tracePropagationTargets` and add an `X-Edot-RN-Traced: 1` dedup header on every traced request. When an active view exists, spans include `view.name` and `view.id` attributes. Body/response sizes and status code are written via the typed `setSpanAttributeNumber` bridge method to preserve numeric type end-to-end.
+Fetch and XHR are monkey-patched to create OTel spans using legacy Elastic mobile spec HTTP attribute names: `http.method`, `http.url` (sanitized via `config.urlSanitizer`), `http.request_body.size`, `http.status_code`, `http.response_body.size`. They inject a W3C `traceparent` header for URLs matching `tracePropagationTargets` and add an `X-Edot-RN-Traced: 1` dedup header on every traced request. When an active view exists, spans include `screen.name` and `screen.id` attributes (RN-specific value-add over apm-agent-android's `ScreenAttributesSpanProcessor`, which only emits `screen.name`). Each instrumentation passes its own `instrumentationName` (`@inox/react-native-edot-sdk/fetch`, `@inox/react-native-edot-sdk/xhr`) so spans carry distinguishable `instrumentation.scope.name`. Body/response sizes and status code are written via the typed `setSpanAttributeNumber` bridge method to preserve numeric type end-to-end.
 
 ### iOS Metrics Pipeline (Custom MeterProvider)
 
@@ -94,9 +95,13 @@ apm-agent-ios v2.0.0 builds the global `MeterProvider` without `.setResource(...
 
 `secretToken` and `apiKey` are wrapped in `redactedString(value)` from `@inox/react-native-edot-shared` immediately on `mergeConfig` (commit `e5f612f`). The wrapper's `toString()` / `toJSON()` return `"[REDACTED]"`, preventing accidental logging. `revealCredentials()` unwraps them just before the `EdotNativeModule.initialize(...)` call.
 
+### App-State Tracking
+
+`packages/react-native/src/instrumentation/app-state.ts` installs a single `AppState.addEventListener('change', ...)` listener (gated by `EDOT_DEFAULTS.appStateTracking: true`). On `'background'`: ends the active screen-lifetime span via `EdotNativeModule.endSpan(spanId, 1)` and clears `ActiveViewContext`. On `'inactive'`: no-op (avoids thrashing on transient Face ID prompts / app-switcher half-pulled). On `'active'` after a real background: invokes `ActiveViewContext.notifyForegroundReEmitters()` — registered plugins reset their `previousScreenName = null` and re-run their first-emission path (so the new span omits `last.screen.name`). The new screen-lifetime span has a fresh `screen.id` — network requests started before background carry the old (now-ended) `screen.id` by design.
+
 ### Error Tracking
 
-`errors.ts` installs two handlers: `ErrorUtils.setGlobalHandler()` for uncaught JS exceptions and Hermes `enablePromiseRejectionTracker` (with `promise/setimmediate/rejection-tracking` fallback for non-Hermes engines). Each reported error opens a short-lived span with `exception.type`/`exception.message`/`exception.stacktrace`/`error.source` and also calls `reportJsException` so the native side emits a structured error event. React render errors are captured separately by the opt-in `EdotErrorBoundary` component exported from `@inox/react-native-edot-sdk`. Service identity (`service.name`, `service.version`, `deployment.environment`) is carried on the OTel Resource (set by the native agent at start), not on each span.
+`errors.ts` installs two handlers: `ErrorUtils.setGlobalHandler()` for uncaught JS exceptions and Hermes `enablePromiseRejectionTracker` (with `promise/setimmediate/rejection-tracking` fallback for non-Hermes engines). Each reported error opens a short-lived span with `exception.type`/`exception.message`/`exception.stacktrace`/`error.source` and also calls `reportJsException` so the native side emits a structured error event. When an active view exists, error spans also carry `screen.name` and `screen.id`. Error spans use `instrumentationName: "@inox/react-native-edot-sdk/errors"`. React render errors are captured separately by the opt-in `EdotErrorBoundary` component exported from `@inox/react-native-edot-sdk`. Service identity (`service.name`, `service.version`, `deployment.environment`) is carried on the OTel Resource (set by the native agent at start), not on each span.
 
 ## Where to Look
 

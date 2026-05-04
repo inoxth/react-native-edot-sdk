@@ -87,7 +87,7 @@ describe('UpDownCounter', () => {
     const meter = getMeterProvider().getMeter('test');
     const counter = meter.createUpDownCounter('active_connections');
 
-    counter.add(-1, { 'pool': 'main' });
+    counter.add(-1, { pool: 'main' });
 
     expect(mockNativeModule.recordMetric).toHaveBeenCalledWith(
       'active_connections',

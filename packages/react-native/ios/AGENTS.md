@@ -2,19 +2,19 @@
 
 ## Overview
 
-iOS half of `@inox/react-native-edot-sdk`. Swift module that bridges JS → `apm-agent-ios` v2.0.0 (via SPM `ElasticApm` product) and OpenTelemetry-Swift v2.2.1 (via `OpenTelemetryProtocolExporter` / `OpenTelemetryProtocolExporterHTTP` / `PersistenceExporter` products). All code is gated on `#if ELASTIC_APM_AVAILABLE` — set by the podspec when `spm_dependency` resolves.
+iOS half of `@inox/react-native-edot-sdk`. Swift module that bridges JS → `apm-agent-ios` v2.0.0 (via SPM `ElasticApm` product), `opentelemetry-swift-core` v2.3.0 (`OpenTelemetryApi` + `OpenTelemetrySdk`), and `opentelemetry-swift` v2.2.1 (`URLSessionInstrumentation` / `OpenTelemetryProtocolExporter` / `OpenTelemetryProtocolExporterHTTP` / `PersistenceExporter`). All code is gated on `#if ELASTIC_APM_AVAILABLE` — set by the podspec when `spm_dependency` resolves.
 
 ## Files
 
-| File | Role |
-|---|---|
-| `EdotReactNative.swift` | Main RN module. `@objc` bridge methods (`initialize`, `startSpan`, `endSpan`, `setSpanAttribute*`, `recordSpanException`, `recordMetric`, `emitLog`, `setUser`, `setSessionAttribute`, `setGlobalAttribute`, `reportJsException`, `setTrackingConsent`, `getCurrentSessionId`). 657 lines. |
-| `EdotReactNative.m` | `RCT_EXTERN_MODULE` Obj-C bridge — exposes Swift selectors to legacy bridge; `RCTLegacyInteropModuleProvider` handles New Arch. |
-| `EdotReactNativeAgent.swift` | Pre-init helper for AppDelegate. Validates resource identity, double-sets `deployment.environment` keys in `OTEL_RESOURCE_ATTRIBUTES`, calls `ElasticApmAgent.start(...)`. |
-| `EdotMeterProviderFactory.swift` | Custom `MeterProvider` (replaces upstream global). Pipeline: `PeriodicMetricReader → Logging? → Persistence → CentralConfigGate → HTTP\|gRPC`. |
-| `EdotCentralConfigMetricExporter.swift` | Wraps metric exporter; drops batches when `CentralConfig().data.recording == false`. |
-| `EdotAppMetrics.swift` | `application.launch.time` histogram via MetricKit (`MXAppLaunchMetric`). Replaces `apm-agent-ios`'s `AppMetrics`. |
-| `EdotSystemMetrics.swift` | `system.cpu.usage` + `system.memory.usage` observable gauges via Mach task APIs. Replaces `apm-agent-ios`'s system metrics. |
+| File                                    | Role                                                                                                                                                                                                                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `EdotReactNative.swift`                 | Main RN module. `@objc` bridge methods (`initialize`, `startSpan`, `endSpan`, `setSpanAttribute*`, `recordSpanException`, `recordMetric`, `emitLog`, `setUser`, `setSessionAttribute`, `setGlobalAttribute`, `reportJsException`, `setTrackingConsent`, `getCurrentSessionId`). 657 lines. |
+| `EdotReactNative.m`                     | `RCT_EXTERN_MODULE` Obj-C bridge — exposes Swift selectors to legacy bridge; `RCTLegacyInteropModuleProvider` handles New Arch.                                                                                                                                                            |
+| `EdotReactNativeAgent.swift`            | Pre-init helper for AppDelegate. Validates resource identity, double-sets `deployment.environment` keys in `OTEL_RESOURCE_ATTRIBUTES`, calls `ElasticApmAgent.start(...)`.                                                                                                                 |
+| `EdotMeterProviderFactory.swift`        | Custom `MeterProvider` (replaces upstream global). Pipeline: `PeriodicMetricReader → Logging? → Persistence → CentralConfigGate → HTTP\|gRPC`.                                                                                                                                             |
+| `EdotCentralConfigMetricExporter.swift` | Wraps metric exporter; drops batches when `CentralConfig().data.recording == false`.                                                                                                                                                                                                       |
+| `EdotAppMetrics.swift`                  | `application.launch.time` histogram via MetricKit (`MXAppLaunchMetric`). Replaces `apm-agent-ios`'s `AppMetrics`.                                                                                                                                                                          |
+| `EdotSystemMetrics.swift`               | `system.cpu.usage` + `system.memory.usage` observable gauges via Mach task APIs. Replaces `apm-agent-ios`'s system metrics.                                                                                                                                                                |
 
 ## Architecture (recent — see commits `8a470ae`, `7165460`, `d3b8050`)
 
@@ -36,6 +36,7 @@ PeriodicMetricReader (60s) → LoggingMetricExporter (debug only) → Persistenc
 ### Transport selection
 
 `(config["exportProtocol"] as? String) == "http" ? .http : .grpc`. **Default is gRPC** to match apm-agent-ios's trace/log default.
+
 - HTTP: `OtlpHttpMetricExporter` → `<serverUrl>/v1/metrics`.
 - gRPC: `OtlpMetricExporter(channel:)` over an NIO `MultiThreadedEventLoopGroup` + `GRPCChannel`. TLS auto-detected from URL scheme. Held in static `grpcResources` for process lifetime — no public teardown (matches apm-agent-ios's NIO group lifetime; OS reclaims at exit).
 
@@ -55,8 +56,9 @@ These rules have a documented "why" in source comments. Removing or relaxing any
 ## Distribution
 
 `EdotReactNative.podspec` (one level up at `packages/react-native/EdotReactNative.podspec`):
+
 - Compiles `ios/**/*.{swift,h,m}` (Swift uses the pod's own module — no bridging header needed).
-- Calls `spm_dependency` for `apm-agent-ios >=2.0.0` (`ElasticApm`) and `opentelemetry-swift >=2.2.1` (`URLSessionInstrumentation`, `OpenTelemetryProtocolExporter`, `OpenTelemetryProtocolExporterHTTP`, `PersistenceExporter`) when the helper is in scope (RN 0.75+).
+- Calls `spm_dependency` for `apm-agent-ios >=2.0.0` (`ElasticApm`), `opentelemetry-swift-core >=2.3.0` (`OpenTelemetryApi`, `OpenTelemetrySdk`), and `opentelemetry-swift >=2.2.1` (`URLSessionInstrumentation`, `OpenTelemetryProtocolExporter`, `OpenTelemetryProtocolExporterHTTP`, `PersistenceExporter`) when the helper is in scope (RN 0.75+). The `opentelemetry-swift-core` declaration is required because `OpenTelemetryApi` and `OpenTelemetrySdk` are products of that separate package — they do not transitively expose as Swift modules through `opentelemetry-swift` consumers.
 - Sets `SWIFT_ACTIVE_COMPILATION_CONDITIONS = ELASTIC_APM_AVAILABLE` on the pod target only.
 
 Example apps' `project.pbxproj` carries **no** SPM refs, EDOT source files, bridging-header settings, or app-level `ELASTIC_APM_AVAILABLE` — `pod install` wires everything onto the pod target.
@@ -66,6 +68,8 @@ Example apps' `project.pbxproj` carries **no** SPM refs, EDOT source files, brid
 - All exporter classes implement `MetricExporter` directly and delegate `flush`/`shutdown`/`getAggregationTemporality`/`getDefaultAggregation` to `inner`.
 - File-scope `private static let log = OSLog(subsystem: "co.elastic.edot", category: "metrics")` — reuse via `os_log(... log: log, ...)`. Don't create new `OSLog` instances per call.
 - `print()` is forbidden — use `os_log` at the appropriate level.
+- **Every `os_log(...)` call MUST be wrapped in `if EdotReactNative.debugEnabledSnapshot() { ... }`** so log emission is gated by the SDK's runtime `debug` flag. The flag is set from `config.debug` during `initialize` and is read thread-safely via the `static debugEnabledSnapshot()` accessor. Use `[EDOT]` (not `[EDOT-METRICS]` or any subsystem-specific prefix) so all log lines share a single grep target.
+- **The `debug` flag has its own dedicated `debugLock` (separate from `stateLock`)**, so `debugEnabledSnapshot()` is safe to call from any code path — including code that already holds `stateLock` (e.g., the os_log gate inside `EdotAppMetrics.init`, which is constructed under `stateLock` in `EdotReactNative.initialize`). **Do not consolidate these locks**; doing so re-introduces the reentrancy deadlock that froze the SDK during the os_log gating rollout (NSLock is not reentrant).
 - Force unwraps (`!`), force casts (`as!`), force tries (`try!`) are forbidden. Use `guard let` / `if let` / `try?`.
 
 ## JS-driven HTTP Spans Get Native Enrichment Automatically
@@ -77,6 +81,22 @@ Example apps' `project.pbxproj` carries **no** SPM refs, EDOT source files, brid
 - **Synthetic parent transaction** — created automatically when an HTTP span has `parentSpanId == nil` (which is the default for `startClientSpan(name, attrs, null)`), so JS HTTP calls appear in APM as `transaction → child span` rather than flat root spans (`ElasticSpanProcessor.swift:102-138`).
 
 **Implication:** anyone updating `startClientSpan` or fetch/XHR attributes must keep `http.url` (or `url.full`) in the emitted attribute set, otherwise `isHttpSpan()` returns false and JS HTTP spans silently lose `network.connection.type` and synthetic-parent wrapping.
+
+## Per-Instrumentation Tracer Scope
+
+`startSpan` and `startClientSpan` accept an optional `instrumentationName: NSString?` (4th arg) so each callsite can pass its own tracer scope. The Swift impl resolves it via `tracer(named:)` which falls back to `"react-native-edot"` when nil/empty. Per-callsite scopes (`@inox/react-native-edot-navigation`, `@inox/react-native-edot-sdk/fetch`, etc.) appear as `instrumentation.scope.name` on the wire so Kibana can filter by signal type. Empty-string `parentSpanId` is treated as no-parent (lookup miss in `activeSpans`). The legacy bridge `.m` declares both methods with `instrumentationName:(NSString * _Nullable)`.
+
+## Native-Only Span Screen Correlation Gap (Deliberate)
+
+JS-controlled spans (fetch/XHR, errors, interactions, manual tracer-provider) carry `screen.name` and `screen.id` via the JS-side `ActiveViewContext` enrichment. Spans started purely from native iOS code — apm-agent-ios's `ApplicationLifecycleInstrumentation` events, `AppMetrics` (responsiveness/hangtime/exits), `CrashReporting`, and any third-party iOS SDK that calls `URLSession` directly — bypass this and **do not** carry `screen.name`.
+
+This is a deliberate gap (design D7 in `openspec/changes/archive/.../align-navigation-with-elastic-mobile-spec/design.md`). opentelemetry-android achieves universal `screen.name` enrichment via `ScreenAttributesSpanProcessor.onStart()` registered globally. The iOS equivalent would require:
+
+1. A new native method `setNativeActiveView({ name, spanId })` plumbed from JS `ActiveViewContext.setActiveView`.
+2. A new `EdotScreenAttributesSpanProcessor` registered alongside `ElasticSpanProcessor` on the global tracer provider.
+3. Cross-thread synchronization since native lifecycle spans can fire from any thread.
+
+Deferred until a concrete third-party-native-URLSession use case appears. Native lifecycle / AppMetrics / Crash spans don't have meaningful screen-correlation semantics anyway (they span screens by definition).
 
 ## Anti-Patterns
 

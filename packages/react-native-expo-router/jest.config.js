@@ -1,7 +1,7 @@
 module.exports = {
   preset: '@react-native/jest-preset',
   modulePathIgnorePatterns: ['<rootDir>/lib/'],
-  testPathIgnorePatterns: ['/node_modules/', '\\.d\\.ts$'],
+  testPathIgnorePatterns: ['/node_modules/', '\\.d\\.ts$', '\\.test\\.js$'],
   transformIgnorePatterns: [
     'node_modules/(?!(react-native|@react-native|@react-native-community|@inox|@testing-library|expo-router)/)',
   ],

@@ -96,6 +96,7 @@ describe('setupXhrInstrumentation', () => {
       'GET api.example.com',
       expect.objectContaining({ 'http.method': 'GET' }),
       null,
+      '@inox/react-native-edot-sdk/xhr',
     );
   });
 
@@ -117,6 +118,7 @@ describe('setupXhrInstrumentation', () => {
         'net.peer.port': 443,
       }),
       null,
+      '@inox/react-native-edot-sdk/xhr',
     );
   });
 

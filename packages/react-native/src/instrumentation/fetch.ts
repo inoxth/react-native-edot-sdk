@@ -61,11 +61,16 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       const peerPort = extractPort(url);
       if (peerPort != null) spanAttributes['net.peer.port'] = peerPort;
       if (activeView) {
-        spanAttributes['view.name'] = activeView.name;
-        spanAttributes['view.id'] = activeView.spanId;
+        spanAttributes['screen.name'] = activeView.name;
+        spanAttributes['screen.id'] = activeView.spanId;
       }
 
-      nativeSpanId = EdotNativeModule.startClientSpan(spanName, spanAttributes, null);
+      nativeSpanId = EdotNativeModule.startClientSpan(
+        spanName,
+        spanAttributes,
+        null,
+        '@inox/react-native-edot-sdk/fetch',
+      );
       trackSpan(nativeSpanId);
 
       const headers = new Headers(init?.headers);
@@ -78,7 +83,11 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       const patchedInit: RequestInit = { ...init, headers };
 
       if (typeof init?.body === 'string') {
-        EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.request_body.size', init.body.length);
+        EdotNativeModule.setSpanAttributeNumber(
+          nativeSpanId,
+          'http.request_body.size',
+          init.body.length,
+        );
       }
 
       const response = await originalFetch(input, patchedInit);
@@ -103,7 +112,7 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
         EdotNativeModule.recordSpanException(nativeSpanId, {
           name: error instanceof Error ? error.name : 'Error',
           message: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack ?? '' : '',
+          stack: error instanceof Error ? (error.stack ?? '') : '',
         });
         EdotNativeModule.endSpan(nativeSpanId, 2);
         untrackSpan(nativeSpanId);

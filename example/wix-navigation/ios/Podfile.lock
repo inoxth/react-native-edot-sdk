@@ -2762,7 +2762,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
-  EdotReactNative: 6cb1766f2046fe4c8c94e3e2f5eaa019d31b1bbe
+  EdotReactNative: 8ef30705c9b2afcca8f48ac9e41e3737559cf01d
   fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
   FBLazyVector: 82d1d7996af4c5850242966eb81e73f9a6dfab1e
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd

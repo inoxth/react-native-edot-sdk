@@ -28,7 +28,7 @@ describe('error handler view correlation', () => {
     ActiveViewContext._resetForTesting();
   });
 
-  it('includes view.name when active view exists', () => {
+  it('includes screen.name and screen.id when active view exists', () => {
     ActiveViewContext.setActiveView({ name: 'CheckoutScreen', spanId: 'vs1' });
 
     reportError(new TypeError('test error'), 'js_uncaught', true);
@@ -36,16 +36,20 @@ describe('error handler view correlation', () => {
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
       'JS Error',
       expect.objectContaining({
-        'view.name': 'CheckoutScreen',
+        'screen.name': 'CheckoutScreen',
+        'screen.id': 'vs1',
       }),
       null,
+      '@inox/react-native-edot-sdk/errors',
     );
   });
 
-  it('omits view.name when no active view', () => {
+  it('omits screen attributes when no active view', () => {
     reportError(new Error('test error'), 'js_uncaught', false);
 
     const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
+    expect(attrs).not.toHaveProperty('screen.name');
+    expect(attrs).not.toHaveProperty('screen.id');
     expect(attrs).not.toHaveProperty('view.name');
   });
 

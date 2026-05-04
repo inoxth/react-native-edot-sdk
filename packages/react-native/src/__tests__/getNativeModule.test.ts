@@ -52,8 +52,10 @@ describe('getNativeModule shape-mismatch', () => {
       EdotNativeModule: { recordMetric: jest.fn() },
     }));
 
-    const { getNativeModule: fresh, resetNativeModuleCacheForTesting: reset } =
-      require('@inox/react-native-edot-shared');
+    const {
+      getNativeModule: fresh,
+      resetNativeModuleCacheForTesting: reset,
+    } = require('@inox/react-native-edot-shared');
     reset();
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -70,8 +72,10 @@ describe('getNativeModule shape-mismatch', () => {
   it('throws when EdotNativeModule property is absent from export', () => {
     jest.doMock('@inox/react-native-edot-sdk/nativeModule', () => ({}));
 
-    const { getNativeModule: fresh, resetNativeModuleCacheForTesting: reset } =
-      require('@inox/react-native-edot-shared');
+    const {
+      getNativeModule: fresh,
+      resetNativeModuleCacheForTesting: reset,
+    } = require('@inox/react-native-edot-shared');
     reset();
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();

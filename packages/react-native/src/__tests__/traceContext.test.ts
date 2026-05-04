@@ -1,4 +1,8 @@
-import { formatTraceparent, generateTraceId, generateSpanId } from '../instrumentation/traceContext';
+import {
+  formatTraceparent,
+  generateTraceId,
+  generateSpanId,
+} from '../instrumentation/traceContext';
 
 describe('traceContext', () => {
   it('generates 32-char hex trace ID', () => {

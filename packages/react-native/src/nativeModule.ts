@@ -59,10 +59,7 @@ function loadNativeModule(): Spec {
       message.includes('Module not found') ||
       message.includes('could not be found');
     if (!isNotFound) {
-      console.warn(
-        '[EDOT] TurboModule load failed, falling back to NativeModules:',
-        sdkError,
-      );
+      console.warn('[EDOT] TurboModule load failed, falling back to NativeModules:', sdkError);
     }
   }
 
@@ -85,13 +82,21 @@ const loadedModule = loadNativeModule();
 // Also: never pass explicit JS `null` for parentSpanId across the bridge.
 // RCTBridge (Old Architecture) converts JS `null` → NSNull, which fails when
 // the native side expects an optional NSString. Omitting the argument entirely
-// (2-arg call) maps `undefined` → nil, which both architectures accept.
+// (lower-arity call) maps `undefined` → nil, which both architectures accept.
+//
+// When `instrumentationName` is provided but `parentSpanId` is not, we pass an
+// empty string for the absent parentSpanId. Native code treats unknown / empty
+// span IDs as "no parent" via the registry lookup miss path.
 
 const startSpanWrapper = function (
   name: string,
   attributes: Record<string, unknown>,
   parentSpanId?: string | null,
+  instrumentationName?: string | null,
 ): string {
+  if (instrumentationName != null) {
+    return loadedModule.startSpan(name, attributes, parentSpanId ?? '', instrumentationName);
+  }
   if (parentSpanId == null) {
     return (loadedModule as any).startSpan(name, attributes);
   }
@@ -102,7 +107,11 @@ const startClientSpanWrapper = function (
   name: string,
   attributes: Record<string, unknown>,
   parentSpanId?: string | null,
+  instrumentationName?: string | null,
 ): string {
+  if (instrumentationName != null) {
+    return loadedModule.startClientSpan(name, attributes, parentSpanId ?? '', instrumentationName);
+  }
   if (parentSpanId == null) {
     return (loadedModule as any).startClientSpan(name, attributes);
   }

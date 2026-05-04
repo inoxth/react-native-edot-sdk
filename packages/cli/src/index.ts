@@ -4,10 +4,7 @@ import { uploadSourcemap } from './upload-sourcemap';
 
 const program = new Command();
 
-program
-  .name('edot')
-  .description('EDOT React Native CLI')
-  .version('0.1.0');
+program.name('edot').description('EDOT React Native CLI').version('0.1.0');
 
 program
   .command('upload-sourcemap')
@@ -19,26 +16,24 @@ program
   .requiredOption('--sourcemap-path <path>', 'Path to the source map file')
   .option('--secret-token <token>', 'Secret token for authentication')
   .option('--api-key <key>', 'API key for authentication')
-  .action(async (opts: {
-    serverUrl: string;
-    serviceName: string;
-    serviceVersion: string;
-    bundlePath: string;
-    sourcemapPath: string;
-    secretToken?: string;
-    apiKey?: string;
-  }) => {
-    try {
-      await uploadSourcemap(opts);
-      console.log(
-        `Source map uploaded for ${opts.serviceName}@${opts.serviceVersion}`,
-      );
-    } catch (err) {
-      console.error(
-        err instanceof Error ? err.message : String(err),
-      );
-      process.exit(1);
-    }
-  });
+  .action(
+    async (opts: {
+      serverUrl: string;
+      serviceName: string;
+      serviceVersion: string;
+      bundlePath: string;
+      sourcemapPath: string;
+      secretToken?: string;
+      apiKey?: string;
+    }) => {
+      try {
+        await uploadSourcemap(opts);
+        console.log(`Source map uploaded for ${opts.serviceName}@${opts.serviceVersion}`);
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : String(err));
+        process.exit(1);
+      }
+    },
+  );
 
 program.parse();

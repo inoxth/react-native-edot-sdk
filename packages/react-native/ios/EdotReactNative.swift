@@ -61,9 +61,17 @@ class EdotReactNative: NSObject {
   private static let stateLock = NSLock()
   private static var isInitialized = false
   private static var isInitializing = false
-  private static var debugEnabled = false
   private static var userAttributesSpanScope: UserAttributesSpanScope = .idOnly
   private static var trackingConsent: TrackingConsent = .granted
+
+  /// Dedicated lock for the `debug` flag. Decoupled from `stateLock` so that
+  /// `debugEnabledSnapshot()` can be called from any code path — including
+  /// code that already holds `stateLock` (e.g., the os_log gate inside
+  /// `EdotAppMetrics.init`, which is constructed under `stateLock`). Sharing
+  /// `stateLock` would re-introduce a self-deadlock since `NSLock` is not
+  /// reentrant.
+  private static let debugLock = NSLock()
+  private static var _debugEnabled = false
 
   private static func emissionAllowed() -> Bool {
     stateLock.lock()
@@ -97,8 +105,14 @@ class EdotReactNative: NSObject {
   private static var sessionAttributes: [String: AttributeValue] = [:]
   private static var globalAttributes: [String: AttributeValue] = [:]
 
-  private var tracer: any Tracer {
-    OpenTelemetry.instance.tracerProvider.get(instrumentationName: "react-native-edot")
+  private func tracer(named instrumentationName: String?) -> any Tracer {
+    let resolved: String
+    if let name = instrumentationName, !name.isEmpty {
+      resolved = name
+    } else {
+      resolved = "react-native-edot"
+    }
+    return OpenTelemetry.instance.tracerProvider.get(instrumentationName: resolved)
   }
 
   private static func readAttributes() -> (global: [String: AttributeValue],
@@ -148,12 +162,13 @@ class EdotReactNative: NSObject {
       return
     }
     EdotReactNative.isInitializing = true
-    EdotReactNative.debugEnabled = config["debug"] as? Bool ?? false
     EdotReactNative.userAttributesSpanScope =
       UserAttributesSpanScope.parse(config["userAttributesIncludeInSpans"] as? String)
     EdotReactNative.trackingConsent =
       TrackingConsent.parse(config["trackingConsent"] as? String)
     EdotReactNative.stateLock.unlock()
+
+    EdotReactNative.setDebugEnabled(config["debug"] as? Bool ?? false)
 
     #if ELASTIC_APM_AVAILABLE
     let serverUrl = config["serverUrl"] as? String ?? ""
@@ -277,7 +292,7 @@ class EdotReactNative: NSObject {
         serverUrl: url,
         secretToken: config["secretToken"] as? String,
         apiKey: config["apiKey"] as? String,
-        debug: EdotReactNative.debugEnabled,
+        debug: EdotReactNative.debugEnabledSnapshot(),
         transport: metricTransport,
         persistencePreset: config["persistencePreset"] as? String
       )
@@ -392,7 +407,7 @@ class EdotReactNative: NSObject {
     let stack = errorInfo["stack"] as? String ?? ""
     let isFatal = errorInfo["isFatal"] as? Bool ?? false
 
-    let span = tracer.spanBuilder(spanName: "js_error: \(name)").startSpan()
+    let span = tracer(named: nil).spanBuilder(spanName: "js_error: \(name)").startSpan()
     span.setAttribute(key: "exception.type", value: .string(name))
     span.setAttribute(key: "exception.message", value: .string(message))
     span.setAttribute(key: "exception.stacktrace", value: .string(stack))
@@ -407,24 +422,37 @@ class EdotReactNative: NSObject {
   @objc
   func startSpan(_ name: String,
                  attributes: NSDictionary,
-                 parentSpanId: NSString?) -> String {
-    return makeSpan(name: name, attributes: attributes, parentSpanId: parentSpanId, kind: .internal)
+                 parentSpanId: NSString?,
+                 instrumentationName: NSString?) -> String {
+    return makeSpan(name: name,
+                    attributes: attributes,
+                    parentSpanId: parentSpanId,
+                    instrumentationName: instrumentationName,
+                    kind: .internal)
   }
 
   @objc
   func startClientSpan(_ name: String,
                        attributes: NSDictionary,
-                       parentSpanId: NSString?) -> String {
-    return makeSpan(name: name, attributes: attributes, parentSpanId: parentSpanId, kind: .client)
+                       parentSpanId: NSString?,
+                       instrumentationName: NSString?) -> String {
+    return makeSpan(name: name,
+                    attributes: attributes,
+                    parentSpanId: parentSpanId,
+                    instrumentationName: instrumentationName,
+                    kind: .client)
   }
 
   private func makeSpan(name: String,
                         attributes: NSDictionary,
                         parentSpanId: NSString?,
+                        instrumentationName: NSString?,
                         kind: SpanKind) -> String {
     #if ELASTIC_APM_AVAILABLE
     guard EdotReactNative.emissionAllowed() else { return "" }
-    var builder = tracer.spanBuilder(spanName: name).setSpanKind(spanKind: kind)
+    var builder = tracer(named: instrumentationName as String?)
+      .spanBuilder(spanName: name)
+      .setSpanKind(spanKind: kind)
 
     if let parentId = parentSpanId as? String {
       spanLock.lock()
@@ -637,11 +665,16 @@ class EdotReactNative: NSObject {
 
   // MARK: - Helpers
 
-  private static func debugEnabledSnapshot() -> Bool {
-    stateLock.lock()
-    let v = debugEnabled
-    stateLock.unlock()
-    return v
+  static func debugEnabledSnapshot() -> Bool {
+    debugLock.lock()
+    defer { debugLock.unlock() }
+    return _debugEnabled
+  }
+
+  private static func setDebugEnabled(_ value: Bool) {
+    debugLock.lock()
+    _debugEnabled = value
+    debugLock.unlock()
   }
 
   private func debugLog(_ message: String) {

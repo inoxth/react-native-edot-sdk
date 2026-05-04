@@ -20,12 +20,14 @@ src/
 ## Key API
 
 ### Tracing
+
 - `getTracerProvider()` — singleton `TracerProvider`
 - `tracer.startSpan(name, options?)` — creates a span, returns `Span` with `setAttribute()`, `setStatus()`, `recordException()`, `end()`
 - `withSpanContext(parentSpan, fn)` — sets implicit parent for spans created inside `fn`
 - `SpanStatusCode.OK` (1) / `SpanStatusCode.ERROR` (2)
 
 ### Metrics
+
 - `getMeterProvider()` — singleton `MeterProvider`
 - `meter.createCounter(name)` / `meter.createHistogram(name)` / `meter.createUpDownCounter(name)`
 - Each metric type has an `add()` or `record()` method with optional attributes

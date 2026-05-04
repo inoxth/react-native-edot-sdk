@@ -12,11 +12,7 @@ interface UseEdotActionReturn {
 
 export function useEdotAction(): UseEdotActionReturn {
   const trackAction = useCallback(
-    (
-      type: string,
-      name: string,
-      attributes?: Record<string, string | number | boolean>,
-    ): void => {
+    (type: string, name: string, attributes?: Record<string, string | number | boolean>): void => {
       const activeView = ActiveViewContext.getActiveView();
       const merged: Record<string, string | number | boolean> = {
         'user_action.type': type,
@@ -24,7 +20,7 @@ export function useEdotAction(): UseEdotActionReturn {
         ...attributes,
       };
       if (activeView) {
-        merged['view.name'] = activeView.name;
+        merged['screen.name'] = activeView.name;
       }
 
       EdotNativeModule.emitLog('info', `UserAction: ${name}`, merged);

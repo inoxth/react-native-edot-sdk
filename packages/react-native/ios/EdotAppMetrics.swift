@@ -36,11 +36,13 @@ final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
       .build()
     super.init()
     MXMetricManager.shared.add(self)
-    os_log(
-      "[EDOT-METRICS] EdotAppMetrics subscribed to MXMetricManager (delivery cadence ≈ 24h)",
-      log: Self.log,
-      type: .info
-    )
+    if EdotReactNative.debugEnabledSnapshot() {
+      os_log(
+        "[EDOT] EdotAppMetrics subscribed to MXMetricManager (delivery cadence ≈ 24h)",
+        log: Self.log,
+        type: .info
+      )
+    }
   }
 
   deinit {
@@ -48,12 +50,14 @@ final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
   }
 
   func didReceive(_ payloads: [MXMetricPayload]) {
-    os_log(
-      "[EDOT-METRICS] didReceive %{public}d MXMetricPayload(s)",
-      log: Self.log,
-      type: .info,
-      payloads.count
-    )
+    if EdotReactNative.debugEnabledSnapshot() {
+      os_log(
+        "[EDOT] didReceive %{public}d MXMetricPayload(s)",
+        log: Self.log,
+        type: .info,
+        payloads.count
+      )
+    }
     for payload in payloads {
       recordTimeToFirstDraw(metric: payload)
     }
@@ -64,11 +68,13 @@ final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
 
   private func recordTimeToFirstDraw(metric: MXMetricPayload) {
     guard let appLaunchMetrics = metric.applicationLaunchMetrics else {
-      os_log(
-        "[EDOT-METRICS] payload had no applicationLaunchMetrics — skipping",
-        log: Self.log,
-        type: .info
-      )
+      if EdotReactNative.debugEnabledSnapshot() {
+        os_log(
+          "[EDOT] payload had no applicationLaunchMetrics — skipping",
+          log: Self.log,
+          type: .info
+        )
+      }
       return
     }
 
@@ -77,20 +83,24 @@ final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
       .bucketEnumerator
       .allObjects as? [MXHistogramBucket<UnitDuration>]
     else {
-      os_log(
-        "[EDOT-METRICS] histogrammedTimeToFirstDraw bucketEnumerator returned no buckets",
-        log: Self.log,
-        type: .info
-      )
+      if EdotReactNative.debugEnabledSnapshot() {
+        os_log(
+          "[EDOT] histogrammedTimeToFirstDraw bucketEnumerator returned no buckets",
+          log: Self.log,
+          type: .info
+        )
+      }
       return
     }
 
     if buckets.isEmpty {
-      os_log(
-        "[EDOT-METRICS] histogrammedTimeToFirstDraw is empty (no launches captured)",
-        log: Self.log,
-        type: .info
-      )
+      if EdotReactNative.debugEnabledSnapshot() {
+        os_log(
+          "[EDOT] histogrammedTimeToFirstDraw is empty (no launches captured)",
+          log: Self.log,
+          type: .info
+        )
+      }
       return
     }
 
@@ -112,13 +122,15 @@ final class EdotAppMetrics: NSObject, MXMetricManagerSubscriber {
     }
     histogram = instrument
 
-    os_log(
-      "[EDOT-METRICS] application.launch.time recorded %{public}d sample(s) across %{public}d bucket(s)",
-      log: Self.log,
-      type: .info,
-      totalRecorded,
-      buckets.count
-    )
+    if EdotReactNative.debugEnabledSnapshot() {
+      os_log(
+        "[EDOT] application.launch.time recorded %{public}d sample(s) across %{public}d bucket(s)",
+        log: Self.log,
+        type: .info,
+        totalRecorded,
+        buckets.count
+      )
+    }
   }
 
   /// Inner bucket boundaries for OTel histogram advice — the upper bound of

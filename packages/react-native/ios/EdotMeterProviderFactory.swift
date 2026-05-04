@@ -79,9 +79,9 @@ enum EdotMeterProviderFactory {
       ? LoggingMetricExporter(inner: persisted, endpoint: logEndpoint)
       : persisted
 
-    if debug {
+    if EdotReactNative.debugEnabledSnapshot() {
       os_log(
-        "[EDOT-METRICS] build endpoint=%{public}@ interval=%.0fs transport=%{public}@",
+        "[EDOT] build endpoint=%{public}@ interval=%.0fs transport=%{public}@",
         log: log,
         type: .info,
         logEndpoint.absoluteString,
@@ -248,32 +248,40 @@ private final class LoggingMetricExporter: MetricExporter {
   }
 
   func export(metrics: [MetricData]) -> ExportResult {
-    os_log(
-      "[EDOT-METRICS] export → %{public}d metrics → %{public}@",
-      log: log,
-      type: .info,
-      metrics.count,
-      endpoint.absoluteString
-    )
+    if EdotReactNative.debugEnabledSnapshot() {
+      os_log(
+        "[EDOT] export → %{public}d metrics → %{public}@",
+        log: log,
+        type: .info,
+        metrics.count,
+        endpoint.absoluteString
+      )
+    }
     let result = inner.export(metrics: metrics)
-    os_log(
-      "[EDOT-METRICS] export ← %{public}@",
-      log: log,
-      type: .info,
-      String(describing: result)
-    )
+    if EdotReactNative.debugEnabledSnapshot() {
+      os_log(
+        "[EDOT] export ← %{public}@",
+        log: log,
+        type: .info,
+        String(describing: result)
+      )
+    }
     return result
   }
 
   func flush() -> ExportResult {
     let result = inner.flush()
-    os_log("[EDOT-METRICS] flush ← %{public}@", log: log, type: .info, String(describing: result))
+    if EdotReactNative.debugEnabledSnapshot() {
+      os_log("[EDOT] flush ← %{public}@", log: log, type: .info, String(describing: result))
+    }
     return result
   }
 
   func shutdown() -> ExportResult {
     let result = inner.shutdown()
-    os_log("[EDOT-METRICS] shutdown ← %{public}@", log: log, type: .info, String(describing: result))
+    if EdotReactNative.debugEnabledSnapshot() {
+      os_log("[EDOT] shutdown ← %{public}@", log: log, type: .info, String(describing: result))
+    }
     return result
   }
 

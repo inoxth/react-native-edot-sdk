@@ -2122,7 +2122,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  EdotReactNative: aaeeadf6fdaed859f9c5fe872b9043f9bf3beca2
+  EdotReactNative: 4ea0fe2805b78cc4a7e92eb9bbf5483c6d8d3ced
   FBLazyVector: ed7eadee1965b0b918ca9d0f2c2328f7eb3fd095
   hermes-engine: 3d0d7444675878a3067284813d9b4f45f065eb14
   RCTDeprecation: d69f6f20a20f669a0aa3115ab1109f28e98ae03e

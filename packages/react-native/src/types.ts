@@ -78,6 +78,7 @@ export interface EdotConfig {
   instrumentNetworkRequests?: boolean;
   instrumentJsErrors?: boolean;
   instrumentAppStartup?: boolean;
+  appStateTracking?: boolean;
 
   tracePropagationTargets?: (string | RegExp)[];
   ignoreUrls?: (string | RegExp)[];

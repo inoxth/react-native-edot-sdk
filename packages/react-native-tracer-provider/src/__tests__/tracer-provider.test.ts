@@ -68,11 +68,7 @@ describe('Tracer', () => {
 
     tracer.startSpan('child', { parentSpan: parent });
 
-    expect(mockNativeModule.startSpan).toHaveBeenLastCalledWith(
-      'child',
-      {},
-      parentId,
-    );
+    expect(mockNativeModule.startSpan).toHaveBeenLastCalledWith('child', {}, parentId);
   });
 });
 
@@ -225,11 +221,7 @@ describe('withSpanContext', () => {
       tracer.startSpan('child');
     });
 
-    expect(mockNativeModule.startSpan).toHaveBeenLastCalledWith(
-      'child',
-      {},
-      parentId,
-    );
+    expect(mockNativeModule.startSpan).toHaveBeenLastCalledWith('child', {}, parentId);
   });
 
   it('restores previous context after execution', () => {
@@ -254,11 +246,7 @@ describe('withSpanContext', () => {
       tracer.startSpan('asyncChild');
     });
 
-    expect(mockNativeModule.startSpan).toHaveBeenLastCalledWith(
-      'asyncChild',
-      {},
-      parentId,
-    );
+    expect(mockNativeModule.startSpan).toHaveBeenLastCalledWith('asyncChild', {}, parentId);
   });
 
   it('two concurrent async calls do not corrupt each other — stack empty after each suspends', async () => {
@@ -275,14 +263,20 @@ describe('withSpanContext', () => {
     const taskA = withSpanContext(spanA, async () => {
       await Promise.resolve();
       const child = tracer.startSpan('childA');
-      results.push({ name: 'childA', parentId: mockNativeModule.startSpan.mock.lastCall?.[2] ?? null });
+      results.push({
+        name: 'childA',
+        parentId: mockNativeModule.startSpan.mock.lastCall?.[2] ?? null,
+      });
       child.end();
     });
 
     const taskB = withSpanContext(spanB, async () => {
       await Promise.resolve();
       const child = tracer.startSpan('childB');
-      results.push({ name: 'childB', parentId: mockNativeModule.startSpan.mock.lastCall?.[2] ?? null });
+      results.push({
+        name: 'childB',
+        parentId: mockNativeModule.startSpan.mock.lastCall?.[2] ?? null,
+      });
       child.end();
     });
 

@@ -29,9 +29,9 @@ describe('view correlation on fetch', () => {
   let teardown: () => void;
 
   beforeEach(() => {
-    global.fetch = jest.fn().mockResolvedValue(
-      new Response('ok', { status: 200, headers: { 'content-length': '2' } }),
-    );
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue(new Response('ok', { status: 200, headers: { 'content-length': '2' } }));
     ActiveViewContext._resetForTesting();
     jest.clearAllMocks();
   });
@@ -40,7 +40,7 @@ describe('view correlation on fetch', () => {
     teardown?.();
   });
 
-  it('attaches view attributes when active view exists', async () => {
+  it('attaches screen attributes when active view exists', async () => {
     ActiveViewContext.setActiveView({ name: 'ProductDetail', spanId: 'view-span-123' });
     teardown = setupFetchInstrumentation(baseConfig);
 
@@ -49,19 +49,22 @@ describe('view correlation on fetch', () => {
     expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
-        'view.name': 'ProductDetail',
-        'view.id': 'view-span-123',
+        'screen.name': 'ProductDetail',
+        'screen.id': 'view-span-123',
       }),
       null,
+      '@inox/react-native-edot-sdk/fetch',
     );
   });
 
-  it('omits view attributes when no active view', async () => {
+  it('omits screen attributes when no active view', async () => {
     teardown = setupFetchInstrumentation(baseConfig);
 
     await global.fetch('https://api.example.com/products/42');
 
     const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
+    expect(attrs['screen.name']).toBeUndefined();
+    expect(attrs['screen.id']).toBeUndefined();
     expect(attrs['view.name']).toBeUndefined();
     expect(attrs['view.id']).toBeUndefined();
   });
@@ -101,7 +104,7 @@ describe('view correlation on XHR', () => {
     teardown?.();
   });
 
-  it('attaches view attributes when active view exists', () => {
+  it('attaches screen attributes when active view exists', () => {
     ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'view-span-456' });
     teardown = setupXhrInstrumentation(baseConfig);
 
@@ -112,14 +115,15 @@ describe('view correlation on XHR', () => {
     expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
-        'view.name': 'HomeScreen',
-        'view.id': 'view-span-456',
+        'screen.name': 'HomeScreen',
+        'screen.id': 'view-span-456',
       }),
       null,
+      '@inox/react-native-edot-sdk/xhr',
     );
   });
 
-  it('omits view attributes when no active view', () => {
+  it('omits screen attributes when no active view', () => {
     teardown = setupXhrInstrumentation(baseConfig);
 
     const xhr = new XMLHttpRequest();
@@ -127,6 +131,8 @@ describe('view correlation on XHR', () => {
     xhr.send();
 
     const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
+    expect(attrs['screen.name']).toBeUndefined();
+    expect(attrs['screen.id']).toBeUndefined();
     expect(attrs['view.name']).toBeUndefined();
     expect(attrs['view.id']).toBeUndefined();
   });
@@ -138,7 +144,7 @@ describe('view correlation on errors', () => {
     jest.clearAllMocks();
   });
 
-  it('attaches view.name when active view exists', () => {
+  it('attaches screen.name and screen.id when active view exists', () => {
     ActiveViewContext.setActiveView({ name: 'CheckoutScreen', spanId: 'view-span-789' });
 
     reportError(new Error('test error'), 'js_uncaught', false);
@@ -146,16 +152,20 @@ describe('view correlation on errors', () => {
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
       'JS Error',
       expect.objectContaining({
-        'view.name': 'CheckoutScreen',
+        'screen.name': 'CheckoutScreen',
+        'screen.id': 'view-span-789',
       }),
       null,
+      '@inox/react-native-edot-sdk/errors',
     );
   });
 
-  it('omits view.name when no active view', () => {
+  it('omits screen attributes when no active view', () => {
     reportError(new Error('test error'), 'js_uncaught', false);
 
     const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
+    expect(attrs['screen.name']).toBeUndefined();
+    expect(attrs['screen.id']).toBeUndefined();
     expect(attrs['view.name']).toBeUndefined();
   });
 });

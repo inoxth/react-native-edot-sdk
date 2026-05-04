@@ -84,11 +84,16 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
       const peerPort = extractPort(url);
       if (peerPort != null) spanAttributes['net.peer.port'] = peerPort;
       if (activeView) {
-        spanAttributes['view.name'] = activeView.name;
-        spanAttributes['view.id'] = activeView.spanId;
+        spanAttributes['screen.name'] = activeView.name;
+        spanAttributes['screen.id'] = activeView.spanId;
       }
 
-      const nativeSpanId = EdotNativeModule.startClientSpan(spanName, spanAttributes, null);
+      const nativeSpanId = EdotNativeModule.startClientSpan(
+        spanName,
+        spanAttributes,
+        null,
+        '@inox/react-native-edot-sdk/xhr',
+      );
       state.spanId = nativeSpanId;
       trackSpan(nativeSpanId);
 

@@ -2322,7 +2322,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  EdotReactNative: c08f009db570e3f4abe6e9a0ef10d1bd669ab260
+  EdotReactNative: 8542eb6782ebc75d64ec9208586eab6ab4dfe18d
   EXConstants: bfe4ae4e5d882e2e0b130e049665d0af4f4cc1b8
   Expo: a43f44ff1e3a1c73fcabba766e13a38dea22236a
   ExpoAsset: dc4f25f84886120f82b23233bba563ea7afa88f5

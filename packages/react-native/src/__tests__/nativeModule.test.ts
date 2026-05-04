@@ -134,7 +134,9 @@ describe('nativeModule', () => {
   // F-25: module-not-found errors fall through silently to NativeModules
   it('silently falls through to NativeModules when TurboModule is not found', () => {
     const notFound = new Error("Cannot find module './NativeEdotReactNative'");
-    jest.doMock('../NativeEdotReactNative', () => { throw notFound; });
+    jest.doMock('../NativeEdotReactNative', () => {
+      throw notFound;
+    });
 
     const fallback = { startSpan: jest.fn().mockReturnValue('span-1'), endSpan: jest.fn() };
     NativeModules.EdotReactNative = fallback;
@@ -319,10 +321,16 @@ describe('nativeModule', () => {
       NativeModules.EdotReactNative = makeFullModule(mockStartClientSpan);
 
       const { EdotNativeModule } = require('../nativeModule');
-      const result = EdotNativeModule.startClientSpan('GET api.example.com', { 'http.method': 'GET' }, null);
+      const result = EdotNativeModule.startClientSpan(
+        'GET api.example.com',
+        { 'http.method': 'GET' },
+        null,
+      );
 
       expect(mockStartClientSpan).toHaveBeenCalledTimes(1);
-      expect(mockStartClientSpan).toHaveBeenCalledWith('GET api.example.com', { 'http.method': 'GET' });
+      expect(mockStartClientSpan).toHaveBeenCalledWith('GET api.example.com', {
+        'http.method': 'GET',
+      });
       expect(result).toBe('client-1');
     });
 

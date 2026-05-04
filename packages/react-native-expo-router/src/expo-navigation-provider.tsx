@@ -6,6 +6,8 @@ interface ExpoRouterModule {
   usePathname(): string;
 }
 
+const INSTRUMENTATION_NAME = '@inox/react-native-edot-expo-router';
+
 function resolveUsePathname(): () => string {
   try {
     const mod: unknown = require('expo-router');
@@ -30,44 +32,61 @@ export function EdotExpoNavigationProvider({
   children,
 }: EdotExpoNavigationProviderProps): React.ReactElement {
   const currentSpanIdRef = useRef<string | null>(null);
-  const previousPathnameRef = useRef<string | null>(null);
+  const previousScreenNameRef = useRef<string | null>(null);
+  const latestScreenNameRef = useRef<string | null>(null);
 
   const pathname = usePathnameHook();
   const displayName = screenNameMapper ? screenNameMapper(pathname) : pathname;
+  latestScreenNameRef.current = displayName;
 
   useEffect(() => {
-    if (previousPathnameRef.current === pathname) return;
+    const startSpanForCurrentScreen = (): void => {
+      const screenName = latestScreenNameRef.current;
+      if (!screenName) return;
 
-    if (currentSpanIdRef.current) {
-      getNativeModule().endSpan(currentSpanIdRef.current, 1);
-    }
+      if (currentSpanIdRef.current) {
+        getNativeModule().endSpan(currentSpanIdRef.current, 1);
+        currentSpanIdRef.current = null;
+      }
 
-    const attributes: Record<string, string> = {
-      'view.name': displayName,
-      'view.url': pathname,
-      'view.transition_type': previousPathnameRef.current ? 'push' : 'initial',
+      const attributes: Record<string, string> = {
+        'screen.name': screenName,
+      };
+      if (previousScreenNameRef.current && previousScreenNameRef.current !== screenName) {
+        attributes['last.screen.name'] = previousScreenNameRef.current;
+      }
+
+      const spanId = getNativeModule().startSpan(
+        screenName,
+        attributes,
+        null,
+        INSTRUMENTATION_NAME,
+      );
+
+      currentSpanIdRef.current = spanId;
+      previousScreenNameRef.current = screenName;
+
+      ActiveViewContext.setActiveView({ name: screenName, spanId });
     };
-    if (previousPathnameRef.current) {
-      attributes['view.previous'] = previousPathnameRef.current;
+
+    if (previousScreenNameRef.current !== displayName) {
+      startSpanForCurrentScreen();
     }
 
-    const spanId = getNativeModule().startSpan(
-      `Navigation: ${displayName}`,
-      attributes,
-      null,
-    );
-
-    currentSpanIdRef.current = spanId;
-    previousPathnameRef.current = pathname;
-
-    ActiveViewContext.setActiveView({ name: displayName, spanId });
+    const unregisterReEmitter = ActiveViewContext.registerForegroundReEmitter(() => {
+      previousScreenNameRef.current = null;
+      startSpanForCurrentScreen();
+    });
 
     return () => {
-      getNativeModule().endSpan(spanId, 1);
-      currentSpanIdRef.current = null;
+      unregisterReEmitter();
+      if (currentSpanIdRef.current) {
+        getNativeModule().endSpan(currentSpanIdRef.current, 1);
+        currentSpanIdRef.current = null;
+      }
       ActiveViewContext.clearActiveView();
     };
-  }, [pathname, displayName]);
+  }, [displayName]);
 
   return React.createElement(React.Fragment, null, children);
 }

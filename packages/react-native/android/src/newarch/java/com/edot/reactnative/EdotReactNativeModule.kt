@@ -30,8 +30,19 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     override fun reportJsException(errorInfo: ReadableMap) = impl.reportJsException(errorInfo)
 
-    override fun startSpan(name: String, attributes: ReadableMap, parentSpanId: String?): String =
-        impl.startSpan(name, attributes, parentSpanId)
+    override fun startSpan(
+        name: String,
+        attributes: ReadableMap,
+        parentSpanId: String?,
+        instrumentationName: String?,
+    ): String = impl.startSpan(name, attributes, parentSpanId, instrumentationName)
+
+    override fun startClientSpan(
+        name: String,
+        attributes: ReadableMap,
+        parentSpanId: String?,
+        instrumentationName: String?,
+    ): String = impl.startClientSpan(name, attributes, parentSpanId, instrumentationName)
 
     override fun endSpan(spanId: String, statusCode: Double) = impl.endSpan(spanId, statusCode)
 

@@ -44,6 +44,7 @@ react-native.config.js          # Pod / Gradle autolinking hints
 ## Subpath Exports
 
 This package exposes subpath imports used by sibling packages:
+
 - `@inox/react-native-edot-sdk/nativeModule` — `EdotNativeModule` bridge
 - `@inox/react-native-edot-sdk/active-view-context` — `ActiveViewContext` re-export
 
@@ -52,6 +53,7 @@ This package exposes subpath imports used by sibling packages:
 ### Initialization Flow
 
 `EdotReactNative.initialize(config)`:
+
 1. Validates config (required fields, resource-identity chars, token mutual exclusivity, sampling range) → 2. Flattens platform overrides onto the native payload → 3. Calls native `initialize()` → 4. Sets up JS instrumentation (fetch, XHR, errors, startup) based on `EDOT_DEFAULTS`-merged toggles, plus unconditional `setupSpanCleanup` → 5. Stores teardown functions; `_resetForTesting()` drains them.
 
 On iOS, `EdotReactNativeAgent.preInitialize(...)` (from `ios/EdotReactNativeAgent.swift`) can be called from AppDelegate before the JS bridge loads. It enforces the same resource-identity rules as JS `validateConfig` and injects `service.name`/`service.version`/`deployment.environment` into the OTel `Resource` via `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. If `isPreInitialized`, the JS-side `initialize()` skips `ElasticApmAgent.start` and only records config for the bridge.
@@ -67,13 +69,26 @@ The native spec (`NativeEdotReactNative.ts`) exposes three typed setters: `setSp
 ### Native Module Loading
 
 `nativeModule.ts` fallback chain:
+
 1. Check `global.__turboModuleProxy` → load TurboModule via `NativeEdotReactNative.ts`
 2. Fall back to `NativeModules.EdotReactNative` (old bridge)
 3. Return no-op Proxy (all calls silently succeed — `startSpan()` returns `''`)
 
 #### Native Module Wrapper (startSpan / startClientSpan Proxy)
 
-The exported `EdotNativeModule` is a `Proxy` around the loaded native module. It intercepts both `startSpan` and `startClientSpan` to avoid passing `null`/`undefined` `parentSpanId` values across the RCTBridge (RCTBridge serializes JS `null` as `NSNull`, which cannot be converted to `NSString`). When `parentSpanId` is nullish, the wrapper calls the 2-arg overload; otherwise it passes all 3 args.
+The exported `EdotNativeModule` is a `Proxy` around the loaded native module. It intercepts both `startSpan` and `startClientSpan` to avoid passing `null`/`undefined` `parentSpanId` values across the RCTBridge (RCTBridge serializes JS `null` as `NSNull`, which cannot be converted to `NSString`). When `parentSpanId` and `instrumentationName` are both nullish, the wrapper calls the 2-arg overload. When only `parentSpanId` is provided, 3-arg overload. When `instrumentationName` is provided, the wrapper passes `parentSpanId ?? ''` for absent parent (native treats unknown/empty parent as no-parent via the registry lookup miss path) plus `instrumentationName` as a 4th arg.
+
+Both `startSpan` and `startClientSpan` accept an optional `instrumentationName: string | null` 4th parameter. Default `"react-native-edot"` when omitted. Per-callsite scopes:
+
+| Callsite                             | Scope                                    |
+| ------------------------------------ | ---------------------------------------- |
+| `react-native-navigation` plugin     | `@inox/react-native-edot-navigation`     |
+| `react-native-expo-router` plugin    | `@inox/react-native-edot-expo-router`    |
+| `react-native-wix-navigation` plugin | `@inox/react-native-edot-wix-navigation` |
+| `instrumentation/fetch.ts`           | `@inox/react-native-edot-sdk/fetch`      |
+| `instrumentation/xhr.ts`             | `@inox/react-native-edot-sdk/xhr`        |
+| `instrumentation/errors.ts`          | `@inox/react-native-edot-sdk/errors`     |
+| `instrumentation/startup.ts`         | `@inox/react-native-edot-sdk/startup`    |
 
 `startSpan` creates `kind=INTERNAL` spans (used by errors, startup, view, action, custom JS-driven spans). `startClientSpan` creates `kind=CLIENT` spans and is used by `fetch.ts` / `xhr.ts` so HTTP spans match what apm-agent-ios's native `URLSessionInstrumentation` emits.
 
@@ -87,6 +102,14 @@ Resource attributes (`service.name`, `service.version`, `os.*`, `device.id`, `pr
 
 The iOS module replaces apm-agent-ios's global `MeterProvider` with a resource-aware one (`EdotMeterProviderFactory`). Pipeline: `PeriodicMetricReader (60s) → Logging? → Persistence (Caches/elastic/) → CentralConfigGate → HTTP|gRPC`. Default transport gRPC; `exportProtocol: "http"` overrides. `EdotAppMetrics` (MetricKit `application.launch.time`) and `EdotSystemMetrics` (CPU/memory observable gauges) replace apm-agent-ios's reimplementations because they emit through the resource-less global. The `CentralConfigGate` (`EdotCentralConfigMetricExporter`) is a deliberate divergence — upstream v2.0.0 doesn't gate metrics on the central-config `recording` flag. See `ios/AGENTS.md` for the full set of load-bearing rules.
 
+### App-State Tracking
+
+`instrumentation/app-state.ts` installs one `AppState.addEventListener('change', ...)` listener (gated by `EDOT_DEFAULTS.appStateTracking: true`). On `'background'`: ends the active screen-lifetime span via `EdotNativeModule.endSpan(spanId, 1)` and clears `ActiveViewContext`. On `'inactive'`: no-op. On `'active'` after a real background: invokes `ActiveViewContext.notifyForegroundReEmitters()` so each navigation plugin replays its current screen with `previousScreenName = null` (resulting span omits `last.screen.name`). The handler tracks `wasBackgrounded` internally so a transient `inactive → active` (Face ID resolved) does not trigger re-emit.
+
+### Screen Correlation on Network/Error/Interaction Spans
+
+`fetch.ts`, `xhr.ts`, `errors.ts`, and the interactions HOC/hook read `ActiveViewContext.getActiveView()` at span-start time and stamp `screen.name` and (for fetch/xhr/errors) `screen.id` on the span. Mirrors opentelemetry-android's `ScreenAttributesSpanProcessor` behavior at the JS layer (iOS apm-agent has no equivalent processor). `screen.id` is an RN-specific value-add — Android upstream only emits `screen.name`.
+
 ### HTTP Span Attribute Convention
 
 `fetch.ts` and `xhr.ts` emit **legacy** HTTP semantic-conv attribute names (`http.method`, `http.url`, `http.status_code`, `http.scheme`, `http.target`, `net.peer.name`, `net.peer.port`, `http.request_body.size`, `http.response_body.size`) — NOT the v1.23 stable names (`http.request.method`, `url.full`, `http.response.status_code`, …). This matches:
@@ -99,6 +122,7 @@ This alignment lets apm-agent-ios's `ElasticSpanProcessor` recognize JS HTTP spa
 ### Configuration Surface (recent additions)
 
 JS-callable config knobs that pass through to apm-agent-ios v2.0.0's builder:
+
 - `disableAgent` — fully suppresses native agent startup
 - `persistencePreset: 'default' | 'lowUsage' | 'highVolume'` — tunes `PersistencePerformancePreset`
 - `managementUrl` + `remoteManagement` — separate central-config endpoint
@@ -128,6 +152,7 @@ Each example app's `project.pbxproj` is now free of any `XCRemoteSwiftPackageRef
 ### Android — sourceSet split for New Arch / Old Arch
 
 `build.gradle.kts` reads the `newArchEnabled` Gradle property and adds either `src/newarch/java` or `src/oldarch/java` to the `main` sourceSet. Both directories define the same class name `com.edot.reactnative.EdotReactNativeModule` but extend different base classes:
+
 - Old Arch: `ReactContextBaseJavaModule` with `@ReactMethod` annotations.
 - New Arch: codegen-generated `NativeEdotReactNativeSpec` with `override fun`.
 

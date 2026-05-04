@@ -27,9 +27,9 @@ describe('fetch view correlation', () => {
   let teardown: () => void;
 
   beforeEach(() => {
-    originalFetch = jest.fn().mockResolvedValue(
-      new Response('ok', { status: 200, headers: { 'content-length': '2' } }),
-    );
+    originalFetch = jest
+      .fn()
+      .mockResolvedValue(new Response('ok', { status: 200, headers: { 'content-length': '2' } }));
     global.fetch = originalFetch;
     jest.clearAllMocks();
     ActiveViewContext._resetForTesting();
@@ -40,7 +40,7 @@ describe('fetch view correlation', () => {
     ActiveViewContext._resetForTesting();
   });
 
-  it('includes view.name and view.id when active view exists', async () => {
+  it('includes screen.name and screen.id when active view exists', async () => {
     ActiveViewContext.setActiveView({ name: 'ProductDetailScreen', spanId: 'vs1' });
     teardown = setupFetchInstrumentation(baseConfig);
 
@@ -49,10 +49,11 @@ describe('fetch view correlation', () => {
     expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
-        'view.name': 'ProductDetailScreen',
-        'view.id': 'vs1',
+        'screen.name': 'ProductDetailScreen',
+        'screen.id': 'vs1',
       }),
       null,
+      '@inox/react-native-edot-sdk/fetch',
     );
   });
 
@@ -62,6 +63,8 @@ describe('fetch view correlation', () => {
     await global.fetch('https://api.example.com/data');
 
     const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
+    expect(attrs).not.toHaveProperty('screen.name');
+    expect(attrs).not.toHaveProperty('screen.id');
     expect(attrs).not.toHaveProperty('view.name');
     expect(attrs).not.toHaveProperty('view.id');
   });
@@ -86,10 +89,11 @@ describe('fetch view correlation', () => {
     expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       'GET api.example.com',
       expect.objectContaining({
-        'view.name': 'ScreenA',
-        'view.id': 'vs-a',
+        'screen.name': 'ScreenA',
+        'screen.id': 'vs-a',
       }),
       null,
+      '@inox/react-native-edot-sdk/fetch',
     );
   });
 });

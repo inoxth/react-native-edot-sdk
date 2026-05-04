@@ -1,7 +1,9 @@
 import type { EdotConfig } from '../types';
 import { EdotNativeModule } from '../nativeModule';
 
-type IdleHandle = { kind: 'idle'; id: number } | { kind: 'timeout'; id: ReturnType<typeof setTimeout> };
+type IdleHandle =
+  | { kind: 'idle'; id: number }
+  | { kind: 'timeout'; id: ReturnType<typeof setTimeout> };
 
 function scheduleIdle(cb: () => void): IdleHandle {
   if (typeof requestIdleCallback === 'function') {
@@ -22,11 +24,20 @@ export function setupStartupTracing(_config: EdotConfig): () => void {
   const jsBundleLoadedAt = Date.now();
 
   try {
-    const parentSpanId = EdotNativeModule.startSpan('AppStartup: cold', {
-      'app.startup.type': 'cold',
-    }, null);
+    const startupScope = '@inox/react-native-edot-sdk/startup';
+    const parentSpanId = EdotNativeModule.startSpan(
+      'AppStartup: cold',
+      { 'app.startup.type': 'cold' },
+      null,
+      startupScope,
+    );
 
-    const jsBundleSpanId = EdotNativeModule.startSpan('AppStartup: js_bundle_load', {}, parentSpanId);
+    const jsBundleSpanId = EdotNativeModule.startSpan(
+      'AppStartup: js_bundle_load',
+      {},
+      parentSpanId,
+      startupScope,
+    );
     EdotNativeModule.setSpanAttributeNumber(
       jsBundleSpanId,
       'app.startup.js_bundle_load_ms',
@@ -34,7 +45,12 @@ export function setupStartupTracing(_config: EdotConfig): () => void {
     );
     EdotNativeModule.endSpan(jsBundleSpanId, 1);
 
-    const firstRenderSpanId = EdotNativeModule.startSpan('AppStartup: first_render', {}, parentSpanId);
+    const firstRenderSpanId = EdotNativeModule.startSpan(
+      'AppStartup: first_render',
+      {},
+      parentSpanId,
+      startupScope,
+    );
 
     const handle = scheduleIdle(() => {
       try {

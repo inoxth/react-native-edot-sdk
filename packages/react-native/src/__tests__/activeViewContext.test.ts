@@ -80,4 +80,79 @@ describe('ActiveViewContext', () => {
 
     warnSpy.mockRestore();
   });
+
+  describe('foreground re-emitter registry', () => {
+    it('invokes a registered re-emitter on notifyForegroundReEmitters', () => {
+      const fn = jest.fn();
+      ActiveViewContext.registerForegroundReEmitter(fn);
+
+      ActiveViewContext.notifyForegroundReEmitters();
+
+      expect(fn).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not invoke an unregistered re-emitter', () => {
+      const fn = jest.fn();
+      const unregister = ActiveViewContext.registerForegroundReEmitter(fn);
+      unregister();
+
+      ActiveViewContext.notifyForegroundReEmitters();
+
+      expect(fn).not.toHaveBeenCalled();
+    });
+
+    it('unregister is idempotent', () => {
+      const fn = jest.fn();
+      const unregister = ActiveViewContext.registerForegroundReEmitter(fn);
+      unregister();
+      unregister();
+
+      ActiveViewContext.notifyForegroundReEmitters();
+
+      expect(fn).not.toHaveBeenCalled();
+    });
+
+    it('invokes multiple re-emitters in registration order', () => {
+      const order: string[] = [];
+      ActiveViewContext.registerForegroundReEmitter(() => order.push('a'));
+      ActiveViewContext.registerForegroundReEmitter(() => order.push('b'));
+
+      ActiveViewContext.notifyForegroundReEmitters();
+
+      expect(order).toEqual(['a', 'b']);
+    });
+
+    it('a throwing re-emitter does not block subsequent re-emitters', () => {
+      const throwing = jest.fn().mockImplementation(() => {
+        throw new Error('boom');
+      });
+      const good = jest.fn();
+
+      ActiveViewContext.registerForegroundReEmitter(throwing);
+      ActiveViewContext.registerForegroundReEmitter(good);
+
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      ActiveViewContext.notifyForegroundReEmitters();
+
+      expect(throwing).toHaveBeenCalledTimes(1);
+      expect(good).toHaveBeenCalledTimes(1);
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[EDOT] ActiveViewContext foreground re-emitter threw:',
+        expect.any(Error),
+      );
+
+      warnSpy.mockRestore();
+    });
+
+    it('_resetForTesting clears the re-emitter registry', () => {
+      const fn = jest.fn();
+      ActiveViewContext.registerForegroundReEmitter(fn);
+
+      ActiveViewContext._resetForTesting();
+      ActiveViewContext.notifyForegroundReEmitters();
+
+      expect(fn).not.toHaveBeenCalled();
+    });
+  });
 });

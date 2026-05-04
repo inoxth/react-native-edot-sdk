@@ -2,11 +2,16 @@ import { EdotReactNative } from '../EdotReactNative';
 import { EdotNativeModule } from '../nativeModule';
 import type { EdotConfig } from '../types';
 
-jest.mock('../instrumentation/fetch', () => ({ setupFetchInstrumentation: jest.fn(() => jest.fn()) }));
+jest.mock('../instrumentation/fetch', () => ({
+  setupFetchInstrumentation: jest.fn(() => jest.fn()),
+}));
 jest.mock('../instrumentation/xhr', () => ({ setupXhrInstrumentation: jest.fn(() => jest.fn()) }));
 jest.mock('../instrumentation/errors', () => ({ setupErrorHandler: jest.fn(() => jest.fn()) }));
 jest.mock('../instrumentation/startup', () => ({ setupStartupTracing: jest.fn(() => jest.fn()) }));
 jest.mock('../instrumentation/spanCleanup', () => ({ setupSpanCleanup: jest.fn(() => jest.fn()) }));
+jest.mock('../instrumentation/app-state', () => ({
+  setupAppStateTracking: jest.fn(() => jest.fn()),
+}));
 
 jest.mock('../nativeModule', () => ({
   EdotNativeModule: {

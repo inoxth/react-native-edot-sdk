@@ -123,9 +123,7 @@ export function validateConfig(config: EdotConfig): void {
     config.persistencePreset !== undefined &&
     !PERSISTENCE_PRESETS.includes(config.persistencePreset)
   ) {
-    throw new Error(
-      `[EDOT] persistencePreset must be one of: ${PERSISTENCE_PRESETS.join(', ')}`,
-    );
+    throw new Error(`[EDOT] persistencePreset must be one of: ${PERSISTENCE_PRESETS.join(', ')}`);
   }
 
   if (config.managementUrl !== undefined) {

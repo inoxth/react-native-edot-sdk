@@ -26,9 +26,9 @@ describe('setupFetchInstrumentation', () => {
   let teardown: () => void;
 
   beforeEach(() => {
-    originalFetch = jest.fn().mockResolvedValue(
-      new Response('ok', { status: 200, headers: { 'content-length': '2' } }),
-    );
+    originalFetch = jest
+      .fn()
+      .mockResolvedValue(new Response('ok', { status: 200, headers: { 'content-length': '2' } }));
     global.fetch = originalFetch;
     jest.clearAllMocks();
   });
@@ -47,6 +47,7 @@ describe('setupFetchInstrumentation', () => {
       'GET api.example.com',
       expect.objectContaining({ 'http.method': 'GET' }),
       null,
+      '@inox/react-native-edot-sdk/fetch',
     );
     expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('span-1', 1);
   });
@@ -66,6 +67,7 @@ describe('setupFetchInstrumentation', () => {
         'net.peer.port': 443,
       }),
       null,
+      '@inox/react-native-edot-sdk/fetch',
     );
   });
 
@@ -122,6 +124,7 @@ describe('setupFetchInstrumentation', () => {
         'net.peer.port': 80,
       }),
       null,
+      '@inox/react-native-edot-sdk/fetch',
     );
   });
 
@@ -133,6 +136,7 @@ describe('setupFetchInstrumentation', () => {
       expect.any(String),
       expect.objectContaining({ 'net.peer.port': 8443 }),
       null,
+      '@inox/react-native-edot-sdk/fetch',
     );
   });
 
@@ -181,6 +185,7 @@ describe('setupFetchInstrumentation', () => {
       'GraphQL: GetUser',
       expect.anything(),
       null,
+      '@inox/react-native-edot-sdk/fetch',
     );
   });
 
