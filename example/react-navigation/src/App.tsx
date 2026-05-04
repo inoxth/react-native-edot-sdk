@@ -114,7 +114,7 @@ export function App(): React.JSX.Element {
           component={HomeStackScreen}
           options={{
             tabBarLabel: 'Home',
-            tabBarTestID: 'tab-home',
+            tabBarButtonTestID: 'tab-home',
             tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>H</Text>,
           }}
         />
@@ -123,7 +123,7 @@ export function App(): React.JSX.Element {
           component={DemosStackScreen}
           options={{
             tabBarLabel: 'Demos',
-            tabBarTestID: 'tab-demos',
+            tabBarButtonTestID: 'tab-demos',
             tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>D</Text>,
           }}
         />
@@ -132,7 +132,7 @@ export function App(): React.JSX.Element {
           component={SettingsStackScreen}
           options={{
             tabBarLabel: 'Settings',
-            tabBarTestID: 'tab-settings',
+            tabBarButtonTestID: 'tab-settings',
             tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>S</Text>,
           }}
         />
