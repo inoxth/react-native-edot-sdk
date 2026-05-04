@@ -34,6 +34,17 @@ Optional `screenNameMapper(name, params)` transforms route names.
 - Attributes: `screen.name`, plus `last.screen.name` only when a prior screen exists _and_ differs from the current screen
 - `view.name` / `view.previous` / `view.transition_type` are NOT emitted (renamed/dropped in `2026-05-04-align-navigation-with-elastic-mobile-spec`)
 
+## Initialization Ordering
+
+`<NavigationContainer>` must mount only **after** `EdotReactNative.initialize(...)` resolves. `onReady` fires synchronously on first mount and starts the initial view span via `EdotNativeModule.startSpan` — but until init resolves, the iOS native module's tracer is the OpenTelemetry default no-op provider and the span is silently dropped. The blessed pattern (see `example/react-navigation/src/App.tsx`):
+
+```tsx
+const [sdkReady, setSdkReady] = useState(false);
+useEffect(() => { EdotReactNative.initialize(cfg).then(() => setSdkReady(true)); }, []);
+if (!sdkReady) return <SplashOrNull />;
+return <NavigationContainer ref={...} onReady={...} onStateChange={...}>...</NavigationContainer>;
+```
+
 ## Key Patterns
 
 - Lazy-requires `@inox/react-native-edot-sdk/nativeModule` to avoid circular deps

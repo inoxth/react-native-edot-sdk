@@ -119,6 +119,14 @@ The iOS module replaces apm-agent-ios's global `MeterProvider` with a resource-a
 
 This alignment lets apm-agent-ios's `ElasticSpanProcessor` recognize JS HTTP spans as HTTP via `isHttpSpan()` (which keys on `http.url` presence) and apply the same enrichment as native: `network.connection.type` via `NetworkStatusInjector`, synthetic-parent transaction wrapping for orphan spans. See `ios/AGENTS.md` "JS-driven HTTP Spans Get Native Enrichment Automatically".
 
+### Native UIKit View-Controller Instrumentation
+
+`enableViewControllerInstrumentation` defaults to **false** in the RN SDK (overrides apm-agent-ios's upstream default of `true`). The JS navigation plugins (`@inox/react-native-edot-navigation`, `-expo-router`, `-wix-navigation`) emit route-named view spans; the native `viewDidAppear:` swizzle would compete with them and — on `react-native-screens` — emits spans named `RNSScreen` (the wrapper VC class) because the VC `title` isn't populated when the swizzle fires. Opt-in via JS config (`enableViewControllerInstrumentation: true`) if you want raw UIVC spans.
+
+### Initialization Ordering — Mount Navigation After `initialize()` Resolves
+
+`EdotReactNative.initialize(...)` is async. Until it resolves, `OpenTelemetry.instance.tracerProvider` on iOS is the default no-op provider, so `startSpan` calls succeed but produce spans that never export. Navigation plugins call `startSpan` from `onReady` (fired synchronously when the navigator mounts) — if the navigator is mounted before `initialize()` resolves, the **initial** screen span is silently dropped. Consumers must wait for `initialize()` to resolve before mounting the navigation root. See each navigation plugin's AGENTS.md for the pattern and the `example/react-navigation/` `sdkReady` gate.
+
 ### Configuration Surface (recent additions)
 
 JS-callable config knobs that pass through to apm-agent-ios v2.0.0's builder:

@@ -32,6 +32,10 @@ yarn ios
 yarn android
 ```
 
+## Initialization Pattern
+
+`EdotReactNative.initialize(...)` is async. `<NavigationContainer>` must wait for it to resolve before mounting — otherwise its `onReady` fires while the iOS native module's tracer is still the OpenTelemetry default no-op provider, and the **initial** screen span (e.g. `Home` on cold start) is silently dropped. See `src/App.tsx`: an `sdkReady` state flips after `initialize(...)` resolves and gates the `<NavigationContainer>` render.
+
 ## Screens
 
 - **Home** - SDK status, session info, user/attribute management

@@ -217,6 +217,14 @@ class EdotReactNative: NSObject {
     if let v = config["enableCrashReporting"] as? Bool {
       instrumentationConfig.enableCrashReporting = v
     }
+    // Default OFF for React Native: JS-side navigation plugins
+    // (`react-native-edot-navigation`, `-expo-router`, `-wix-navigation`) emit
+    // route-named view spans. apm-agent-ios's UIKit `viewDidAppear:` swizzle
+    // would otherwise emit a competing span — and on `react-native-screens`
+    // that span is named `RNSScreen` (the wrapper VC class) because the title
+    // isn't set when the swizzle fires. Opt-in via JS config if you want raw
+    // UIVC spans instead of (or in addition to) the JS plugin spans.
+    instrumentationConfig.enableViewControllerInstrumentation = false
     if let v = config["enableViewControllerInstrumentation"] as? Bool {
       instrumentationConfig.enableViewControllerInstrumentation = v
     }

@@ -95,6 +95,8 @@ export function App(): React.JSX.Element {
     };
   }, []);
 
+  if (!sdkReady) return <></>;
+
   return (
     <NavigationContainer
       ref={edotNav.current.navigationRef}
