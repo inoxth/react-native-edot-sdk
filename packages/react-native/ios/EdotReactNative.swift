@@ -138,8 +138,8 @@ class EdotReactNative: NSObject {
     case .all:
       return all
     case .idOnly:
-      if let id = all["enduser.id"] {
-        return ["enduser.id": id]
+      if let id = all["user.id"] {
+        return ["user.id": id]
       }
       return [:]
     case .none:
@@ -251,7 +251,7 @@ class EdotReactNative: NSObject {
     // the synthetic transaction parent that apm-agent-ios's
     // ElasticSpanProcessor.onEnd builds for orphan HTTP spans (which APM
     // Server promotes ECS fields like `user.id` from). Without this,
-    // `enduser.id` lands on child spans only as `labels.enduser_id` and the
+    // `user.id` lands on child spans only as `labels.user_id` and the
     // transaction document carries no user context. Registered before the
     // user-supplied redactor so consumers can still drop or mask values.
     configBuilder = configBuilder.addSpanAttributeInterceptor(
@@ -372,13 +372,13 @@ class EdotReactNative: NSObject {
     #if ELASTIC_APM_AVAILABLE
     EdotReactNative.attrLock.lock()
     if let userId = userInfo["id"] as? String {
-      EdotReactNative.userAttributes["enduser.id"] = .string(userId)
+      EdotReactNative.userAttributes["user.id"] = .string(userId)
     }
     if let email = userInfo["email"] as? String {
-      EdotReactNative.userAttributes["enduser.email"] = .string(email)
+      EdotReactNative.userAttributes["user.email"] = .string(email)
     }
     if let name = userInfo["name"] as? String {
-      EdotReactNative.userAttributes["enduser.name"] = .string(name)
+      EdotReactNative.userAttributes["user.name"] = .string(name)
     }
     EdotReactNative.attrLock.unlock()
     #endif

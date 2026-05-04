@@ -82,9 +82,9 @@ Example apps' `project.pbxproj` carries **no** SPM refs, EDOT source files, brid
 
 **Implication:** anyone updating `startClientSpan` or fetch/XHR attributes must keep `http.url` (or `url.full`) in the emitted attribute set, otherwise `isHttpSpan()` returns false and JS HTTP spans silently lose `network.connection.type` and synthetic-parent wrapping.
 
-## User / Session / Global Attribute Injection (`enduser.id` → `user.id`)
+## User / Session / Global Attribute Injection (`user.id` → ECS `user.id`)
 
-`EdotReactNative.initialize` registers a built-in `ClosureInterceptor` via `configBuilder.addSpanAttributeInterceptor(...)` that merges `EdotReactNative.userAttributes` (filtered by `userAttributesSpanScope`), `sessionAttributes`, and `globalAttributes` into every span's attribute set. This is the **only** path that puts `enduser.id` onto the synthetic transaction parent that `ElasticSpanProcessor.onEnd` builds for orphan HTTP spans (the agent itself only adds `type=mobile` and `session.id` there). Without it, APM Server sees `enduser.id` only on child spans (where it lands as `labels.enduser_id`) and the transaction document has no user context to promote to ECS `user.id`.
+`EdotReactNative.initialize` registers a built-in `ClosureInterceptor` via `configBuilder.addSpanAttributeInterceptor(...)` that merges `EdotReactNative.userAttributes` (filtered by `userAttributesSpanScope`), `sessionAttributes`, and `globalAttributes` into every span's attribute set. `setUser` writes the OTel-stable keys `user.id` / `user.email` / `user.name` (matches ECS field names exactly). The interceptor is the **only** path that puts these onto the synthetic transaction parent that `ElasticSpanProcessor.onEnd` builds for orphan HTTP spans (the agent itself only adds `type=mobile` and `session.id` there). Without it, user attrs land only on child spans and the transaction document has no user context.
 
 **Order**: this injector is registered **before** the user-supplied `attributeRedactions.spans` interceptor so consumers can still drop or mask injected values. Don't reorder. See `packages/react-native/AGENTS.md` for the full pattern.
 

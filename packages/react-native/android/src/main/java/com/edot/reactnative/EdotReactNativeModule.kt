@@ -138,9 +138,9 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun setUser(userInfo: ReadableMap) {
-        userInfo.getStringSafe("id")?.let { userAttributes["enduser.id"] = it }
-        userInfo.getStringSafe("email")?.let { userAttributes["enduser.email"] = it }
-        userInfo.getStringSafe("name")?.let { userAttributes["enduser.name"] = it }
+        userInfo.getStringSafe("id")?.let { userAttributes["user.id"] = it }
+        userInfo.getStringSafe("email")?.let { userAttributes["user.email"] = it }
+        userInfo.getStringSafe("name")?.let { userAttributes["user.name"] = it }
     }
 
     @ReactMethod
@@ -357,7 +357,7 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     private fun filteredUserAttributesForSpan(): Map<String, String> = when (userAttributesSpanScope) {
         UserAttributesSpanScope.ALL -> userAttributes
         UserAttributesSpanScope.ID_ONLY ->
-            userAttributes["enduser.id"]?.let { mapOf("enduser.id" to it) } ?: emptyMap()
+            userAttributes["user.id"]?.let { mapOf("user.id" to it) } ?: emptyMap()
         UserAttributesSpanScope.NONE -> emptyMap()
     }
 
