@@ -247,6 +247,24 @@ class EdotReactNative: NSObject {
     // instance below. See `installURLSessionInstrumentation` for the reasoning.
     instrumentationConfig.enableURLSessionInstrumentation = false
 
+    // Inject user / session / global attributes onto every span — including
+    // the synthetic transaction parent that apm-agent-ios's
+    // ElasticSpanProcessor.onEnd builds for orphan HTTP spans (which APM
+    // Server promotes ECS fields like `user.id` from). Without this,
+    // `enduser.id` lands on child spans only as `labels.enduser_id` and the
+    // transaction document carries no user context. Registered before the
+    // user-supplied redactor so consumers can still drop or mask values.
+    configBuilder = configBuilder.addSpanAttributeInterceptor(
+      ClosureInterceptor<[String: AttributeValue]> { attrs in
+        var merged = attrs
+        let (global, session, user) = EdotReactNative.readAttributes()
+        for (k, v) in global where merged[k] == nil { merged[k] = v }
+        for (k, v) in session where merged[k] == nil { merged[k] = v }
+        for (k, v) in user where merged[k] == nil { merged[k] = v }
+        return merged
+      }
+    )
+
     if let redactions = config["attributeRedactions"] as? [String: Any] {
       if let spanRules = redactions["spans"] as? [String: Any],
          let spanRedactor = Self.compileAttributeRedactor(spanRules) {

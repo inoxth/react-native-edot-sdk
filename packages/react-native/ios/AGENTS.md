@@ -82,6 +82,12 @@ Example apps' `project.pbxproj` carries **no** SPM refs, EDOT source files, brid
 
 **Implication:** anyone updating `startClientSpan` or fetch/XHR attributes must keep `http.url` (or `url.full`) in the emitted attribute set, otherwise `isHttpSpan()` returns false and JS HTTP spans silently lose `network.connection.type` and synthetic-parent wrapping.
 
+## User / Session / Global Attribute Injection (`enduser.id` → `user.id`)
+
+`EdotReactNative.initialize` registers a built-in `ClosureInterceptor` via `configBuilder.addSpanAttributeInterceptor(...)` that merges `EdotReactNative.userAttributes` (filtered by `userAttributesSpanScope`), `sessionAttributes`, and `globalAttributes` into every span's attribute set. This is the **only** path that puts `enduser.id` onto the synthetic transaction parent that `ElasticSpanProcessor.onEnd` builds for orphan HTTP spans (the agent itself only adds `type=mobile` and `session.id` there). Without it, APM Server sees `enduser.id` only on child spans (where it lands as `labels.enduser_id`) and the transaction document has no user context to promote to ECS `user.id`.
+
+**Order**: this injector is registered **before** the user-supplied `attributeRedactions.spans` interceptor so consumers can still drop or mask injected values. Don't reorder. See `packages/react-native/AGENTS.md` for the full pattern.
+
 ## Per-Instrumentation Tracer Scope
 
 `startSpan` and `startClientSpan` accept an optional `instrumentationName: NSString?` (4th arg) so each callsite can pass its own tracer scope. The Swift impl resolves it via `tracer(named:)` which falls back to `"react-native-edot"` when nil/empty. Per-callsite scopes (`@inox/react-native-edot-navigation`, `@inox/react-native-edot-sdk/fetch`, etc.) appear as `instrumentation.scope.name` on the wire so Kibana can filter by signal type. Empty-string `parentSpanId` is treated as no-parent (lookup miss in `activeSpans`). The legacy bridge `.m` declares both methods with `instrumentationName:(NSString * _Nullable)`.

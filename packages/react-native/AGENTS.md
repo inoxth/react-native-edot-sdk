@@ -119,6 +119,14 @@ The iOS module replaces apm-agent-ios's global `MeterProvider` with a resource-a
 
 This alignment lets apm-agent-ios's `ElasticSpanProcessor` recognize JS HTTP spans as HTTP via `isHttpSpan()` (which keys on `http.url` presence) and apply the same enrichment as native: `network.connection.type` via `NetworkStatusInjector`, synthetic-parent transaction wrapping for orphan spans. See `ios/AGENTS.md` "JS-driven HTTP Spans Get Native Enrichment Automatically".
 
+### User / Session / Global Attribute Propagation onto Transactions (iOS)
+
+`setUser`, `setSessionAttribute`, and `setGlobalAttribute` write into static attribute dicts on `EdotReactNative` (Swift). At `ElasticApmAgent.start` we register a built-in `ClosureInterceptor<[String: AttributeValue]>` via `configBuilder.addSpanAttributeInterceptor(...)` that merges those dicts into every span's attributes. The interceptor runs in apm-agent-ios's `ElasticSpanProcessor` for every `onStart` AND for the synthetic transaction parent that `onEnd` builds for orphan HTTP spans (only `type=mobile` and `session.id` are added by the agent itself there). Without the interceptor, `enduser.id` lands only on child HTTP spans (as `labels.enduser_id` after APM Server normalization) and the transaction document carries no user context — so APM Server cannot promote `enduser.id` → ECS `user.id`.
+
+Registration order matters: this injector runs **before** the user-supplied `attributeRedactions.spans` redactor (also registered as a span attribute interceptor) so consumers can still drop or mask values we just injected (`enduser.email`, etc.). The user-attribute filter (`userAttributesSpanScope`) is applied inside `readAttributes()`, so by default only `enduser.id` ships unless `userAttributesSpanScope: 'all'` is configured.
+
+Per-span injection in `makeSpan` (`:466-482`) is retained for redundancy / explicitness even though the interceptor now covers the same surface for JS-emitted spans.
+
 ### Native UIKit View-Controller Instrumentation
 
 `enableViewControllerInstrumentation` defaults to **false** in the RN SDK (overrides apm-agent-ios's upstream default of `true`). The JS navigation plugins (`@inox/react-native-edot-navigation`, `-expo-router`, `-wix-navigation`) emit route-named view spans; the native `viewDidAppear:` swizzle would compete with them and — on `react-native-screens` — emits spans named `RNSScreen` (the wrapper VC class) because the VC `title` isn't populated when the swizzle fires. Opt-in via JS config (`enableViewControllerInstrumentation: true`) if you want raw UIVC spans.
