@@ -51,7 +51,7 @@ Navigation.events().registerAppLaunchedListener(async () => {
         secretToken: EDOT_SECRET_TOKEN,
         debug: true,
       });
-    } catch (_) {
+    } catch {
       // SDK init failure is non-fatal; screens still render
     }
   }
