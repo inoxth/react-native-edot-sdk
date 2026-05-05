@@ -10,7 +10,7 @@ High-level overview of the EDOT React Native SDK. For user-facing setup see [REA
 
 - Drop-in observability for React Native 0.75+ on both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric).
 - Feature parity with the DataDog React Native RUM SDK, so existing adopters can migrate.
-- OpenTelemetry semantic conventions for spans, metrics, and logs — HTTP attributes follow OTel v1.23 (`http.request.method`, `url.full`, `http.response.status_code`, etc.).
+- OpenTelemetry semantic conventions for spans, metrics, and logs. HTTP spans currently use the legacy Elastic mobile attribute names (`http.method`, `http.url`, `http.status_code`, `http.request_body.size`, `http.response_body.size`) for parity with apm-agent-ios / apm-agent-android; migration to OTel v1.23 (`http.request.method`, `url.full`, `http.response.status_code`) is tracked separately.
 - Delegate native telemetry collection to EDOT iOS and EDOT Android wherever possible. Apply targeted local patches only when upstream behavior diverges from spec or breaks RN integration — see `packages/react-native/ios/AGENTS.md` for the documented set of iOS divergences.
 
 ## Non-goals
@@ -33,7 +33,7 @@ High-level overview of the EDOT React Native SDK. For user-facing setup see [REA
 │  │  • fetch / XHR              • getTracerProvider                │  │
 │  │  • JS errors                • getMeterProvider                 │  │
 │  │  • Cold-start tracing       • EdotReactNative.log              │  │
-│  │  • Navigation plugins       • useEdotAction / withEdotTracking │  │
+│  │  • App-state tracking       • useEdotAction / withEdotTracking │  │
 │  │  • Navigation plugins                                          │  │
 │  │           │                          │                         │  │
 │  │           └────────────┬─────────────┘                         │  │
@@ -63,15 +63,13 @@ High-level overview of the EDOT React Native SDK. For user-facing setup see [REA
 
 ## Package Map
 
-Yarn 4 workspace monorepo. Seven library packages under `packages/` and four demo apps under `example/`.
+Yarn 4 workspace monorepo. Five library packages under `packages/` and four demo apps under `example/`.
 
 | Package | Purpose |
 |---|---|
 | `@inox/react-native-edot-sdk` | Core SDK — config, native bridge, auto-instrumentation, public API, React components. |
 | `@inox/react-native-edot-shared` | Shared cross-package state (`ActiveViewContext` singleton). Pure JS/TS — no React Native dependency. |
-| `@inox/react-native-edot-navigation` | React Navigation view-span integration. |
-| `@inox/react-native-edot-expo-router` | Expo Router view-span integration. |
-| `@inox/react-native-edot-wix-navigation` | Wix react-native-navigation view-span integration. |
+| `@inox/react-native-edot-navigation` | Unified screen-span integration covering React Navigation, Expo Router, and Wix react-native-navigation. |
 | `@inox/react-native-edot-tracer-provider` | Manual OTel-style tracing and metrics API. |
 | `@inox/react-native-edot-cli` | Source-map upload CLI for server-side symbolication. |
 
@@ -83,15 +81,13 @@ shared (pure JS/TS, no deps)
   ▼
 react-native (core SDK; depends on shared)
   │
-  ├── react-native-navigation       (depends on sdk + shared)
-  ├── react-native-expo-router      (depends on sdk + shared)
-  ├── react-native-wix-navigation   (depends on sdk + shared)
+  ├── react-native-navigation       (depends on sdk + shared; 3 optional navigator peer deps)
   └── react-native-tracer-provider  (depends on sdk)
 
 cli (standalone Node.js; depends only on commander)
 ```
 
-Navigation plugins and the tracer-provider load the native module through the subpath export `@inox/react-native-edot-sdk/nativeModule` via a lazy `require(...)` to avoid circular imports at module-evaluation time.
+The unified navigation package and the tracer-provider load the native module through the subpath export `@inox/react-native-edot-sdk/nativeModule` via a lazy `require(...)` to avoid circular imports at module-evaluation time. The three navigator libraries (`@react-navigation/native`, `expo-router`, `react-native-navigation`) are declared as **optional** peer dependencies via `peerDependenciesMeta` and duck-typed via local `…Like` interfaces — never imported at module top level.
 
 ## Native Bridge Model
 
@@ -133,7 +129,7 @@ The EDOT Gradle plugin (`co.elastic.otel.android.agent` v1.5.0) must be applied 
 
 ## Active View Correlation
 
-`ActiveViewContext` is a pure-JS singleton in `@inox/react-native-edot-shared`. Navigation plugins write to it on screen changes (`setActiveView({ name, spanId })`); auto-instrumentation modules read from it to correlate network and error spans to the current view via `view.name` / `view.id` attributes. The main SDK re-exports the singleton at the subpath `@inox/react-native-edot-sdk/active-view-context` for backwards-compat; navigation plugins import from `@inox/react-native-edot-shared` directly to keep the shared state in one canonical location.
+`ActiveViewContext` is a pure-JS singleton in `@inox/react-native-edot-shared`. The unified navigation package writes to it on screen changes (`setActiveView({ name, spanId })`); auto-instrumentation modules read from it to correlate network and error spans to the current screen via `screen.name` / `screen.id` attributes (the `spanId` field of `ActiveView` is exported as the `screen.id` attribute). The main SDK re-exports the singleton at the subpath `@inox/react-native-edot-sdk/active-view-context` for backwards-compat; the navigation package imports from `@inox/react-native-edot-shared` directly to keep the shared state in one canonical location.
 
 ## Where Capability Detail Lives
 
