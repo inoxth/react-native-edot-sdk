@@ -31,13 +31,13 @@ Optional `screenNameMapper(componentName)` transforms component names.
 
 ## Key Patterns
 
-- Lazy-requires `@inox/react-native-edot-sdk/nativeModule` to avoid circular deps
-- Imports `ActiveViewContext` from `@inox/react-native-edot-shared` (not from the SDK)
-- Ignores duplicate screen events (same screen appearing twice)
-- Stashes the most recent `ComponentDidAppear` event in module state so the foreground re-emitter can replay it. The re-emitter resets `previousScreenName = null` and runs the same handler used for live events. Cleanup unregisters the re-emitter and clears the stashed event.
+- Lifecycle is delegated to `createNavigationLifecycle` exported from `@inox/react-native-edot-navigation`. All three navigation plugins (react-navigation, expo-router, wix-navigation) share that helper.
+- The tracker stashes the most recent `ComponentDidAppear` event so the lifecycle's foreground re-emitter can read the current screen via `getCurrentScreenName`. Live events call `lifecycle.onScreen(name)`, which dedupes against the previous emitted name internally.
+- Cleanup removes the wix listener and calls `lifecycle.cleanup()` (which unregisters the foreground re-emitter and clears active view context).
 
 ## Dependencies
 
+- `@inox/react-native-edot-navigation` (workspace) — provides `createNavigationLifecycle`
 - `@inox/react-native-edot-sdk` (workspace)
 - `@inox/react-native-edot-shared` (workspace)
 - Peer: `react-native-navigation >=7.0.0`, `react >=18.0.0`, `react-native >=0.72.0`

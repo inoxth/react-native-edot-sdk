@@ -2141,6 +2141,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@inox/react-native-edot-wix-navigation@workspace:packages/react-native-wix-navigation"
   dependencies:
+    "@inox/react-native-edot-navigation": "workspace:*"
     "@inox/react-native-edot-sdk": "workspace:*"
     "@inox/react-native-edot-shared": "workspace:*"
     react: "npm:^19.2.3"

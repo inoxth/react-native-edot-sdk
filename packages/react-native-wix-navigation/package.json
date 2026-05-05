@@ -21,6 +21,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@inox/react-native-edot-navigation": "workspace:*",
     "@inox/react-native-edot-sdk": "workspace:*",
     "@inox/react-native-edot-shared": "workspace:*"
   },
