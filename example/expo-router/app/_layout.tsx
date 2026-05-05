@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
-import { EdotExpoNavigationProvider } from '@inox/react-native-edot-expo-router';
+import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
 import {
   EDOT_SERVER_URL,
   EDOT_SERVICE_NAME,
@@ -43,7 +43,7 @@ export default function RootLayout(): React.ReactElement {
   }, []);
 
   return (
-    <EdotExpoNavigationProvider
+    <EdotNavigationProvider
       navigationRef={navigationRef}
       screenNameMapper={screenNameMapper}
     >
@@ -53,6 +53,6 @@ export default function RootLayout(): React.ReactElement {
           title: titleFor(initState),
         }}
       />
-    </EdotExpoNavigationProvider>
+    </EdotNavigationProvider>
   );
 }

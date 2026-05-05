@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
 import { Navigation } from 'react-native-navigation';
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
-import { registerEdotNavigationListener } from '@inox/react-native-edot-wix-navigation';
+import { registerEdotNavigationListener } from '@inox/react-native-edot-navigation';
 import {
   EDOT_SERVER_URL,
   EDOT_SERVICE_NAME,

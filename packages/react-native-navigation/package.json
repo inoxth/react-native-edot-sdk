@@ -1,7 +1,7 @@
 {
   "name": "@inox/react-native-edot-navigation",
   "version": "0.1.0",
-  "description": "EDOT React Navigation integration — automatic view span tracking",
+  "description": "EDOT navigation integration — unified screen-tracking for react-navigation, expo-router, and Wix react-native-navigation",
   "license": "MIT",
   "source": "src/index.ts",
   "files": [
@@ -25,7 +25,6 @@
     "@inox/react-native-edot-shared": "workspace:*"
   },
   "devDependencies": {
-    "@react-navigation/native": "^7.0.0",
     "react": "^19.2.3",
     "react-native": "^0.85.1",
     "rimraf": "^6.1.3",
@@ -33,8 +32,21 @@
   },
   "peerDependencies": {
     "@react-navigation/native": ">=6.0.0",
+    "expo-router": ">=3.0.0",
     "react": ">=18.0.0",
-    "react-native": ">=0.72.0"
+    "react-native": ">=0.72.0",
+    "react-native-navigation": ">=7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@react-navigation/native": {
+      "optional": true
+    },
+    "expo-router": {
+      "optional": true
+    },
+    "react-native-navigation": {
+      "optional": true
+    }
   },
   "react-native-builder-bob": {
     "source": "src",

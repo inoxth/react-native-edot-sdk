@@ -10,8 +10,8 @@ Four standalone demo apps showing SDK integration with different navigation fram
 |---|---|---|
 | `basic/` | None | sdk, tracer-provider |
 | `react-navigation/` | React Navigation native-stack + bottom tabs | sdk, tracer-provider, navigation |
-| `expo-router/` | Expo Router (file-based, root Stack + tabs) | sdk, tracer-provider, expo-router |
-| `wix-navigation/` | Wix react-native-navigation (bottomTabs + push) | sdk, tracer-provider, wix-navigation |
+| `expo-router/` | Expo Router (file-based, root Stack + tabs) | sdk, tracer-provider, navigation |
+| `wix-navigation/` | Wix react-native-navigation (bottomTabs + push) | sdk, tracer-provider, navigation |
 
 ## Runtime Config
 
@@ -91,6 +91,6 @@ EDOT Gradle plugin (`co.elastic.otel.android.agent`) v1.5.0 applied in all apps.
 | App | Key Difference |
 |---|---|
 | `basic/` | No navigation plugin — only SDK init + manual instrumentation. Single scrollable screen. |
-| `react-navigation/` | Uses `createEdotNavigationContainerRef()` from `@inox/react-native-edot-navigation`. |
-| `expo-router/` | Wraps layout in `<EdotExpoNavigationProvider>`. Requires `app.json` with `"scheme"` for deep linking. Podfile needs `use_expo_modules!`. AppDelegate adds `RCTLinkingManager` for URL handling. Uses `babel-preset-expo` (not `@react-native/babel-preset`). |
-| `wix-navigation/` | Uses `registerEdotNavigationListener()` from `@inox/react-native-edot-wix-navigation`. AppDelegate extends `RNNAppDelegate` (not `RCTAppDelegate`) — RNN controls the root view controller. SDK init happens inside `registerAppLaunchedListener` callback. |
+| `react-navigation/` | Uses `useNavigationContainerRef()` from `@react-navigation/native` + `<EdotNavigationProvider navigationRef={…}>` from `@inox/react-native-edot-navigation`. Provider wraps `<NavigationContainer ref={ref}>`. |
+| `expo-router/` | Uses `useNavigationContainerRef()` from `expo-router` + `<EdotNavigationProvider navigationRef={…}>` (same component as react-navigation). Requires `app.json` with `"scheme"` for deep linking. Podfile needs `use_expo_modules!`. AppDelegate adds `RCTLinkingManager` for URL handling. Uses `babel-preset-expo` (not `@react-native/babel-preset`). |
+| `wix-navigation/` | Uses imperative `registerEdotNavigationListener(Navigation, …)` from `@inox/react-native-edot-navigation` (no React tree wrapper — Wix has no persistent React root). AppDelegate extends `RNNAppDelegate` (not `RCTAppDelegate`) — RNN controls the root view controller. SDK init + listener registration happen inside `registerAppLaunchedListener` callback, before `Navigation.setRoot(...)`. |

@@ -25,9 +25,7 @@ yarn jest packages/react-native/src/__tests__/errors.test.ts
 packages/
 ├── shared/                        # @inox/react-native-edot-shared
 ├── react-native/                  # @inox/react-native-edot-sdk
-├── react-native-navigation/       # @inox/react-native-edot-navigation
-├── react-native-expo-router/      # @inox/react-native-edot-expo-router
-├── react-native-wix-navigation/   # @inox/react-native-edot-wix-navigation
+├── react-native-navigation/       # @inox/react-native-edot-navigation (unified — covers react-navigation, expo-router, wix)
 ├── react-native-tracer-provider/  # @inox/react-native-edot-tracer-provider
 └── cli/                           # @inox/react-native-edot-cli
 example/                           # 4 demo apps (see example/AGENTS.md)
@@ -42,9 +40,7 @@ Each package has its own `CLAUDE.md` and `AGENTS.md` with detailed documentation
 |---|---|---|
 | `@inox/react-native-edot-shared` | Shared cross-package state (`ActiveViewContext` singleton). Pure JS/TS. | [AGENTS.md](./packages/shared/AGENTS.md) |
 | `@inox/react-native-edot-sdk` | Main SDK. Config, native bridge, auto-instrumentation, public API, React components. | [AGENTS.md](./packages/react-native/AGENTS.md) |
-| `@inox/react-native-edot-navigation` | React Navigation integration. View spans on route changes. | [AGENTS.md](./packages/react-native-navigation/AGENTS.md) |
-| `@inox/react-native-edot-expo-router` | Expo Router integration. View spans on pathname changes. | [AGENTS.md](./packages/react-native-expo-router/AGENTS.md) |
-| `@inox/react-native-edot-wix-navigation` | Wix react-native-navigation integration. View spans on `ComponentDidAppear`. | [AGENTS.md](./packages/react-native-wix-navigation/AGENTS.md) |
+| `@inox/react-native-edot-navigation` | Unified navigation integration. `<EdotNavigationProvider>` for `@react-navigation/native` + `expo-router` (both use `useNavigationContainerRef`); imperative `registerEdotNavigationListener` for Wix `react-native-navigation`. | [AGENTS.md](./packages/react-native-navigation/AGENTS.md) |
 | `@inox/react-native-edot-tracer-provider` | Manual instrumentation API. Custom spans and metrics. | [AGENTS.md](./packages/react-native-tracer-provider/AGENTS.md) |
 | `@inox/react-native-edot-cli` | CLI tool for source map upload. | [AGENTS.md](./packages/cli/AGENTS.md) |
 
@@ -73,15 +69,15 @@ Each package has its own `CLAUDE.md` and `AGENTS.md` with detailed documentation
 
 Singleton in `@inox/react-native-edot-shared` — navigation plugins write to it (`setActiveView`), instrumentation modules read from it (`getActiveView`). The main package re-exports at `@inox/react-native-edot-sdk/active-view-context` for backwards compat. Navigation plugins import from `@inox/react-native-edot-shared` directly.
 
-### Navigation Plugin Pattern
+### Navigation Plugin Pattern (unified)
 
-All three plugins (`react-native-navigation`, `react-native-expo-router`, `react-native-wix-navigation`) follow the same structure:
-1. Listen for screen changes (library-specific API)
-2. End previous view span via `EdotNativeModule.endSpan()`
-3. Start new span via `EdotNativeModule.startSpan()` with `screen.name` (and `last.screen.name` when the prior screen exists and differs). Span name is the plain screen name. Span kind is INTERNAL (default). Each plugin passes its own `instrumentationName` (`@inox/react-native-edot-navigation`, `@inox/react-native-edot-expo-router`, or `@inox/react-native-edot-wix-navigation`) so spans carry distinguishable `instrumentation.scope.name` on the wire.
-4. Update `ActiveViewContext.setActiveView()`
-5. Lazy-require `@inox/react-native-edot-sdk/nativeModule` to avoid circular deps
-6. Register a foreground re-emitter via `ActiveViewContext.registerForegroundReEmitter(fn)` — fires after `AppState` returns to `'active'` from `'background'`. The re-emitter resets the plugin's `previousScreenName` to `null` and re-runs first-emission for the current screen (so `last.screen.name` is omitted). Wix replays the last `componentDidAppear` event from module state; React Navigation reads `navigationRef.current.getCurrentRoute()` live; Expo Router reads from a stashed pathname ref.
+A single package `@inox/react-native-edot-navigation` covers all three navigators. Internally everything is built on the shared `createNavigationLifecycle` helper which handles span start/end, `ActiveViewContext` updates, and foreground re-emit:
+
+1. **Ref-based navigators (`@react-navigation/native` + `expo-router`)** — same component `<EdotNavigationProvider navigationRef={…}>`. The provider subscribes to `addListener('state', …)` on the ref and reads `getCurrentRoute().name`. expo-router and react-navigation collapse cleanly because expo-router is built on top of react-navigation and re-exports `useNavigationContainerRef()`. Tracer scope: `@inox/react-native-edot-navigation`.
+2. **Wix `react-native-navigation`** — imperative `registerEdotNavigationListener(Navigation, options)`. Hooks `Navigation.events().registerComponentDidAppearListener(...)`. Returned cleanup function unsubscribes + tears down the lifecycle. Wix is imperative because Wix apps have no continuously-mounted React root. Tracer scope: `@inox/react-native-edot-wix-navigation`.
+3. Both surfaces emit the same span shape: name = plain screen name (post-mapper), kind = INTERNAL, attribute `screen.name` (and `last.screen.name` when the prior screen exists and differs).
+4. Both surfaces register a foreground re-emitter via `ActiveViewContext.registerForegroundReEmitter(...)` so the SDK's `AppState` listener can replay the current screen on foreground (treated as fresh visit; `last.screen.name` omitted).
+5. The package never imports any of the three navigator libraries — props/arguments are duck-typed via local `NavigationContainerRefLike` and `WixNavigationLike` interfaces. All three are declared as **optional** peer dependencies via `peerDependenciesMeta`.
 
 ### Network Instrumentation
 
@@ -114,7 +110,7 @@ apm-agent-ios v2.0.0 builds the global `MeterProvider` without `.setResource(...
 | iOS distribution | `packages/react-native/EdotReactNative.podspec` (compiles iOS sources + declares `apm-agent-ios` via `spm_dependency`) |
 | Android native implementation | `packages/react-native/android/src/main/.../EdotReactNativeModuleImpl.kt` (shared) + `src/{newarch,oldarch}/java/.../EdotReactNativeModule.kt` |
 | Add new instrumentation | `packages/react-native/src/instrumentation/` — follow fetch.ts pattern |
-| Add navigation plugin | Copy `packages/react-native-navigation/` — same structure |
+| Add support for a new navigator | Build on `createNavigationLifecycle` in `packages/react-native-navigation/src/navigation-lifecycle.ts` — same surface as the existing component / wix listener |
 | Shared cross-package types | `packages/shared/src/` |
 | Specs / requirements | `openspec/specs/` |
 
@@ -125,9 +121,7 @@ shared (pure JS/TS, no deps)
   |
 react-native (core SDK, depends: shared)
   |
-  +-- react-native-navigation (depends: sdk + shared)
-  +-- react-native-expo-router (depends: sdk + shared)
-  +-- react-native-wix-navigation (depends: sdk + shared)
+  +-- react-native-navigation (unified — depends: sdk + shared; 3 optional navigator peer deps)
   +-- react-native-tracer-provider (depends: sdk only)
 
 cli (standalone Node.js, depends: commander only)

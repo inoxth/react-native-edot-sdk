@@ -1,29 +1,30 @@
 import React, { useEffect, useRef } from 'react';
-import { createNavigationLifecycle } from '@inox/react-native-edot-navigation';
-import type {
-  EdotExpoNavigationProviderProps,
-  ExpoNavigationContainerRef,
-} from './types';
+import { createNavigationLifecycle } from './navigation-lifecycle';
+import type { NavigationContainerRefLike, RefScreenNameMapper } from './types';
 
-const INSTRUMENTATION_NAME = '@inox/react-native-edot-expo-router';
+const INSTRUMENTATION_NAME = '@inox/react-native-edot-navigation';
 
-type ScreenNameMapper = (routeName: string, params?: object) => string;
+export interface EdotNavigationProviderProps {
+  navigationRef: NavigationContainerRefLike;
+  screenNameMapper?: RefScreenNameMapper;
+  children?: React.ReactNode;
+}
 
 function resolveScreenName(
-  navigationRef: ExpoNavigationContainerRef,
-  mapper: ScreenNameMapper | undefined,
+  navigationRef: NavigationContainerRefLike,
+  mapper: RefScreenNameMapper | undefined,
 ): string | null {
   const route = navigationRef.getCurrentRoute();
   if (!route) return null;
   return mapper ? mapper(route.name, route.params) : route.name;
 }
 
-export function EdotExpoNavigationProvider({
+export function EdotNavigationProvider({
   navigationRef,
   screenNameMapper,
   children,
-}: EdotExpoNavigationProviderProps): React.ReactElement {
-  const mapperRef = useRef<ScreenNameMapper | undefined>(screenNameMapper);
+}: EdotNavigationProviderProps): React.ReactElement {
+  const mapperRef = useRef<RefScreenNameMapper | undefined>(screenNameMapper);
   mapperRef.current = screenNameMapper;
 
   useEffect(() => {

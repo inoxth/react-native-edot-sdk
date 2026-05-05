@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
-import type { NavigationContainerRef, ParamListBase } from '@react-navigation/native';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Alert, Text } from 'react-native';
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
-import { createEdotNavigationContainerRef } from '@inox/react-native-edot-navigation';
+import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
 import {
   EDOT_SERVER_URL,
   EDOT_SERVICE_NAME,
@@ -62,11 +61,7 @@ function screenNameMapper(routeName: string): string {
 
 export function App(): React.JSX.Element {
   const [sdkReady, setSdkReady] = useState(false);
-  const edotNav = useRef(
-    createEdotNavigationContainerRef<NavigationContainerRef<ParamListBase>>({
-      screenNameMapper,
-    }),
-  );
+  const navigationRef = useNavigationContainerRef();
 
   useEffect(() => {
     async function init(): Promise<void> {
@@ -89,54 +84,48 @@ export function App(): React.JSX.Element {
       }
     }
     init();
-
-    return () => {
-      edotNav.current.cleanup();
-    };
   }, []);
 
   if (!sdkReady) return <></>;
 
   return (
-    <NavigationContainer
-      ref={edotNav.current.navigationRef}
-      onReady={edotNav.current.onReady}
-      onStateChange={edotNav.current.onStateChange}
-    >
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarLabelStyle: { fontSize: 12 },
-        }}
-      >
-        <Tab.Screen
-          name="HomeTab"
-          component={HomeStackScreen}
-          options={{
-            tabBarLabel: 'Home',
-            tabBarButtonTestID: 'tab-home',
-            tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>H</Text>,
+    <EdotNavigationProvider navigationRef={navigationRef} screenNameMapper={screenNameMapper}>
+      <NavigationContainer ref={navigationRef}>
+        <Tab.Navigator
+          screenOptions={{
+            headerShown: false,
+            tabBarLabelStyle: { fontSize: 12 },
           }}
-        />
-        <Tab.Screen
-          name="DemosTab"
-          component={DemosStackScreen}
-          options={{
-            tabBarLabel: 'Demos',
-            tabBarButtonTestID: 'tab-demos',
-            tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>D</Text>,
-          }}
-        />
-        <Tab.Screen
-          name="SettingsTab"
-          component={SettingsStackScreen}
-          options={{
-            tabBarLabel: 'Settings',
-            tabBarButtonTestID: 'tab-settings',
-            tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>S</Text>,
-          }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+        >
+          <Tab.Screen
+            name="HomeTab"
+            component={HomeStackScreen}
+            options={{
+              tabBarLabel: 'Home',
+              tabBarButtonTestID: 'tab-home',
+              tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>H</Text>,
+            }}
+          />
+          <Tab.Screen
+            name="DemosTab"
+            component={DemosStackScreen}
+            options={{
+              tabBarLabel: 'Demos',
+              tabBarButtonTestID: 'tab-demos',
+              tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>D</Text>,
+            }}
+          />
+          <Tab.Screen
+            name="SettingsTab"
+            component={SettingsStackScreen}
+            options={{
+              tabBarLabel: 'Settings',
+              tabBarButtonTestID: 'tab-settings',
+              tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>S</Text>,
+            }}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+    </EdotNavigationProvider>
   );
 }

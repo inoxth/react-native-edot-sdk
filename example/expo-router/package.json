@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@inox/react-native-edot-expo-router": "workspace:*",
+    "@inox/react-native-edot-navigation": "workspace:*",
     "@inox/react-native-edot-sdk": "workspace:*",
     "@inox/react-native-edot-tracer-provider": "workspace:*",
     "expo": "~55.0.15",

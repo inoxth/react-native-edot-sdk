@@ -1,17 +1,21 @@
-import { createNavigationLifecycle } from '@inox/react-native-edot-navigation';
-import type { WixNavigation, EdotWixNavigationOptions, ComponentDidAppearEvent } from './types';
+import { createNavigationLifecycle } from './navigation-lifecycle';
+import type {
+  EdotWixNavigationOptions,
+  WixComponentDidAppearEvent,
+  WixNavigationLike,
+} from './types';
 
 const INSTRUMENTATION_NAME = '@inox/react-native-edot-wix-navigation';
 
 export function registerEdotNavigationListener(
-  Navigation: WixNavigation,
+  Navigation: WixNavigationLike,
   options?: EdotWixNavigationOptions,
 ): () => void {
   const mapper = options?.screenNameMapper;
 
-  let lastEvent: ComponentDidAppearEvent | null = null;
+  let lastEvent: WixComponentDidAppearEvent | null = null;
 
-  function resolveScreenName(event: ComponentDidAppearEvent): string {
+  function resolveScreenName(event: WixComponentDidAppearEvent): string {
     return mapper ? mapper(event.componentName) : event.componentName;
   }
 
@@ -21,7 +25,7 @@ export function registerEdotNavigationListener(
   });
 
   const subscription = Navigation.events().registerComponentDidAppearListener(
-    (event: ComponentDidAppearEvent) => {
+    (event: WixComponentDidAppearEvent) => {
       lastEvent = event;
       lifecycle.onScreen(resolveScreenName(event));
     },
@@ -32,10 +36,4 @@ export function registerEdotNavigationListener(
     lifecycle.cleanup();
     lastEvent = null;
   };
-}
-
-export function resetForTesting(): void {
-  if (!__DEV__) {
-    return;
-  }
 }

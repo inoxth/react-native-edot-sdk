@@ -80,15 +80,14 @@ The exported `EdotNativeModule` is a `Proxy` around the loaded native module. It
 
 Both `startSpan` and `startClientSpan` accept an optional `instrumentationName: string | null` 4th parameter. Default `"react-native-edot"` when omitted. Per-callsite scopes:
 
-| Callsite                             | Scope                                    |
-| ------------------------------------ | ---------------------------------------- |
-| `react-native-navigation` plugin     | `@inox/react-native-edot-navigation`     |
-| `react-native-expo-router` plugin    | `@inox/react-native-edot-expo-router`    |
-| `react-native-wix-navigation` plugin | `@inox/react-native-edot-wix-navigation` |
-| `instrumentation/fetch.ts`           | `@inox/react-native-edot-sdk/fetch`      |
-| `instrumentation/xhr.ts`             | `@inox/react-native-edot-sdk/xhr`        |
-| `instrumentation/errors.ts`          | `@inox/react-native-edot-sdk/errors`     |
-| `instrumentation/startup.ts`         | `@inox/react-native-edot-sdk/startup`    |
+| Callsite                                                                  | Scope                                    |
+| ------------------------------------------------------------------------- | ---------------------------------------- |
+| `<EdotNavigationProvider>` (react-navigation + expo-router; unified pkg)  | `@inox/react-native-edot-navigation`     |
+| `registerEdotNavigationListener` (Wix; unified pkg)                       | `@inox/react-native-edot-wix-navigation` |
+| `instrumentation/fetch.ts`                                                | `@inox/react-native-edot-sdk/fetch`      |
+| `instrumentation/xhr.ts`                                                  | `@inox/react-native-edot-sdk/xhr`        |
+| `instrumentation/errors.ts`                                               | `@inox/react-native-edot-sdk/errors`     |
+| `instrumentation/startup.ts`                                              | `@inox/react-native-edot-sdk/startup`    |
 
 `startSpan` creates `kind=INTERNAL` spans (used by errors, startup, view, action, custom JS-driven spans). `startClientSpan` creates `kind=CLIENT` spans and is used by `fetch.ts` / `xhr.ts` so HTTP spans match what apm-agent-ios's native `URLSessionInstrumentation` emits.
 
@@ -135,7 +134,9 @@ Per-span injection in `makeSpan` (`:466-482`) is retained for redundancy / expli
 
 ### Initialization Ordering — Mount Navigation After `initialize()` Resolves
 
-`EdotReactNative.initialize(...)` is async. Until it resolves, `OpenTelemetry.instance.tracerProvider` on iOS is the default no-op provider, so `startSpan` calls succeed but produce spans that never export. Navigation plugins call `startSpan` from `onReady` (fired synchronously when the navigator mounts) — if the navigator is mounted before `initialize()` resolves, the **initial** screen span is silently dropped. Consumers must wait for `initialize()` to resolve before mounting the navigation root. See each navigation plugin's AGENTS.md for the pattern and the `example/react-navigation/` `sdkReady` gate.
+`EdotReactNative.initialize(...)` is async. Until it resolves, `OpenTelemetry.instance.tracerProvider` on iOS is the default no-op provider, so `startSpan` calls succeed but produce spans that never export. The navigation provider emits the initial screen span synchronously on mount — if the navigator is mounted before `initialize()` resolves, the **initial** screen span is silently dropped. Consumers must wait for `initialize()` to resolve before mounting the navigation root. See `packages/react-native-navigation/AGENTS.md` for the pattern and the `example/react-navigation/` `sdkReady` gate.
+
+For Wix consumers: `registerEdotNavigationListener` is called inside `Navigation.events().registerAppLaunchedListener` after `await EdotReactNative.initialize(...)`, before `Navigation.setRoot(...)` — so the home screen's first `componentDidAppear` is captured by the listener but only after the SDK is ready.
 
 ### Configuration Surface (recent additions)
 
