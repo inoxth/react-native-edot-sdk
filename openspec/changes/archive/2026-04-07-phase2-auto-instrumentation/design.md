@@ -29,7 +29,7 @@ Phase 1 established the native bridge, `EdotReactNative.initialize()`, and the s
 
 **Decision**: Store `global.fetch` reference before patching. The replacement function creates a span, optionally injects `traceparent`, calls the original, and records the response. The `X-Edot-RN-Traced: 1` header is always added to prevent native-side duplicate spans.
 
-**Rationale**: This is the standard approach used by DataDog RN SDK, Embrace SDK, and Sentry RN SDK. Storing the original reference ensures we can restore it on teardown and that our patch doesn't break if called before initialization.
+**Rationale**: This is the standard approach used by mainstream React Native observability SDKs (DataDog and Sentry, among others). Storing the original reference ensures we can restore it on teardown and that our patch doesn't break if called before initialization.
 
 ### 3. XHR instrumentation: Patch prototype methods
 

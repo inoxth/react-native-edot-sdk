@@ -1,21 +1,21 @@
 import { ActiveViewContext, getNativeModule } from '@inox/react-native-edot-shared';
 import type { NavigationContainerRef, EdotNavigationOptions } from './types';
 
-const INSTRUMENTATION_NAME = '@inox/react-native-edot-navigation';
+const REACT_NAVIGATION_INSTRUMENTATION = '@inox/react-native-edot-navigation';
 
-export function createEdotNavigationContainerRef<
-  T extends NavigationContainerRef = NavigationContainerRef,
->(
-  options?: EdotNavigationOptions,
-): {
-  onStateChange: () => void;
-  onReady: () => void;
+export interface NavigationLifecycle {
+  onScreen: (screenName: string) => void;
   cleanup: () => void;
-  navigationRef: { current: T | null };
-} {
-  const navigationRef: { current: T | null } = { current: null };
-  const mapper = options?.screenNameMapper;
+}
 
+export interface CreateNavigationLifecycleOptions {
+  instrumentationName: string;
+  getCurrentScreenName: () => string | null;
+}
+
+export function createNavigationLifecycle(
+  options: CreateNavigationLifecycleOptions,
+): NavigationLifecycle {
   let currentSpanId: string | null = null;
   let previousScreenName: string | null = null;
 
@@ -36,41 +36,29 @@ export function createEdotNavigationContainerRef<
       attributes['last.screen.name'] = previousScreenName;
     }
 
-    currentSpanId = getNativeModule().startSpan(screenName, attributes, null, INSTRUMENTATION_NAME);
+    currentSpanId = getNativeModule().startSpan(
+      screenName,
+      attributes,
+      null,
+      options.instrumentationName,
+    );
 
     ActiveViewContext.setActiveView({ name: screenName, spanId: currentSpanId });
     previousScreenName = screenName;
   }
 
-  function getScreenName(ref: NavigationContainerRef): string | null {
-    const route = ref.getCurrentRoute();
-    if (!route) return null;
-    return mapper ? mapper(route.name, route.params) : route.name;
-  }
-
-  function onReady(): void {
-    if (!navigationRef.current) return;
-    const screenName = getScreenName(navigationRef.current);
-    if (screenName) {
-      startViewSpan(screenName);
-    }
-  }
-
-  function onStateChange(): void {
-    if (!navigationRef.current) return;
-    const screenName = getScreenName(navigationRef.current);
-    if (screenName && screenName !== previousScreenName) {
-      startViewSpan(screenName);
-    }
-  }
-
   const unregisterReEmitter = ActiveViewContext.registerForegroundReEmitter(() => {
-    if (!navigationRef.current) return;
-    const screenName = getScreenName(navigationRef.current);
+    const screenName = options.getCurrentScreenName();
     if (!screenName) return;
     previousScreenName = null;
     startViewSpan(screenName);
   });
+
+  function onScreen(screenName: string): void {
+    if (screenName !== previousScreenName) {
+      startViewSpan(screenName);
+    }
+  }
 
   function cleanup(): void {
     unregisterReEmitter();
@@ -79,7 +67,46 @@ export function createEdotNavigationContainerRef<
     previousScreenName = null;
   }
 
-  return { onStateChange, onReady, cleanup, navigationRef };
+  return { onScreen, cleanup };
+}
+
+export function createEdotNavigationContainerRef<
+  T extends NavigationContainerRef = NavigationContainerRef,
+>(
+  options?: EdotNavigationOptions,
+): {
+  onStateChange: () => void;
+  onReady: () => void;
+  cleanup: () => void;
+  navigationRef: { current: T | null };
+} {
+  const navigationRef: { current: T | null } = { current: null };
+  const mapper = options?.screenNameMapper;
+
+  function getScreenName(): string | null {
+    const ref = navigationRef.current;
+    if (!ref) return null;
+    const route = ref.getCurrentRoute();
+    if (!route) return null;
+    return mapper ? mapper(route.name, route.params) : route.name;
+  }
+
+  const lifecycle = createNavigationLifecycle({
+    instrumentationName: REACT_NAVIGATION_INSTRUMENTATION,
+    getCurrentScreenName: getScreenName,
+  });
+
+  function onReady(): void {
+    const screenName = getScreenName();
+    if (screenName) lifecycle.onScreen(screenName);
+  }
+
+  function onStateChange(): void {
+    const screenName = getScreenName();
+    if (screenName) lifecycle.onScreen(screenName);
+  }
+
+  return { onStateChange, onReady, cleanup: lifecycle.cleanup, navigationRef };
 }
 
 export function resetForTesting(): void {

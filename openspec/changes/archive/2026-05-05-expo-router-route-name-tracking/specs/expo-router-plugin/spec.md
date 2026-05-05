@@ -1,10 +1,4 @@
-# expo-router-plugin
-
-## Purpose
-
-Integrates with Expo Router to automatically create screen-lifetime spans on route changes and maintain the ActiveViewContext, enabling network and error spans to be correlated to the current screen.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Expo Router navigation provider
 The SDK SHALL provide `<EdotExpoNavigationProvider>` React component that wraps the app's root layout. It SHALL accept a required `navigationRef` prop obtained from `expo-router`'s `useNavigationContainerRef()` hook. It SHALL accept an optional `screenNameMapper` prop with signature `(routeName: string, params?: object) => string`. It SHALL subscribe to `state` events on the `navigationRef` to detect route changes.
@@ -80,3 +74,10 @@ The provider SHALL end the current screen-lifetime span, clear the active view c
 - **AND** active view context SHALL be cleared
 - **AND** the `state` listener SHALL be removed from `navigationRef`
 - **AND** the foreground re-emitter SHALL be unregistered from `ActiveViewContext`
+
+## REMOVED Requirements
+
+### Requirement: usePathname-based route detection
+**Reason:** Replaced by `useNavigationContainerRef()`-based detection. URL pathnames as span names interact poorly with Elastic APM Server's transaction grouping (some paths are silently dropped on ingestion). Route segment names produced by `getCurrentRoute().name` are identifier-style (`index`, `network`, `(tabs)`) and align with the `react-native-navigation` plugin, which already emits identifier-style names successfully.
+
+**Migration:** Consumers must update their root `_layout.tsx` to obtain `useNavigationContainerRef()` from `expo-router` and pass the ref as the `navigationRef` prop. The `screenNameMapper` signature changes from `(pathname: string) => string` to `(routeName: string, params?: object) => string`. No backwards-compatibility shim is provided.

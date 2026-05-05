@@ -2064,6 +2064,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@inox/react-native-edot-expo-router@workspace:packages/react-native-expo-router"
   dependencies:
+    "@inox/react-native-edot-navigation": "workspace:*"
     "@inox/react-native-edot-sdk": "workspace:*"
     "@inox/react-native-edot-shared": "workspace:*"
     expo-router: "npm:^55.0.0"
@@ -2107,7 +2108,7 @@ __metadata:
     typescript: "npm:~5.8.3"
   peerDependencies:
     react: ">=18.0.0"
-    react-native: ">=0.72.0"
+    react-native: ">=0.75.0"
   languageName: unknown
   linkType: soft
 

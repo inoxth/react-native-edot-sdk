@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useNavigationContainerRef } from 'expo-router';
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
 import { EdotExpoNavigationProvider } from '@inox/react-native-edot-expo-router';
 import {
@@ -12,8 +12,8 @@ import {
 
 type InitState = 'missing-env' | 'initializing' | 'ready';
 
-function screenNameMapper(pathname: string): string {
-  return pathname.replace(/\/\d+/g, '/:id');
+function screenNameMapper(routeName: string): string {
+  return routeName;
 }
 
 function titleFor(state: InitState): string {
@@ -26,6 +26,7 @@ export default function RootLayout(): React.ReactElement {
   const [initState, setInitState] = useState<InitState>(
     EDOT_SERVER_URL ? 'initializing' : 'missing-env',
   );
+  const navigationRef = useNavigationContainerRef();
 
   useEffect(() => {
     if (!EDOT_SERVER_URL) return;
@@ -42,7 +43,10 @@ export default function RootLayout(): React.ReactElement {
   }, []);
 
   return (
-    <EdotExpoNavigationProvider screenNameMapper={screenNameMapper}>
+    <EdotExpoNavigationProvider
+      navigationRef={navigationRef}
+      screenNameMapper={screenNameMapper}
+    >
       <Stack
         screenOptions={{
           headerShown: true,

@@ -36,7 +36,7 @@ Key constraints:
 
 **Decision**: Use Yarn Workspaces for package management and react-native-builder-bob for library builds.
 
-**Rationale**: bob is the de-facto standard for React Native library builds — it handles CommonJS, ESM, and TypeScript declarations out of the box. Yarn Workspaces are well-tested with React Native's metro bundler (pnpm symlinks cause issues with metro without extra config). This matches the embrace-io SDK's proven monorepo pattern.
+**Rationale**: bob is the de-facto standard for React Native library builds — it handles CommonJS, ESM, and TypeScript declarations out of the box. Yarn Workspaces are well-tested with React Native's metro bundler (pnpm symlinks cause issues with metro without extra config). This matches the monorepo pattern used by other established React Native observability SDKs.
 
 **Alternatives considered**:
 - pnpm workspaces — better disk efficiency but metro compatibility requires `node-linker=hoisted` and extra config
