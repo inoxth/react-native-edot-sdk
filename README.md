@@ -2,90 +2,14 @@
 
 OpenTelemetry-compliant observability SDK for React Native. Wraps the native [EDOT iOS](https://github.com/elastic/apm-agent-ios) and [EDOT Android](https://github.com/elastic/elastic-otel-android) agents to provide automatic and manual instrumentation with zero-config setup.
 
-## Features
+Supports both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric) from a single codebase. React Native 0.75+, iOS 16+, Android minSdk 24.
 
-- **Network instrumentation** — automatic span creation for `fetch` and `XMLHttpRequest` (including Axios) with W3C trace context propagation
-- **Error tracking** — captures uncaught JS exceptions, unhandled Promise rejections, and React render errors via `EdotErrorBoundary`
-- **Navigation tracking** — view spans for React Navigation, Expo Router, and Wix react-native-navigation
-- **Lifecycle tracking** — foreground/background/inactive/terminate state transitions emitted natively per Elastic mobile agents spec
-- **Startup tracing** — cold and warm start performance with JS bundle load and first render phases
-- **User interactions** — `withEdotTracking` HOC and `useEdotAction` hook for tap/action tracking
-- **Manual instrumentation** — custom spans, metrics (Counter, Histogram, UpDownCounter), and structured logs
-- **Source map upload** — CLI tool for server-side crash stack symbolication
-- **Dual architecture** — supports both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric)
-
-## Packages
-
-| Package | Description |
-|---|---|
-| [`@inox/react-native-edot-sdk`](./packages/react-native) | Core SDK — config, native bridge, auto-instrumentation, public API |
-| [`@inox/react-native-edot-navigation`](./packages/react-native-navigation) | React Navigation integration |
-| [`@inox/react-native-edot-expo-router`](./packages/react-native-expo-router) | Expo Router integration |
-| [`@inox/react-native-edot-wix-navigation`](./packages/react-native-wix-navigation) | Wix react-native-navigation integration |
-| [`@inox/react-native-edot-tracer-provider`](./packages/react-native-tracer-provider) | Manual tracing and metrics API |
-| [`@inox/react-native-edot-cli`](./packages/cli) | Source map upload CLI |
-| [`@inox/react-native-edot-shared`](./packages/shared) | Shared internal state (not for direct use) |
-
-## Quick Start
-
-### 1. Install
+## Get started
 
 ```bash
 yarn add @inox/react-native-edot-sdk
 ```
 
-For navigation tracking, add the plugin for your router:
-
-```bash
-# React Navigation
-yarn add @inox/react-native-edot-navigation
-
-# Expo Router
-yarn add @inox/react-native-edot-expo-router
-
-# Wix react-native-navigation
-yarn add @inox/react-native-edot-wix-navigation
-```
-
-### 2. iOS Setup
-
-```bash
-cd ios && pod install
-```
-
-That's it. The SDK podspec declares the EDOT iOS agent (`apm-agent-ios`) as a Swift Package dependency via React Native's `spm_dependency` helper, so `pod install` resolves the package and links the `ElasticApm` product onto the SDK's pod target automatically. No manual Xcode SPM configuration is required.
-
-Requires React Native 0.75+ and CocoaPods 1.13+. The SDK's native files are conditionally compiled against `ELASTIC_APM_AVAILABLE`, which the podspec enables on its own pod target whenever `spm_dependency` is in scope.
-
-### 3. Android Setup
-
-Apply the EDOT Android Gradle plugin — it provides the `co.elastic.otel.android` runtime the SDK links against.
-
-`android/build.gradle` (project-level):
-
-```groovy
-buildscript {
-  dependencies {
-    classpath("co.elastic.otel.android.agent:co.elastic.otel.android.agent.gradle.plugin:1.5.0")
-  }
-  repositories {
-    google()
-    mavenCentral()
-    gradlePluginPortal()
-  }
-}
-```
-
-`android/app/build.gradle`:
-
-```groovy
-apply plugin: "co.elastic.otel.android.agent"
-```
-
-Requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36, minSdk 24. See `example/react-navigation/android/` for a reference setup.
-
-### 4. Initialize
-
 ```typescript
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
 
@@ -94,230 +18,30 @@ await EdotReactNative.initialize({
   serviceName: 'my-app',
   serviceVersion: '1.0.0',
   deploymentEnvironment: 'production',
+  secretToken: process.env.EDOT_SECRET_TOKEN,
 });
 ```
 
-All auto-instrumentation (network, errors, startup) is enabled by default. Lifecycle events (`event.name="lifecycle"`, `event.domain="device"`) are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec.
+iOS pod install + Android Gradle plugin setup, the full configuration reference, error boundary, interactions, and user/session APIs all live in **[`packages/react-native/README.md`](./packages/react-native/README.md)**.
 
-## Configuration
+## Packages
 
-```typescript
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
-
-await EdotReactNative.initialize({
-  // Required
-  serverUrl: 'https://your-apm-server:8200',
-  serviceName: 'my-app',
-  serviceVersion: '1.0.0',
-  deploymentEnvironment: 'production',
-
-  // Authentication (pick one)
-  secretToken: 'your-secret-token',
-  // apiKey: 'your-api-key',
-
-  // Auto-instrumentation toggles (all default to true)
-  instrumentNetworkRequests: true,
-  instrumentJsErrors: true,
-  instrumentAppStartup: true,
-
-  // Network
-  tracePropagationTargets: [/api\.example\.com/],
-  ignoreUrls: [/analytics\.example\.com/],
-  graphqlUrls: [/\/graphql$/],
-
-  // Sampling & consent (optional, no defaults)
-  sessionSamplingRate: 0.5,        // 0.0 to 1.0
-  trackingConsent: 'granted',      // 'granted' | 'pending' | 'not_granted'
-
-  // Transport (applies to both platforms)
-  exportProtocol: 'grpc',          // 'http' | 'grpc'
-
-  // Platform-specific
-  ios: { enableCrashReporting: true },
-  android: { diskBufferingEnabled: true },
-
-  // Debug
-  debug: false,
-});
-```
-
-## Navigation Tracking
-
-### React Navigation
-
-```typescript
-import { createEdotNavigationContainerRef } from '@inox/react-native-edot-navigation';
-
-const { navigationRef, onStateChange, onReady, cleanup } =
-  createEdotNavigationContainerRef({
-    screenNameMapper: (name, params) => name, // optional
-  });
-
-function App() {
-  useEffect(() => cleanup, []);
-
-  return (
-    <NavigationContainer
-      ref={navigationRef}
-      onStateChange={onStateChange}
-      onReady={onReady}
-    >
-      {/* screens */}
-    </NavigationContainer>
-  );
-}
-```
-
-### Expo Router
-
-```tsx
-import { EdotExpoNavigationProvider } from '@inox/react-native-edot-expo-router';
-
-export default function Layout() {
-  return (
-    <EdotExpoNavigationProvider
-      screenNameMapper={(pathname) => pathname.replace(/\/\d+/g, '/:id')}
-    >
-      <Slot />
-    </EdotExpoNavigationProvider>
-  );
-}
-```
-
-### Wix react-native-navigation
-
-```typescript
-import { Navigation } from 'react-native-navigation';
-import { registerEdotNavigationListener } from '@inox/react-native-edot-wix-navigation';
-
-const cleanup = registerEdotNavigationListener(Navigation, {
-  screenNameMapper: (componentName) => componentName,
-});
-```
-
-## Error Boundary
-
-```tsx
-import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
-
-<EdotErrorBoundary fallback={<Text>Something went wrong</Text>}>
-  <MyApp />
-</EdotErrorBoundary>
-```
-
-## User Interactions
-
-### HOC
-
-```tsx
-import { withEdotTracking } from '@inox/react-native-edot-sdk';
-import { TouchableOpacity } from 'react-native';
-
-const TrackedButton = withEdotTracking(TouchableOpacity, 'CheckoutButton');
-```
-
-### Hook
-
-```typescript
-import { useEdotAction } from '@inox/react-native-edot-sdk';
-
-function CheckoutScreen() {
-  const { trackAction } = useEdotAction();
-
-  const handlePurchase = () => {
-    trackAction('tap', 'Purchase', { 'cart.items': 3 });
-  };
-}
-```
-
-## Manual Instrumentation
-
-```typescript
-import {
-  getTracerProvider,
-  getMeterProvider,
-  SpanStatusCode,
-} from '@inox/react-native-edot-tracer-provider';
-
-// Custom spans
-const tracer = getTracerProvider().getTracer('checkout');
-const span = tracer.startSpan('processPayment');
-span.setAttribute('payment.method', 'credit_card');
-span.setStatus(SpanStatusCode.OK);
-span.end();
-
-// Custom metrics
-const meter = getMeterProvider().getMeter('business');
-const counter = meter.createCounter('orders_placed');
-counter.add(1, { region: 'us-east' });
-```
-
-## Session & User APIs
-
-```typescript
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
-
-// User identity
-EdotReactNative.setUser({ id: 'user-123', email: 'user@example.com', name: 'Alice' });
-EdotReactNative.clearUser();
-
-// Session attributes
-EdotReactNative.setSessionAttribute('subscription', 'premium');
-
-// Global attributes (attached to all telemetry)
-EdotReactNative.setGlobalAttribute('tenant_id', 'acme-corp');
-EdotReactNative.removeGlobalAttribute('tenant_id');
-
-// Tracking consent
-EdotReactNative.setTrackingConsent('granted');
-
-// Structured logs
-EdotReactNative.log('info', 'Payment completed', { orderId: 'ord-456' });
-```
-
-## Source Map Upload
-
-Upload source maps for server-side crash symbolication:
-
-```bash
-npx @inox/react-native-edot-cli upload-sourcemap \
-  --server-url https://your-apm-server:8200 \
-  --service-name my-app \
-  --service-version 1.0.0 \
-  --bundle-path ios/main.jsbundle \
-  --sourcemap-path ios/main.jsbundle.map \
-  --secret-token your-token
-```
-
-## Requirements
-
-- React Native >= 0.75 (required for the `spm_dependency` Cocoapods helper)
-- iOS >= 16.0
-- Android minSdk 24
-- Node.js >= 18
-
-## Development
-
-```bash
-yarn install
-yarn typecheck          # TypeScript check
-yarn test               # Run all tests
-yarn lint               # oxlint
-yarn fmt                # oxfmt
-yarn build              # Build all packages
-```
+| Package | Description |
+|---|---|
+| [`@inox/react-native-edot-sdk`](./packages/react-native) | Core SDK — config, native bridge, auto-instrumentation, error boundary, user APIs |
+| [`@inox/react-native-edot-navigation`](./packages/react-native-navigation) | Unified navigation tracking — React Navigation, Expo Router, Wix react-native-navigation |
+| [`@inox/react-native-edot-tracer-provider`](./packages/react-native-tracer-provider) | Manual instrumentation API — custom spans and metrics |
+| [`@inox/react-native-edot-cli`](./packages/cli) | Source map upload CLI |
+| [`@inox/react-native-edot-shared`](./packages/shared) | Internal shared state — do not depend on directly |
 
 ## Examples
 
-| Example | Directory | Description |
-|---|---|---|
-| Basic | [`example/basic/`](./example/basic) | SDK init, manual tracing, metrics, logs, network, errors, interactions — no navigation |
-| React Navigation | [`example/react-navigation/`](./example/react-navigation) | Bottom tabs + stack navigation with `@inox/react-native-edot-navigation` |
-| Expo Router | [`example/expo-router/`](./example/expo-router) | Tab + stack routes with `@inox/react-native-edot-expo-router` |
-| Wix Navigation | [`example/wix-navigation/`](./example/wix-navigation) | Bottom tabs + push navigation with `@inox/react-native-edot-wix-navigation` |
+Working example apps live in [`example/`](./example) — one each for `basic` (no navigation), React Navigation, Expo Router, and Wix react-native-navigation. Copy `.env.example` to `.env` in any app and fill in your EDOT server details to run.
 
-Each example uses `.env` for configuration. Copy `.env.example` to `.env` and fill in your EDOT server details.
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, commands, and architecture entry points.
 
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE).

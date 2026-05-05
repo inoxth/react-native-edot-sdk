@@ -18,9 +18,7 @@ Guide for working on the EDOT React Native SDK monorepo. For a product/architect
 ├── packages/              # Library packages (published under @inox/*)
 │   ├── react-native/                 # Core SDK — public API, native bridge, auto-instrumentation
 │   ├── shared/                       # ActiveViewContext singleton (pure JS/TS)
-│   ├── react-native-navigation/      # React Navigation integration
-│   ├── react-native-expo-router/     # Expo Router integration
-│   ├── react-native-wix-navigation/  # Wix react-native-navigation integration
+│   ├── react-native-navigation/      # Unified navigation integration (react-navigation, expo-router, Wix)
 │   ├── react-native-tracer-provider/ # Manual OTel tracing/metrics API
 │   └── cli/                          # Source-map upload CLI
 ├── example/               # Four demo apps (basic, react-navigation, expo-router, wix-navigation)
@@ -81,11 +79,13 @@ Follow `instrumentation/fetch.ts` as the canonical reference. Use OTel v1.23 sem
 
 ## Adding a New Navigation Plugin
 
-1. Copy `packages/react-native-navigation/` into `packages/react-native-<framework>/` and update `package.json` (name, peer deps).
-2. Listen to the framework's route-change event.
-3. On each change: end the current view span, call `EdotNativeModule.startSpan(...)` with `view.name` / `view.previous` / `view.transition_type`, call `ActiveViewContext.setActiveView(...)`.
-4. Lazy-`require('@inox/react-native-edot-sdk/nativeModule')` inside a getter to break the circular dependency.
-5. Import `ActiveViewContext` from `@inox/react-native-edot-shared` (never from the SDK).
+The unified `@inox/react-native-edot-navigation` package handles all three popular RN navigators by building on a shared `createNavigationLifecycle` helper. To add a fourth navigator:
+
+1. Add a new entry surface in `packages/react-native-navigation/src/` (a React component for ref-based navigators, or an imperative `register…Listener` for navigators without a continuously-mounted React root).
+2. Build it on top of `createNavigationLifecycle({ instrumentationName, getCurrentScreenName })` — the helper handles span start/end, `ActiveViewContext` updates, and foreground re-emit for you.
+3. Pick a unique `instrumentationName` (e.g. `@inox/react-native-edot-<framework>-navigation`) so spans carry a distinguishable `instrumentation.scope.name`.
+4. Add the navigator package as an **optional** peer dependency in `packages/react-native-navigation/package.json` via `peerDependenciesMeta`. Do not import the navigator library at module top-level — duck-type its API via a local `…Like` interface in `types.ts`.
+5. Re-export the new surface from `packages/react-native-navigation/src/index.ts`.
 
 ## Native Development
 
@@ -125,8 +125,8 @@ Four demo apps under `example/` are yarn workspace members. Each has `installCon
 | App | Navigation | Notes |
 |---|---|---|
 | `basic/` | None | SDK init + manual tracing only — single scrollable screen. |
-| `react-navigation/` | React Navigation native-stack + bottom tabs | RN 0.85.1. Uses `createEdotNavigationContainerRef()`. |
-| `expo-router/` | Expo Router (file-based) | RN 0.83.4. Wraps layout in `<EdotExpoNavigationProvider>`. Uses `babel-preset-expo` (not `@react-native/babel-preset`). |
+| `react-navigation/` | React Navigation native-stack + bottom tabs | RN 0.85.1. Wraps `NavigationContainer` in `<EdotNavigationProvider>` with a `useNavigationContainerRef()` ref. |
+| `expo-router/` | Expo Router (file-based) | RN 0.83.4. Wraps root layout in `<EdotNavigationProvider>` (same component as react-navigation, ref source is `expo-router`'s `useNavigationContainerRef`). Uses `babel-preset-expo` (not `@react-native/babel-preset`). |
 | `wix-navigation/` | Wix react-native-navigation | RN 0.83.4. AppDelegate extends `RNNAppDelegate`. SDK init inside `registerAppLaunchedListener` callback. |
 
 Each app owns its own `.env` at its root — there is no shared `example/.env`. Copy the template before running an app:
