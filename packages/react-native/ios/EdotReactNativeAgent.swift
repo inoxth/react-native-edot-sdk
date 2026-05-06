@@ -2,6 +2,7 @@ import Foundation
 
 #if ELASTIC_APM_AVAILABLE
 import ElasticApm
+import OpenTelemetryApi
 #endif
 
 /// Native-side entry point for starting the Elastic APM agent before the
@@ -32,7 +33,11 @@ public class EdotReactNativeAgent: NSObject {
     serviceName: String,
     serviceVersion: String,
     deploymentEnvironment: String,
-    secretToken: String? = nil
+    secretToken: String? = nil,
+    apiKey: String? = nil,
+    sessionSamplingRate: NSNumber? = nil,
+    exportProtocol: String? = nil,
+    persistencePreset: String? = nil
   ) {
     if serverUrl.isEmpty {
       raiseInvalid("serverUrl must not be blank")
@@ -43,6 +48,8 @@ public class EdotReactNativeAgent: NSObject {
     requireResourceIdentity("serviceName", serviceName)
     requireResourceIdentity("serviceVersion", serviceVersion)
     requireResourceIdentity("deploymentEnvironment", deploymentEnvironment)
+    requireMutuallyExclusiveCredentials(secretToken: secretToken, apiKey: apiKey)
+    requireValidSamplingRate(sessionSamplingRate)
 
     agentLock.lock()
     guard !preInitialized else {
@@ -60,11 +67,38 @@ public class EdotReactNativeAgent: NSObject {
     var configBuilder = AgentConfigBuilder()
       .withExportUrl(url)
 
-    if let token = secretToken {
+    if let token = secretToken, !token.isEmpty {
       configBuilder = configBuilder.withSecretToken(token)
     }
 
-    ElasticApmAgent.start(with: configBuilder.build())
+    if let key = apiKey, !key.isEmpty {
+      configBuilder = configBuilder.withApiKey(key)
+    }
+
+    if let rate = sessionSamplingRate {
+      configBuilder = configBuilder.withSessionSampleRate(rate.doubleValue)
+    }
+
+    if let proto = exportProtocol {
+      configBuilder = configBuilder.useConnectionType(proto == "http" ? .http : .grpc)
+    }
+
+    // Mirrors the JS-init interceptor so user / session / global attrs reach
+    // every span — including the synthetic transaction parent that
+    // `ElasticSpanProcessor.onEnd` builds for orphan HTTP spans — even when
+    // the host app pre-initializes the agent before JS loads.
+    configBuilder = configBuilder.addSpanAttributeInterceptor(
+      ClosureInterceptor<[String: AttributeValue]> { attrs in
+        EdotReactNative.mergeUserSessionGlobalAttributes(attrs)
+      }
+    )
+
+    var instrumentationConfig = InstrumentationConfiguration()
+    if let preset = persistencePreset {
+      instrumentationConfig.storageConfiguration = EdotReactNative.persistencePreset(from: preset)
+    }
+
+    ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
     #endif
 
     preInitialized = true
@@ -79,6 +113,23 @@ public class EdotReactNativeAgent: NSObject {
       raiseInvalid("\(name) must not contain ',' or '=' characters (got: \(value))")
     }
   }
+
+  private static func requireMutuallyExclusiveCredentials(secretToken: String?, apiKey: String?) {
+    let hasToken = !(secretToken?.isEmpty ?? true)
+    let hasKey = !(apiKey?.isEmpty ?? true)
+    if hasToken && hasKey {
+      raiseInvalid("secretToken and apiKey are mutually exclusive")
+    }
+  }
+
+  private static func requireValidSamplingRate(_ rate: NSNumber?) {
+    guard let rate else { return }
+    let value = rate.doubleValue
+    if value < 0 || value > 1 {
+      raiseInvalid("sessionSamplingRate must be between 0.0 and 1.0 (got: \(value))")
+    }
+  }
+
 
   private static func raiseInvalid(_ reason: String) -> Never {
     NSException(

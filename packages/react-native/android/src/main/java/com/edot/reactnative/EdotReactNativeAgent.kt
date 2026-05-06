@@ -5,7 +5,9 @@ import co.elastic.otel.android.ElasticApmAgent
 import co.elastic.otel.android.connectivity.Authentication
 import co.elastic.otel.android.exporters.configuration.ExportProtocol
 import co.elastic.otel.android.features.diskbuffering.DiskBufferingConfiguration
+import co.elastic.otel.android.interceptor.Interceptor
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.common.Attributes
 import java.util.concurrent.atomic.AtomicBoolean
 
 object EdotReactNativeAgent {
@@ -29,11 +31,17 @@ object EdotReactNativeAgent {
         serviceVersion: String,
         deploymentEnvironment: String,
         secretToken: String? = null,
+        apiKey: String? = null,
+        sessionSamplingRate: Double? = null,
+        exportProtocol: String? = null,
+        diskBufferingEnabled: Boolean? = null,
     ) {
         require(serverUrl.isNotBlank()) { "[EDOT] serverUrl must not be blank" }
         requireResourceIdentity("serviceName", serviceName)
         requireResourceIdentity("serviceVersion", serviceVersion)
         requireResourceIdentity("deploymentEnvironment", deploymentEnvironment)
+        requireMutuallyExclusiveCredentials(secretToken, apiKey)
+        requireValidSamplingRate(sessionSamplingRate)
 
         if (!preInitialized.compareAndSet(false, true)) return
 
@@ -45,8 +53,25 @@ object EdotReactNativeAgent {
         secretToken?.takeIf { it.isNotBlank() }?.let {
             builder.setExportAuthentication(Authentication.SecretToken(it))
         }
+        apiKey?.takeIf { it.isNotBlank() }?.let {
+            builder.setExportAuthentication(Authentication.ApiKey(it))
+        }
+        sessionSamplingRate?.let { builder.setSessionSampleRate(it) }
+        exportProtocol?.let {
+            builder.setExportProtocol(
+                if (it == "grpc") ExportProtocol.GRPC else ExportProtocol.HTTP
+            )
+        }
+        diskBufferingEnabled?.let {
+            builder.setDiskBufferingConfiguration(
+                if (it) DiskBufferingConfiguration.enabled() else DiskBufferingConfiguration.disabled()
+            )
+        }
+        attachSpanAttributesInterceptor(builder)
 
-        agent = builder.build()
+        val builtAgent = builder.build()
+        agent = builtAgent
+        installAppMetrics(application, builtAgent.getOpenTelemetry())
     }
 
     private fun requireResourceIdentity(name: String, value: String) {
@@ -54,6 +79,33 @@ object EdotReactNativeAgent {
         require(!value.contains(',') && !value.contains('=')) {
             "[EDOT] $name must not contain ',' or '=' characters (got: $value)"
         }
+    }
+
+    private fun requireMutuallyExclusiveCredentials(secretToken: String?, apiKey: String?) {
+        val hasToken = !secretToken.isNullOrBlank()
+        val hasKey = !apiKey.isNullOrBlank()
+        require(!(hasToken && hasKey)) {
+            "[EDOT] secretToken and apiKey are mutually exclusive"
+        }
+    }
+
+    private fun requireValidSamplingRate(rate: Double?) {
+        if (rate == null) return
+        require(rate in 0.0..1.0) {
+            "[EDOT] sessionSamplingRate must be between 0.0 and 1.0 (got: $rate)"
+        }
+    }
+
+    private fun attachSpanAttributesInterceptor(builder: ElasticApmAgent.Builder) {
+        builder.addSpanAttributesInterceptor(
+            Interceptor<Attributes> { existing ->
+                EdotReactNativeModuleImpl.mergeUserSessionGlobalAttributes(existing)
+            }
+        )
+    }
+
+    private fun installAppMetrics(application: Application, openTelemetry: OpenTelemetry) {
+        EdotAppMetrics.install(application, openTelemetry)
     }
 
     internal fun buildFromJsConfig(
@@ -89,7 +141,11 @@ object EdotReactNativeAgent {
         serviceName?.takeIf { it.isNotBlank() }?.let { builder.setServiceName(it) }
         serviceVersion?.takeIf { it.isNotBlank() }?.let { builder.setServiceVersion(it) }
         deploymentEnvironment?.takeIf { it.isNotBlank() }?.let { builder.setDeploymentEnvironment(it) }
+        attachSpanAttributesInterceptor(builder)
 
-        return builder.build().also { agent = it }
+        return builder.build().also {
+            agent = it
+            installAppMetrics(application, it.getOpenTelemetry())
+        }
     }
 }

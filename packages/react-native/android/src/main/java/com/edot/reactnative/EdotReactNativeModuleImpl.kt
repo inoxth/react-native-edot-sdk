@@ -56,6 +56,8 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         private var isInitialized = false
         @Volatile
         private var debugEnabled = false
+
+        @Volatile
         private var userAttributesSpanScope = UserAttributesSpanScope.ID_ONLY
 
         @Volatile
@@ -65,6 +67,13 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         private val sessionAttributes = ConcurrentHashMap<String, String>()
         private val globalAttributes = ConcurrentHashMap<String, String>()
 
+        private val PRE_INIT_RESERVED_FIELDS = listOf(
+            "apiKey",
+            "sessionSamplingRate",
+            "exportProtocol",
+            "diskBufferingEnabled",
+        )
+
         fun debugLog(message: String) {
             if (debugEnabled) {
                 android.util.Log.d("EDOT", message)
@@ -72,6 +81,29 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         }
 
         fun emissionAllowed(): Boolean = trackingConsent.allowsEmission
+
+        internal fun mergeUserSessionGlobalAttributes(existing: Attributes): Attributes {
+            val builder = existing.toBuilder()
+            val existingKeys = existing.asMap().keys.mapTo(HashSet()) { it.key }
+
+            for ((key, value) in globalAttributes) {
+                if (key !in existingKeys) builder.put(key, value)
+            }
+            for ((key, value) in sessionAttributes) {
+                if (key !in existingKeys) builder.put(key, value)
+            }
+            for ((key, value) in filteredUserAttributesForSpan()) {
+                if (key !in existingKeys) builder.put(key, value)
+            }
+            return builder.build()
+        }
+
+        private fun filteredUserAttributesForSpan(): Map<String, String> = when (userAttributesSpanScope) {
+            UserAttributesSpanScope.ALL -> userAttributes
+            UserAttributesSpanScope.ID_ONLY ->
+                userAttributes["user.id"]?.let { mapOf("user.id" to it) } ?: emptyMap()
+            UserAttributesSpanScope.NONE -> emptyMap()
+        }
     }
 
     private val activeSpans: MutableMap<String, Span> = Collections.synchronizedMap(
@@ -120,6 +152,8 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
                     serviceVersion = config.getStringSafe("serviceVersion"),
                     deploymentEnvironment = config.getStringSafe("deploymentEnvironment"),
                 )
+            } else {
+                warnDroppedJsFieldsAfterPreInit(config)
             }
 
             isInitialized = true
@@ -128,6 +162,15 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         } catch (e: Exception) {
             promise.reject("EDOT_INIT_ERROR", "Failed to initialize EDOT: ${e.message}", e)
         }
+    }
+
+    private fun warnDroppedJsFieldsAfterPreInit(config: ReadableMap) {
+        val present = PRE_INIT_RESERVED_FIELDS.filter { config.hasKey(it) }
+        if (present.isEmpty()) return
+        debugLog(
+            "Ignoring JS config field(s) after host pre-init: ${present.joinToString()}. " +
+                "Pass them to EdotReactNativeAgent.preInitialize instead."
+        )
     }
 
     fun getCurrentSessionId(promise: Promise) {
@@ -229,16 +272,6 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
                 ReadableType.Boolean -> spanBuilder.setAttribute(key, attributes.getBoolean(key))
                 else -> {}
             }
-        }
-
-        for ((key, value) in globalAttributes) {
-            spanBuilder.setAttribute(key, value)
-        }
-        for ((key, value) in sessionAttributes) {
-            spanBuilder.setAttribute(key, value)
-        }
-        for ((key, value) in filteredUserAttributesForSpan()) {
-            spanBuilder.setAttribute(key, value)
         }
 
         val span = spanBuilder.startSpan()
@@ -359,13 +392,6 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
 
     fun setTrackingConsent(consent: String) {
         trackingConsent = TrackingConsent.parse(consent)
-    }
-
-    private fun filteredUserAttributesForSpan(): Map<String, String> = when (userAttributesSpanScope) {
-        UserAttributesSpanScope.ALL -> userAttributes
-        UserAttributesSpanScope.ID_ONLY ->
-            userAttributes["user.id"]?.let { mapOf("user.id" to it) } ?: emptyMap()
-        UserAttributesSpanScope.NONE -> emptyMap()
     }
 
     private fun mapSeverity(severity: String): Severity = when (severity) {

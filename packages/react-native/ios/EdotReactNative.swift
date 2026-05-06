@@ -146,7 +146,41 @@ class EdotReactNative: NSObject {
       return [:]
     }
   }
+
+  /// Merges user / session / global attributes into an existing attribute set
+  /// without overwriting explicitly-set keys. Shared between the JS-init and
+  /// host pre-init paths so the synthetic transaction parent that
+  /// `ElasticSpanProcessor.onEnd` builds for orphan HTTP spans gets the same
+  /// enrichment regardless of how the agent was started.
+  static func mergeUserSessionGlobalAttributes(
+    _ existing: [String: AttributeValue]
+  ) -> [String: AttributeValue] {
+    var merged = existing
+    let (global, session, user) = readAttributes()
+    for (k, v) in global where merged[k] == nil { merged[k] = v }
+    for (k, v) in session where merged[k] == nil { merged[k] = v }
+    for (k, v) in user where merged[k] == nil { merged[k] = v }
+    return merged
+  }
   #endif
+
+  /// Logs (under `debug`) any JS config fields that the agent silently drops
+  /// because the host app already pre-initialized via
+  /// `EdotReactNativeAgent.preInitialize(...)`. `exportProtocol` and
+  /// `secretToken` are intentionally NOT in this list — `EdotMeterProviderFactory`
+  /// still consumes them for the metrics pipeline.
+  static func warnDroppedJsFieldsAfterPreInit(_ config: NSDictionary) {
+    let reserved = ["apiKey", "sessionSamplingRate", "persistencePreset"]
+    let present = reserved.filter { config[$0] != nil }
+    guard !present.isEmpty, debugEnabledSnapshot() else { return }
+    let joined = present.joined(separator: ", ")
+    os_log(
+      "[EDOT] Ignoring JS config field(s) after host pre-init: %{public}@. Pass them to EdotReactNativeAgent.preInitialize instead.",
+      log: log,
+      type: .info,
+      joined
+    )
+  }
 
   // MARK: - Initialization
 
@@ -256,12 +290,7 @@ class EdotReactNative: NSObject {
     // user-supplied redactor so consumers can still drop or mask values.
     configBuilder = configBuilder.addSpanAttributeInterceptor(
       ClosureInterceptor<[String: AttributeValue]> { attrs in
-        var merged = attrs
-        let (global, session, user) = EdotReactNative.readAttributes()
-        for (k, v) in global where merged[k] == nil { merged[k] = v }
-        for (k, v) in session where merged[k] == nil { merged[k] = v }
-        for (k, v) in user where merged[k] == nil { merged[k] = v }
-        return merged
+        EdotReactNative.mergeUserSessionGlobalAttributes(attrs)
       }
     )
 
@@ -308,6 +337,8 @@ class EdotReactNative: NSObject {
           deploymentEnvironment: config["deploymentEnvironment"] as? String
         )
         ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
+      } else {
+        EdotReactNative.warnDroppedJsFieldsAfterPreInit(config)
       }
 
       EdotReactNative.installCentralConfigSampleRateObserver()
@@ -758,7 +789,7 @@ class EdotReactNative: NSObject {
     urlSessionInstrumentation = URLSessionInstrumentation(configuration: urlSessionConfig)
   }
 
-  private static func persistencePreset(from raw: String) -> PersistencePerformancePreset {
+  static func persistencePreset(from raw: String) -> PersistencePerformancePreset {
     switch raw {
     case "highVolume": return .instantDataDelivery
     default: return .default
