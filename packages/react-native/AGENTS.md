@@ -156,6 +156,16 @@ Instrumentation scope names match iOS (`CPU Sampler`, `Memory Sampler`, version 
 
 Both metric installs are conditional on the JS config flags `enableAppMetricInstrumentation` and `enableSystemMetrics` (default `true`). Set either to `false` to opt out — the constructor for the corresponding class never runs and no `Meter` instruments are registered.
 
+### JS Bridge Forwarding for Native-Only Config Keys
+
+`mergeConfig` in `EdotReactNative.ts` is the single source of truth for what reaches the native bridge. Top-level config keys whose values only matter to native code (`disableAgent`, `managementUrl`, `remoteManagement`, `persistencePreset`, `attributeRedactions`, `ignoreSpanNames`, `ignoreLogPatterns`) must be explicitly spread into the returned `InternalConfig` — otherwise they're silently dropped at the JS layer and the native side reads `null`. Platform-specific keys (`config.ios.*` / `config.android.*`) flow automatically via `...platformExtras`. Regex-bearing fields (`ignoreSpanNames`, `ignoreLogPatterns.name`, `attributeRedactions.*Pattern`) use the `RegexSource` shape (`{ source, flags }`) because real `RegExp` objects don't survive the bridge.
+
+### Android Central Config
+
+`apm-agent-android` v1.5.0 wires `SampleRateManager` to listen for `CentralConfigurationManager` updates automatically — central-config sample-rate changes apply mid-session without any explicit observer. iOS needs `installCentralConfigSampleRateObserver()` to work around `apm-agent-ios`'s `SessionSampler` caching `shouldSample` until the next session refresh; Android has no equivalent caching quirk so no workaround is needed.
+
+`managementUrl` is wired on Android via `ElasticApmAgent.Builder.setManagementUrl(...)` (mirrors iOS's `withManagementUrl`). `remoteManagement: false` and `useOpAMP` are iOS-only — `apm-agent-android` v1.5.0 has no public Builder method to disable central-config polling or to switch transport (it uses HTTP polling by default), so those flags are documented as iOS-only in `EdotConfig`.
+
 ### Android Attribute Redactions, Span / Log Filters, and `disableAgent`
 
 `EdotConfigCompilers.kt` ports iOS's `compileAttributeRedactor` / `compileSpanNamePredicates` / `compileLogPredicates` helpers from `EdotReactNative.swift`. The compiled callbacks are passed through `EdotReactNativeAgent.buildFromJsConfig` and registered on the underlying `ElasticApmAgent.builder` using the upstream interceptor APIs:
