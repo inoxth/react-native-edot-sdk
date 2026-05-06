@@ -177,9 +177,9 @@ describe('nativeModule', () => {
 
     const { EdotNativeModule } = require('../nativeModule');
 
-    // Verify wrapper intercepts startSpan (calls 2-arg when parentSpanId is null)
+    // Verify wrapper intercepts startSpan (always 4-arg with empty-string sentinels)
     EdotNativeModule.startSpan('test', {}, null);
-    expect(turboModule.startSpan).toHaveBeenCalledWith('test', {});
+    expect(turboModule.startSpan).toHaveBeenCalledWith('test', {}, '', '');
 
     // Verify ALL other Spec methods remain accessible (not dropped by spread)
     expect(EdotNativeModule.initialize).toBe(turboModule.initialize);
@@ -203,9 +203,8 @@ describe('nativeModule', () => {
   });
 
   describe('startSpan wrapper', () => {
-    it('calls 2-arg startSpan when parentSpanId is null (avoids NSNull bridge error)', () => {
-      const mockStartSpan = jest.fn().mockReturnValue('span-1');
-      NativeModules.EdotReactNative = {
+    function makeFullModule(startSpan: jest.Mock): Record<string, jest.Mock> {
+      return {
         initialize: jest.fn(),
         getCurrentSessionId: jest.fn(),
         setUser: jest.fn(),
@@ -214,7 +213,7 @@ describe('nativeModule', () => {
         setGlobalAttribute: jest.fn(),
         removeGlobalAttribute: jest.fn(),
         reportJsException: jest.fn(),
-        startSpan: mockStartSpan,
+        startSpan,
         endSpan: jest.fn(),
         setSpanAttribute: jest.fn(),
         setSpanAttributeNumber: jest.fn(),
@@ -224,71 +223,51 @@ describe('nativeModule', () => {
         emitLog: jest.fn(),
         setTrackingConsent: jest.fn(),
       };
+    }
+
+    it('passes empty-string sentinels for parentSpanId and instrumentationName when null', () => {
+      const mockStartSpan = jest.fn().mockReturnValue('span-1');
+      NativeModules.EdotReactNative = makeFullModule(mockStartSpan);
 
       const { EdotNativeModule } = require('../nativeModule');
       const result = EdotNativeModule.startSpan('test', {}, null);
 
       expect(mockStartSpan).toHaveBeenCalledTimes(1);
-      expect(mockStartSpan).toHaveBeenCalledWith('test', {});
+      expect(mockStartSpan).toHaveBeenCalledWith('test', {}, '', '');
       expect(result).toBe('span-1');
     });
 
-    it('calls 3-arg startSpan when parentSpanId is provided', () => {
+    it('forwards parentSpanId and uses empty instrumentationName when only parent provided', () => {
       const mockStartSpan = jest.fn().mockReturnValue('span-2');
-      NativeModules.EdotReactNative = {
-        initialize: jest.fn(),
-        getCurrentSessionId: jest.fn(),
-        setUser: jest.fn(),
-        clearUser: jest.fn(),
-        setSessionAttribute: jest.fn(),
-        setGlobalAttribute: jest.fn(),
-        removeGlobalAttribute: jest.fn(),
-        reportJsException: jest.fn(),
-        startSpan: mockStartSpan,
-        endSpan: jest.fn(),
-        setSpanAttribute: jest.fn(),
-        setSpanAttributeNumber: jest.fn(),
-        setSpanAttributeBoolean: jest.fn(),
-        recordSpanException: jest.fn(),
-        recordMetric: jest.fn(),
-        emitLog: jest.fn(),
-        setTrackingConsent: jest.fn(),
-      };
+      NativeModules.EdotReactNative = makeFullModule(mockStartSpan);
 
       const { EdotNativeModule } = require('../nativeModule');
       const result = EdotNativeModule.startSpan('child', { key: 'val' }, 'parent-id');
 
-      expect(mockStartSpan).toHaveBeenCalledWith('child', { key: 'val' }, 'parent-id');
+      expect(mockStartSpan).toHaveBeenCalledWith('child', { key: 'val' }, 'parent-id', '');
       expect(result).toBe('span-2');
     });
 
-    it('calls 2-arg startSpan when parentSpanId is undefined', () => {
+    it('passes empty-string sentinels when both parentSpanId and instrumentationName are undefined', () => {
       const mockStartSpan = jest.fn().mockReturnValue('span-3');
-      NativeModules.EdotReactNative = {
-        initialize: jest.fn(),
-        getCurrentSessionId: jest.fn(),
-        setUser: jest.fn(),
-        clearUser: jest.fn(),
-        setSessionAttribute: jest.fn(),
-        setGlobalAttribute: jest.fn(),
-        removeGlobalAttribute: jest.fn(),
-        reportJsException: jest.fn(),
-        startSpan: mockStartSpan,
-        endSpan: jest.fn(),
-        setSpanAttribute: jest.fn(),
-        setSpanAttributeNumber: jest.fn(),
-        setSpanAttributeBoolean: jest.fn(),
-        recordSpanException: jest.fn(),
-        recordMetric: jest.fn(),
-        emitLog: jest.fn(),
-        setTrackingConsent: jest.fn(),
-      };
+      NativeModules.EdotReactNative = makeFullModule(mockStartSpan);
 
       const { EdotNativeModule } = require('../nativeModule');
       const result = EdotNativeModule.startSpan('test', {});
 
-      expect(mockStartSpan).toHaveBeenCalledWith('test', {});
+      expect(mockStartSpan).toHaveBeenCalledWith('test', {}, '', '');
       expect(result).toBe('span-3');
+    });
+
+    it('forwards instrumentationName with empty parentSpanId when only scope provided', () => {
+      const mockStartSpan = jest.fn().mockReturnValue('span-4');
+      NativeModules.EdotReactNative = makeFullModule(mockStartSpan);
+
+      const { EdotNativeModule } = require('../nativeModule');
+      const result = EdotNativeModule.startSpan('scoped', {}, null, '@inox/scope');
+
+      expect(mockStartSpan).toHaveBeenCalledWith('scoped', {}, '', '@inox/scope');
+      expect(result).toBe('span-4');
     });
   });
 
@@ -316,7 +295,7 @@ describe('nativeModule', () => {
       };
     }
 
-    it('calls 2-arg startClientSpan when parentSpanId is null (avoids NSNull bridge error)', () => {
+    it('passes empty-string sentinels for parentSpanId and instrumentationName when null', () => {
       const mockStartClientSpan = jest.fn().mockReturnValue('client-1');
       NativeModules.EdotReactNative = makeFullModule(mockStartClientSpan);
 
@@ -328,31 +307,34 @@ describe('nativeModule', () => {
       );
 
       expect(mockStartClientSpan).toHaveBeenCalledTimes(1);
-      expect(mockStartClientSpan).toHaveBeenCalledWith('GET api.example.com', {
-        'http.method': 'GET',
-      });
+      expect(mockStartClientSpan).toHaveBeenCalledWith(
+        'GET api.example.com',
+        { 'http.method': 'GET' },
+        '',
+        '',
+      );
       expect(result).toBe('client-1');
     });
 
-    it('calls 3-arg startClientSpan when parentSpanId is provided', () => {
+    it('forwards parentSpanId and uses empty instrumentationName when only parent provided', () => {
       const mockStartClientSpan = jest.fn().mockReturnValue('client-2');
       NativeModules.EdotReactNative = makeFullModule(mockStartClientSpan);
 
       const { EdotNativeModule } = require('../nativeModule');
       const result = EdotNativeModule.startClientSpan('GET api.example.com', {}, 'parent-id');
 
-      expect(mockStartClientSpan).toHaveBeenCalledWith('GET api.example.com', {}, 'parent-id');
+      expect(mockStartClientSpan).toHaveBeenCalledWith('GET api.example.com', {}, 'parent-id', '');
       expect(result).toBe('client-2');
     });
 
-    it('calls 2-arg startClientSpan when parentSpanId is undefined', () => {
+    it('passes empty-string sentinels when both parentSpanId and instrumentationName are undefined', () => {
       const mockStartClientSpan = jest.fn().mockReturnValue('client-3');
       NativeModules.EdotReactNative = makeFullModule(mockStartClientSpan);
 
       const { EdotNativeModule } = require('../nativeModule');
       const result = EdotNativeModule.startClientSpan('GET api.example.com', {});
 
-      expect(mockStartClientSpan).toHaveBeenCalledWith('GET api.example.com', {});
+      expect(mockStartClientSpan).toHaveBeenCalledWith('GET api.example.com', {}, '', '');
       expect(result).toBe('client-3');
     });
 

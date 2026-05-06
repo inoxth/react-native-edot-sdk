@@ -79,14 +79,16 @@ const loadedModule = loadNativeModule();
 // "EdotNativeModule missing expected methods: endSpan".
 // Use Proxy with Reflect.get() to preserve the full prototype chain.
 //
-// Also: never pass explicit JS `null` for parentSpanId across the bridge.
-// RCTBridge (Old Architecture) converts JS `null` → NSNull, which fails when
-// the native side expects an optional NSString. Omitting the argument entirely
-// (lower-arity call) maps `undefined` → nil, which both architectures accept.
-//
-// When `instrumentationName` is provided but `parentSpanId` is not, we pass an
-// empty string for the absent parentSpanId. Native code treats unknown / empty
-// span IDs as "no parent" via the registry lookup miss path.
+// Bridge arg-count behaviour:
+// - Android New Arch (TurboModule) is STRICT — `JavaTurboModule.cpp` throws
+//   `JavaTurboModuleInvalidArgumentCountException` when JS arity != Java arity
+//   (codegen registers `startSpan`/`startClientSpan` with arity 4).
+// - iOS Old Arch (RCTBridge) converts JS `null` → NSNull, which can't cast to
+//   an optional NSString.
+// We satisfy both by always calling the 4-arg form with empty-string sentinels
+// for absent values. Empty string is a valid NSString/String on both sides.
+// Native code treats empty `parentSpanId` as no-parent (registry lookup miss)
+// and empty `instrumentationName` as the default scope (`react-native-edot`).
 
 const startSpanWrapper = function (
   name: string,
@@ -94,13 +96,7 @@ const startSpanWrapper = function (
   parentSpanId?: string | null,
   instrumentationName?: string | null,
 ): string {
-  if (instrumentationName != null) {
-    return loadedModule.startSpan(name, attributes, parentSpanId ?? '', instrumentationName);
-  }
-  if (parentSpanId == null) {
-    return (loadedModule as any).startSpan(name, attributes);
-  }
-  return loadedModule.startSpan(name, attributes, parentSpanId);
+  return loadedModule.startSpan(name, attributes, parentSpanId ?? '', instrumentationName ?? '');
 };
 
 const startClientSpanWrapper = function (
@@ -109,22 +105,18 @@ const startClientSpanWrapper = function (
   parentSpanId?: string | null,
   instrumentationName?: string | null,
 ): string {
-  if (instrumentationName != null) {
-    return loadedModule.startClientSpan(name, attributes, parentSpanId ?? '', instrumentationName);
-  }
-  if (parentSpanId == null) {
-    return (loadedModule as any).startClientSpan(name, attributes);
-  }
-  return loadedModule.startClientSpan(name, attributes, parentSpanId);
+  return loadedModule.startClientSpan(
+    name,
+    attributes,
+    parentSpanId ?? '',
+    instrumentationName ?? '',
+  );
 };
 
 /**
- * Wraps startSpan / startClientSpan to avoid passing null/undefined
- * parentSpanId across the native bridge. RCTBridge serializes JS null
- * as NSNull, which fails when the native side expects an optional
- * NSString (NSNull cannot be cast to NSString). By calling the 2-arg
- * overload when parentSpanId is absent, both Old and New Architecture
- * bridges work correctly.
+ * Wraps startSpan / startClientSpan to satisfy strict-arity bridges (Android
+ * TurboModule) while avoiding `null` → NSNull on iOS Old Arch. Always emits a
+ * 4-arg call with empty-string sentinels for absent values.
  *
  * A Proxy is used instead of object spread so that prototype methods
  * (endSpan, initialize, etc.) remain accessible on TurboModule instances.
