@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "types": ["react-native", "jest", "node"]
+  },
+  "include": ["./**/*", "../**/*.ts", "../**/*.tsx", "../**/*.d.ts"]
+}
