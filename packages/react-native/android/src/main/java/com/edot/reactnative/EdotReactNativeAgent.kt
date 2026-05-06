@@ -71,7 +71,9 @@ object EdotReactNativeAgent {
 
         val builtAgent = builder.build()
         agent = builtAgent
-        installAppMetrics(application, builtAgent.getOpenTelemetry())
+        val openTelemetry = builtAgent.getOpenTelemetry()
+        installAppMetrics(application, openTelemetry)
+        installSystemMetrics(openTelemetry)
     }
 
     private fun requireResourceIdentity(name: String, value: String) {
@@ -106,6 +108,10 @@ object EdotReactNativeAgent {
 
     private fun installAppMetrics(application: Application, openTelemetry: OpenTelemetry) {
         EdotAppMetrics.install(application, openTelemetry)
+    }
+
+    private fun installSystemMetrics(openTelemetry: OpenTelemetry) {
+        EdotSystemMetrics.install(openTelemetry)
     }
 
     internal fun buildFromJsConfig(
@@ -145,7 +151,9 @@ object EdotReactNativeAgent {
 
         return builder.build().also {
             agent = it
-            installAppMetrics(application, it.getOpenTelemetry())
+            val openTelemetry = it.getOpenTelemetry()
+            installAppMetrics(application, openTelemetry)
+            installSystemMetrics(openTelemetry)
         }
     }
 }
