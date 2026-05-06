@@ -80,6 +80,19 @@ export interface EdotConfig {
   secretToken?: string;
   apiKey?: string;
 
+  /**
+   * OTLP transport protocol for traces, metrics, and logs.
+   *
+   * Defaults to `'http'` on both iOS and Android. We override the upstream
+   * default — `apm-agent-ios` defaults to gRPC and `apm-agent-android`
+   * defaults to HTTP — so the same omitted-config produces the same
+   * transport on both platforms. Set explicitly when you need gRPC.
+   *
+   * - `'http'` — OTLP/HTTP-protobuf, posts to `<serverUrl>/v1/{traces,metrics,logs}`.
+   *   Easier to proxy / load-balance.
+   * - `'grpc'` — OTLP/gRPC over HTTP/2 (same port). Requires server-side
+   *   gRPC support; on Android the OkHttp sender handles HTTP/2 negotiation.
+   */
   exportProtocol?: 'http' | 'grpc';
 
   sessionSamplingRate?: number;

@@ -60,7 +60,7 @@ function mergeConfig(config: EdotConfig): InternalConfig {
     ...(config.trackingConsent ? { trackingConsent: config.trackingConsent } : {}),
     ...(config.secretToken ? { secretToken: redactedString(config.secretToken) } : {}),
     ...(config.apiKey ? { apiKey: redactedString(config.apiKey) } : {}),
-    ...(config.exportProtocol ? { exportProtocol: config.exportProtocol } : {}),
+    exportProtocol: config.exportProtocol ?? 'http',
     ...(config.globalAttributes ? { globalAttributes: config.globalAttributes } : {}),
     ...(config.disableAgent !== undefined ? { disableAgent: config.disableAgent } : {}),
     ...(config.managementUrl !== undefined ? { managementUrl: config.managementUrl } : {}),
