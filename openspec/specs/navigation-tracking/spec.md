@@ -19,8 +19,8 @@ The SDK SHALL create one screen-lifetime span per screen visit. The span SHALL b
 - **THEN** the new span SHALL be named `Details`
 - **AND** SHALL include `screen.name = "Details"` and `last.screen.name = "Home"`
 
-### Requirement: Per-surface tracer scope
-The SDK SHALL pass a per-surface `instrumentationName` to `EdotNativeModule.startSpan(...)` so spans carry distinguishable `instrumentation.scope.name`. The component-based surface SHALL use `"@inox/react-native-edot-navigation"`. The Wix listener SHALL use `"@inox/react-native-edot-wix-navigation"`.
+### Requirement: Tracer scope
+The SDK SHALL pass `instrumentationName = "@inox/react-native-edot-navigation"` to `EdotNativeModule.startSpan(...)` for every navigation span so all navigation spans carry the same `instrumentation.scope.name` regardless of which navigator emitted them. The unified package owns one OpenTelemetry scope.
 
 #### Scenario: Component span scope
 - **WHEN** `<EdotNavigationProvider>` emits a screen-lifetime span
@@ -28,7 +28,7 @@ The SDK SHALL pass a per-surface `instrumentationName` to `EdotNativeModule.star
 
 #### Scenario: Wix listener span scope
 - **WHEN** `registerEdotNavigationListener` emits a screen-lifetime span
-- **THEN** the span SHALL carry `instrumentation.scope.name = "@inox/react-native-edot-wix-navigation"`
+- **THEN** the span SHALL carry `instrumentation.scope.name = "@inox/react-native-edot-navigation"`
 
 ### Requirement: Foreground re-emit
 The SDK SHALL register a foreground re-emitter via `ActiveViewContext.registerForegroundReEmitter(...)` so the SDK's app-state listener can re-emit the current screen on foreground. The re-emit SHALL be treated as a fresh visit, with `last.screen.name` omitted.

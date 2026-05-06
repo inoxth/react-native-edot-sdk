@@ -35,4 +35,4 @@ yarn android
 
 ## Wix Navigation Integration
 
-This example uses `registerEdotNavigationListener` from `@inox/react-native-edot-wix-navigation` to automatically track screen transitions as spans. A `screenNameMapper` maps component names to human-readable screen names.
+This example uses `registerEdotNavigationListener` from `@inox/react-native-edot-navigation` to automatically track screen transitions as spans. A `screenNameMapper` maps component names to human-readable screen names.

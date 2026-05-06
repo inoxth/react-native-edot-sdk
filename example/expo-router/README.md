@@ -60,5 +60,5 @@ app/
 ## SDK Packages Used
 
 - `@inox/react-native-edot-sdk` — Core SDK
-- `@inox/react-native-edot-expo-router` — Expo Router navigation tracking
+- `@inox/react-native-edot-navigation` — Navigation tracking (covers Expo Router)
 - `@inox/react-native-edot-tracer-provider` — Manual tracing and metrics

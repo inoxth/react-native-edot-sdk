@@ -5,7 +5,7 @@ import type {
   WixNavigationLike,
 } from './types';
 
-const INSTRUMENTATION_NAME = '@inox/react-native-edot-wix-navigation';
+const INSTRUMENTATION_NAME = '@inox/react-native-edot-navigation';
 
 export function registerEdotNavigationListener(
   Navigation: WixNavigationLike,

@@ -52,9 +52,15 @@ import { Navigation } from 'react-native-navigation';
 import { registerEdotNavigationListener } from '@inox/react-native-edot-navigation';
 
 Navigation.events().registerAppLaunchedListener(async () => {
-  await EdotReactNative.initialize({ /* ... */ });
-  registerEdotNavigationListener(Navigation, { screenNameMapper: name => SCREEN_NAME_MAP[name] ?? name });
-  Navigation.setRoot({ /* ... */ });
+  await EdotReactNative.initialize({
+    /* ... */
+  });
+  registerEdotNavigationListener(Navigation, {
+    screenNameMapper: (name) => SCREEN_NAME_MAP[name] ?? name,
+  });
+  Navigation.setRoot({
+    /* ... */
+  });
 });
 ```
 
@@ -68,9 +74,7 @@ For consumers building support for a navigator we don't ship out of the box. Ret
 
 - Span name: the route segment name (e.g. `'index'`, `'demos'`, `'network'`, `'(tabs)'`) after any `screenNameMapper` transformation
 - Span kind: `INTERNAL` (default)
-- Tracer scope (`instrumentationName`):
-  - `"@inox/react-native-edot-navigation"` for the component (react-navigation + expo-router)
-  - `"@inox/react-native-edot-wix-navigation"` for the Wix listener
+- Tracer scope (`instrumentationName`): `"@inox/react-native-edot-navigation"` for all three navigators (component-based + Wix listener share the same scope since they live in the same package)
 - Attributes: `screen.name`, plus `last.screen.name` only when a prior screen exists _and_ differs from the current
 
 ## Initialization ordering

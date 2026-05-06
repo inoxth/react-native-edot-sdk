@@ -15,7 +15,7 @@ const config = {
   resolver: {
     extraNodeModules: {
       '@inox/react-native-edot-sdk': path.resolve(root, 'packages/react-native'),
-      '@inox/react-native-edot-wix-navigation': path.resolve(root, 'packages/react-native-wix-navigation'),
+      '@inox/react-native-edot-navigation': path.resolve(root, 'packages/react-native-navigation'),
       '@inox/react-native-edot-tracer-provider': path.resolve(root, 'packages/react-native-tracer-provider'),
     },
     nodeModulesPaths: [

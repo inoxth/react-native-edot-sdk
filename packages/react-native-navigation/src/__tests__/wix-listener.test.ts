@@ -75,7 +75,7 @@ describe('registerEdotNavigationListener', () => {
       'HomeScreen',
       { 'screen.name': 'HomeScreen' },
       null,
-      '@inox/react-native-edot-wix-navigation',
+      '@inox/react-native-edot-navigation',
     );
     expect(ActiveViewContext.setActiveView).toHaveBeenCalledWith({
       name: 'HomeScreen',
@@ -98,7 +98,7 @@ describe('registerEdotNavigationListener', () => {
       'DemosScreen',
       { 'screen.name': 'DemosScreen', 'last.screen.name': 'HomeScreen' },
       null,
-      '@inox/react-native-edot-wix-navigation',
+      '@inox/react-native-edot-navigation',
     );
   });
 
@@ -114,7 +114,7 @@ describe('registerEdotNavigationListener', () => {
       'Home',
       { 'screen.name': 'Home' },
       null,
-      '@inox/react-native-edot-wix-navigation',
+      '@inox/react-native-edot-navigation',
     );
   });
 
@@ -160,7 +160,7 @@ describe('registerEdotNavigationListener', () => {
       'HomeScreen',
       { 'screen.name': 'HomeScreen' },
       null,
-      '@inox/react-native-edot-wix-navigation',
+      '@inox/react-native-edot-navigation',
     );
     const attrs = mockNativeModule.startSpan.mock.calls[0]?.[1] as Record<string, string>;
     expect(attrs).not.toHaveProperty('last.screen.name');

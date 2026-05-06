@@ -16,7 +16,7 @@ config.watchFolders = [root];
 
 config.resolver.extraNodeModules = {
   '@inox/react-native-edot-sdk': path.resolve(root, 'packages/react-native'),
-  '@inox/react-native-edot-expo-router': path.resolve(root, 'packages/react-native-expo-router'),
+  '@inox/react-native-edot-navigation': path.resolve(root, 'packages/react-native-navigation'),
   '@inox/react-native-edot-tracer-provider': path.resolve(root, 'packages/react-native-tracer-provider'),
 };
 
