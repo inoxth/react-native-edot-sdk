@@ -135,6 +135,16 @@ The iOS module replaces apm-agent-ios's global `MeterProvider` with a resource-a
 
 The histogram uses `setExplicitBucketBoundariesAdvice` with cold-start-appropriate boundaries `[0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.5, 4.0, 5.0, 7.5, 10.0, 15.0, 30.0]` (in seconds). OTel's default histogram boundaries `[0, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500, 5000, 7500, 10000]` are tuned for ms-scale HTTP request durations — without explicit advice, a typical 1–4 s cold start collapses into the first bucket `[0, 5]` and APM Server reports the bucket midpoint (2.5 s) regardless of the true value. iOS doesn't hit this issue because `EdotAppMetrics.swift` already advises bucket boundaries derived from MetricKit's payload.
 
+### Android OkHttp Auto-Instrumentation — Don't Add It
+
+`apm-agent-android` v1.5.0 does **not** auto-instrument OkHttp by default — OkHttp instrumentation is gated behind a separate Gradle plugin (`co.elastic.otel.android.instrumentation.okhttp`). All four example apps in this repo apply only the base `co.elastic.otel.android.agent` plugin, which is correct.
+
+**Do not add the OkHttp instrumentation plugin to consumer apps.** RN's `fetch` / `XHR` are already instrumented by the JS-side `instrumentation/fetch.ts` and `instrumentation/xhr.ts` (which call `EdotNativeModule.startClientSpan(...)` against the agent's tracer). Adding the OkHttp plugin would emit a _second_ span for every JS-initiated HTTP call — once at the JS layer and once at the OkHttp layer — silently doubling APM ingest cost and inflating dashboard counts.
+
+The iOS analog of this concern is `apm-agent-ios`'s `URLSessionInstrumentation`, which IS auto-applied by default and would also double-span JS fetch — that's why iOS installs a custom `URLSessionInstrumentation` filter that skips requests carrying the `X-Edot-RN-Traced: 1` header (set by `fetch.ts` / `xhr.ts`). Android doesn't need an equivalent dedup filter because the upstream OkHttp instrumentation isn't active in the default configuration.
+
+If a consumer app _needs_ OkHttp instrumentation for non-RN code paths (a native screen with its own OkHttp client, etc.), they should add an OkHttp `Interceptor` that calls `chain.proceed(request)` without emitting a span when `request.header("X-Edot-RN-Traced") != null`. We may ship a `EdotReactNativeAgent.createOkHttpDedupInterceptor()` helper in a future release if this becomes a recurring need.
+
 ### Android System Metrics
 
 Mirrors iOS's `EdotSystemMetrics.swift`. `EdotSystemMetrics.kt` registers two observable gauges via the agent's `Meter` and is installed alongside `EdotAppMetrics` from both pre-init and JS-init paths.
@@ -143,6 +153,24 @@ Mirrors iOS's `EdotSystemMetrics.swift`. `EdotSystemMetrics.kt` registers two ob
 - `system.memory.usage` (long gauge, attribute `state=app`) — total PSS (proportional set size) of the process in bytes, sampled per callback via `Debug.getMemoryInfo(Debug.MemoryInfo())`. Maps to iOS's `phys_footprint`.
 
 Instrumentation scope names match iOS (`CPU Sampler`, `Memory Sampler`, version `1.0.0`) so cross-platform dashboards filter on the same `instrumentation.scope.name`. `apm-agent-android` v1.5.0 has no equivalent of upstream's `CPUSampler` / `MemorySampler` exposed publicly — without `EdotSystemMetrics.kt` the gauges never reach APM Server on Android.
+
+Both metric installs are conditional on the JS config flags `enableAppMetricInstrumentation` and `enableSystemMetrics` (default `true`). Set either to `false` to opt out — the constructor for the corresponding class never runs and no `Meter` instruments are registered.
+
+### Android Attribute Redactions, Span / Log Filters, and `disableAgent`
+
+`EdotConfigCompilers.kt` ports iOS's `compileAttributeRedactor` / `compileSpanNamePredicates` / `compileLogPredicates` helpers from `EdotReactNative.swift`. The compiled callbacks are passed through `EdotReactNativeAgent.buildFromJsConfig` and registered on the underlying `ElasticApmAgent.builder` using the upstream interceptor APIs:
+
+| JS config                                                                     | Android upstream API                                                                                                                                                                              |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `attributeRedactions.spans` (`drop` / `dropPattern` / `mask` / `maskPattern`) | `addSpanAttributesInterceptor(Interceptor<Attributes>)`                                                                                                                                           |
+| `attributeRedactions.logs` (same shape)                                       | `addLogRecordAttributesInterceptor(Interceptor<Attributes>)`                                                                                                                                      |
+| `ignoreSpanNames` (string or `{source,flags}` regex per entry)                | `addSpanExporterInterceptor(...)` wrapping the exporter to filter `SpanData.name`                                                                                                                 |
+| `ignoreLogPatterns` (`{name?, minSeverity?}` per entry)                       | `addLogRecordExporterInterceptor(...)` wrapping the exporter to filter `LogRecordData.eventName` / `severity`                                                                                     |
+| `disableAgent: true`                                                          | `buildFromJsConfig` is skipped entirely; the agent never starts and `EdotAppMetrics` / `EdotSystemMetrics` are not installed. JS-side `setUser` / span APIs no-op via the existing emission gate. |
+
+Order is load-bearing: user-supplied span-attribute redactors are registered **after** the user/session/global injector so consumers can drop or mask attributes we just injected (`user.email`, etc.) — same ordering iOS uses. Filter exporters are wrapped via interceptors so dropped spans never reach the wire (early short-circuit if the entire batch is filtered).
+
+Pattern compilation: regex `flags` characters `i` / `m` / `s` map to `Pattern.CASE_INSENSITIVE` / `MULTILINE` / `DOTALL` to match iOS's `NSRegularExpression.Options` mapping.
 
 ### App-State Tracking
 
