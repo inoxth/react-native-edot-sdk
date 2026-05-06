@@ -8,6 +8,8 @@ import co.elastic.otel.android.features.diskbuffering.DiskBufferingConfiguration
 import co.elastic.otel.android.interceptor.Interceptor
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.common.Attributes
+import io.opentelemetry.sdk.logs.export.LogRecordExporter
+import io.opentelemetry.sdk.trace.export.SpanExporter
 import java.util.concurrent.atomic.AtomicBoolean
 
 object EdotReactNativeAgent {
@@ -125,6 +127,12 @@ object EdotReactNativeAgent {
         serviceName: String?,
         serviceVersion: String?,
         deploymentEnvironment: String?,
+        spanAttributeRedactor: Interceptor<Attributes>? = null,
+        logAttributeRedactor: Interceptor<Attributes>? = null,
+        spanExporterFilter: Interceptor<SpanExporter>? = null,
+        logExporterFilter: Interceptor<LogRecordExporter>? = null,
+        enableAppMetrics: Boolean = true,
+        enableSystemMetrics: Boolean = true,
     ): ElasticApmAgent {
         val builder = ElasticApmAgent.builder(application).setExportUrl(serverUrl)
         secretToken?.takeIf { it.isNotBlank() }?.let {
@@ -148,12 +156,23 @@ object EdotReactNativeAgent {
         serviceVersion?.takeIf { it.isNotBlank() }?.let { builder.setServiceVersion(it) }
         deploymentEnvironment?.takeIf { it.isNotBlank() }?.let { builder.setDeploymentEnvironment(it) }
         attachSpanAttributesInterceptor(builder)
+        // User-supplied redactors are registered AFTER the user/session/global
+        // interceptor so consumers can drop or mask values we just injected
+        // (e.g. user.email). Mirrors iOS ordering in EdotReactNative.swift.
+        spanAttributeRedactor?.let { builder.addSpanAttributesInterceptor(it) }
+        logAttributeRedactor?.let { builder.addLogRecordAttributesInterceptor(it) }
+        spanExporterFilter?.let { builder.addSpanExporterInterceptor(it) }
+        logExporterFilter?.let { builder.addLogRecordExporterInterceptor(it) }
 
         return builder.build().also {
             agent = it
             val openTelemetry = it.getOpenTelemetry()
-            installAppMetrics(application, openTelemetry)
-            installSystemMetrics(openTelemetry)
+            if (enableAppMetrics) {
+                installAppMetrics(application, openTelemetry)
+            }
+            if (enableSystemMetrics) {
+                installSystemMetrics(openTelemetry)
+            }
         }
     }
 }

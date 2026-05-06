@@ -138,8 +138,14 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
                 return
             }
 
-            if (!EdotReactNativeAgent.isPreInitialized) {
+            val agentDisabled = config.getBooleanSafe("disableAgent", false)
+
+            if (agentDisabled) {
+                debugLog("disableAgent=true; skipping native agent startup")
+            } else if (!EdotReactNativeAgent.isPreInitialized) {
                 val application = reactContext.applicationContext as Application
+                val redactions = config.takeIf { it.hasKey("attributeRedactions") }
+                    ?.getMap("attributeRedactions")
                 EdotReactNativeAgent.buildFromJsConfig(
                     application = application,
                     serverUrl = serverUrl,
@@ -151,6 +157,20 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
                     serviceName = config.getStringSafe("serviceName"),
                     serviceVersion = config.getStringSafe("serviceVersion"),
                     deploymentEnvironment = config.getStringSafe("deploymentEnvironment"),
+                    spanAttributeRedactor = EdotConfigCompilers.compileAttributeRedactor(
+                        redactions?.takeIf { it.hasKey("spans") }?.getMap("spans")
+                    ),
+                    logAttributeRedactor = EdotConfigCompilers.compileAttributeRedactor(
+                        redactions?.takeIf { it.hasKey("logs") }?.getMap("logs")
+                    ),
+                    spanExporterFilter = EdotConfigCompilers.makeSpanFilteringExporterInterceptor(
+                        EdotConfigCompilers.compileSpanNamePredicates(config, "ignoreSpanNames")
+                    ),
+                    logExporterFilter = EdotConfigCompilers.makeLogFilteringExporterInterceptor(
+                        EdotConfigCompilers.compileLogFilterRules(config, "ignoreLogPatterns")
+                    ),
+                    enableAppMetrics = config.getBooleanSafe("enableAppMetricInstrumentation", true),
+                    enableSystemMetrics = config.getBooleanSafe("enableSystemMetrics", true),
                 )
             } else {
                 warnDroppedJsFieldsAfterPreInit(config)
