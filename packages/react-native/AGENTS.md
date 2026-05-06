@@ -58,6 +58,32 @@ This package exposes subpath imports used by sibling packages:
 
 On iOS, `EdotReactNativeAgent.preInitialize(...)` (from `ios/EdotReactNativeAgent.swift`) can be called from AppDelegate before the JS bridge loads. It enforces the same resource-identity rules as JS `validateConfig` and injects `service.name`/`service.version`/`deployment.environment` into the OTel `Resource` via `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. If `isPreInitialized`, the JS-side `initialize()` skips `ElasticApmAgent.start` and only records config for the bridge.
 
+#### Per-platform service identity
+
+`EdotConfig.serviceName` is optional at the type level. The effective value for the running platform is resolved by `resolveResourceField(config, 'serviceName')` in `config.ts`: it returns `config.ios.serviceName` (resp. `config.android.serviceName`) when present, otherwise falls back to the top-level `config.serviceName`. `validateConfig` uses the resolved value for both the required-field check and the `,`/`=` character check. `mergeConfig` passes the resolved value as the single flat `serviceName` key on the bridge payload — native code (Swift / Kotlin) is unchanged and reads `config["serviceName"]` from a flat dict.
+
+```ts
+// Distinct services in the APM service map per platform:
+EdotReactNative.initialize({
+  serverUrl: 'https://apm.example.com:8200',
+  serviceVersion: '1.0.0',
+  deploymentEnvironment: 'production',
+  ios: { serviceName: 'myapp-ios' },
+  android: { serviceName: 'myapp-android' },
+});
+
+// Or with a top-level fallback and one platform-specific override:
+EdotReactNative.initialize({
+  serverUrl: 'https://apm.example.com:8200',
+  serviceName: 'myapp',
+  ios: { serviceName: 'myapp-ios-special' },
+  serviceVersion: '1.0.0',
+  deploymentEnvironment: 'production',
+});
+```
+
+When iOS pre-init is in use, the `serviceName` passed to `EdotReactNativeAgent.preInitialize(...)` from AppDelegate must match what JS `config.ios.serviceName ?? config.serviceName` resolves to — the native agent does not restart on the JS init call once pre-initialized, so a mismatch would silently disagree with the `OTEL_RESOURCE_ATTRIBUTES` env var.
+
 ### Instrumentation Pattern
 
 Each `setup*()` function in `instrumentation/` monkey-patches a global (fetch, XHR, ErrorUtils) and returns a `() => void` teardown that restores the original. `startup.ts` uses `requestIdleCallback` (not `InteractionManager`) to mark first-render. Startup emits a `cold` parent span with two child spans (`js_bundle_load` and `first_render`) and closes all three via `requestIdleCallback`.
@@ -80,14 +106,14 @@ The exported `EdotNativeModule` is a `Proxy` around the loaded native module. It
 
 Both `startSpan` and `startClientSpan` accept an optional `instrumentationName: string | null` 4th parameter. Default `"react-native-edot"` when omitted. Per-callsite scopes:
 
-| Callsite                                                                  | Scope                                    |
-| ------------------------------------------------------------------------- | ---------------------------------------- |
-| `<EdotNavigationProvider>` (react-navigation + expo-router; unified pkg)  | `@inox/react-native-edot-navigation`     |
-| `registerEdotNavigationListener` (Wix; unified pkg)                       | `@inox/react-native-edot-wix-navigation` |
-| `instrumentation/fetch.ts`                                                | `@inox/react-native-edot-sdk/fetch`      |
-| `instrumentation/xhr.ts`                                                  | `@inox/react-native-edot-sdk/xhr`        |
-| `instrumentation/errors.ts`                                               | `@inox/react-native-edot-sdk/errors`     |
-| `instrumentation/startup.ts`                                              | `@inox/react-native-edot-sdk/startup`    |
+| Callsite                                                                 | Scope                                 |
+| ------------------------------------------------------------------------ | ------------------------------------- |
+| `<EdotNavigationProvider>` (react-navigation + expo-router; unified pkg) | `@inox/react-native-edot-navigation`  |
+| `registerEdotNavigationListener` (Wix; unified pkg)                      | `@inox/react-native-edot-navigation`  |
+| `instrumentation/fetch.ts`                                               | `@inox/react-native-edot-sdk/fetch`   |
+| `instrumentation/xhr.ts`                                                 | `@inox/react-native-edot-sdk/xhr`     |
+| `instrumentation/errors.ts`                                              | `@inox/react-native-edot-sdk/errors`  |
+| `instrumentation/startup.ts`                                             | `@inox/react-native-edot-sdk/startup` |
 
 `startSpan` creates `kind=INTERNAL` spans (used by errors, startup, view, action, custom JS-driven spans). `startClientSpan` creates `kind=CLIENT` spans and is used by `fetch.ts` / `xhr.ts` so HTTP spans match what apm-agent-ios's native `URLSessionInstrumentation` emits.
 

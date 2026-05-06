@@ -23,7 +23,8 @@ import {
 } from '@inox/react-native-edot-tracer-provider';
 import {
   EDOT_SERVER_URL,
-  EDOT_SERVICE_NAME,
+  EDOT_SERVICE_NAME_IOS,
+  EDOT_SERVICE_NAME_ANDROID,
   EDOT_SERVICE_VERSION,
   EDOT_SECRET_TOKEN,
   EDOT_DEPLOYMENT_ENVIRONMENT,
@@ -162,7 +163,8 @@ export function App(): React.JSX.Element {
       try {
         await EdotReactNative.initialize({
           serverUrl: EDOT_SERVER_URL,
-          serviceName: EDOT_SERVICE_NAME || 'rn-edot-example',
+          ios: { serviceName: EDOT_SERVICE_NAME_IOS || 'edot-basic-example-ios' },
+          android: { serviceName: EDOT_SERVICE_NAME_ANDROID || 'edot-basic-example-android' },
           serviceVersion: EDOT_SERVICE_VERSION || '0.1.0',
           deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT || 'development',
           secretToken: EDOT_SECRET_TOKEN,

@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -8,15 +9,19 @@ import {
 } from 'react-native';
 import {
   EDOT_SERVER_URL,
-  EDOT_SERVICE_NAME,
+  EDOT_SERVICE_NAME_IOS,
+  EDOT_SERVICE_NAME_ANDROID,
   EDOT_SERVICE_VERSION,
   EDOT_SECRET_TOKEN,
   EDOT_DEPLOYMENT_ENVIRONMENT,
 } from '@env';
 
+const resolvedServiceName =
+  Platform.OS === 'ios' ? EDOT_SERVICE_NAME_IOS : EDOT_SERVICE_NAME_ANDROID;
+
 const CONFIG_ITEMS = [
   { label: 'Server URL', value: EDOT_SERVER_URL, testID: 'settings-server-url' },
-  { label: 'Service Name', value: EDOT_SERVICE_NAME, testID: 'settings-service-name' },
+  { label: 'Service Name', value: resolvedServiceName, testID: 'settings-service-name' },
   { label: 'Service Version', value: EDOT_SERVICE_VERSION },
   { label: 'Secret Token', value: EDOT_SECRET_TOKEN ? '****' : 'Not set' },
   { label: 'Environment', value: EDOT_DEPLOYMENT_ENVIRONMENT },

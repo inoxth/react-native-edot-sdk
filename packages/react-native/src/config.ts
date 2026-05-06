@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import type {
   AttributeRedactions,
   EdotConfig,
@@ -9,16 +10,19 @@ import type {
 
 const REQUIRED_FIELDS: (keyof EdotConfig)[] = [
   'serverUrl',
-  'serviceName',
   'serviceVersion',
   'deploymentEnvironment',
 ];
 
-const RESOURCE_IDENTITY_FIELDS: (keyof EdotConfig)[] = [
-  'serviceName',
-  'serviceVersion',
-  'deploymentEnvironment',
-];
+const RESOURCE_IDENTITY_FIELDS: (keyof EdotConfig)[] = ['serviceVersion', 'deploymentEnvironment'];
+
+type ResourceField = 'serviceName';
+
+export function resolveResourceField(config: EdotConfig, field: ResourceField): string | undefined {
+  const platformBlock =
+    Platform.OS === 'ios' ? config.ios : Platform.OS === 'android' ? config.android : undefined;
+  return platformBlock?.[field] ?? config[field];
+}
 
 function assertValidRegexSource(source: string, flags: string | undefined, field: string): void {
   try {
@@ -97,6 +101,18 @@ export function validateConfig(config: EdotConfig): void {
     if (!config[field]) {
       throw new Error(`[EDOT] ${field} is required`);
     }
+  }
+
+  const resolvedServiceName = resolveResourceField(config, 'serviceName');
+  if (!resolvedServiceName) {
+    throw new Error(
+      '[EDOT] serviceName is required (set top-level serviceName or ios.serviceName / android.serviceName)',
+    );
+  }
+  if (/[,=]/.test(resolvedServiceName)) {
+    throw new Error(
+      `[EDOT] serviceName must not contain ',' or '=' characters (got: ${JSON.stringify(resolvedServiceName)})`,
+    );
   }
 
   for (const field of RESOURCE_IDENTITY_FIELDS) {

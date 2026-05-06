@@ -245,6 +245,42 @@ describe('EdotReactNative', () => {
       expect(nativeConfig.enableCrashReporting).toBeUndefined();
     });
 
+    it('ios.serviceName overrides top-level serviceName in the bridge payload on iOS', async () => {
+      jest.doMock('react-native', () => ({ Platform: { OS: 'ios' } }));
+      jest.resetModules();
+
+      const { EdotReactNative: Fresh } = require('../EdotReactNative');
+      Fresh._resetForTesting();
+
+      await Fresh.initialize({
+        ...validConfig,
+        serviceName: 'myapp',
+        ios: { serviceName: 'myapp-ios' },
+      });
+
+      const { EdotNativeModule: MockModule } = require('../nativeModule');
+      const nativeConfig = (MockModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.serviceName).toBe('myapp-ios');
+    });
+
+    it('android.serviceName is ignored on iOS; top-level wins', async () => {
+      jest.doMock('react-native', () => ({ Platform: { OS: 'ios' } }));
+      jest.resetModules();
+
+      const { EdotReactNative: Fresh } = require('../EdotReactNative');
+      Fresh._resetForTesting();
+
+      await Fresh.initialize({
+        ...validConfig,
+        serviceName: 'myapp',
+        android: { serviceName: 'myapp-android' },
+      });
+
+      const { EdotNativeModule: MockModule } = require('../nativeModule');
+      const nativeConfig = (MockModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.serviceName).toBe('myapp');
+    });
+
     it('forwards top-level exportProtocol to native on both platforms', async () => {
       await EdotReactNative.initialize({ ...validConfig, exportProtocol: 'grpc' });
 

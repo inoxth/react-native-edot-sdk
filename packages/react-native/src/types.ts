@@ -64,7 +64,16 @@ export interface IgnoreLogRule {
 
 export interface EdotConfig {
   serverUrl: string;
-  serviceName: string;
+  /**
+   * Service name reported on the OTel `Resource` (`service.name`).
+   *
+   * Optional at the type level: validation requires that **either** this
+   * top-level value **or** the active platform's override
+   * (`ios.serviceName` / `android.serviceName`) resolves to a non-empty
+   * string with no `,` or `=` characters. The per-platform override wins
+   * when both are present.
+   */
+  serviceName?: string;
   serviceVersion: string;
   deploymentEnvironment: string;
 
@@ -161,6 +170,11 @@ export interface EdotConfig {
 }
 
 export interface EdotIosConfig {
+  /**
+   * iOS-only override for `serviceName`. When set, replaces the top-level
+   * `serviceName` in the OTel `Resource` on iOS.
+   */
+  serviceName?: string;
   enableCrashReporting?: boolean;
   enableURLSessionInstrumentation?: boolean;
   enableViewControllerInstrumentation?: boolean;
@@ -171,6 +185,11 @@ export interface EdotIosConfig {
 }
 
 export interface EdotAndroidConfig {
+  /**
+   * Android-only override for `serviceName`. When set, replaces the
+   * top-level `serviceName` in the OTel `Resource` on Android.
+   */
+  serviceName?: string;
   diskBufferingEnabled?: boolean;
 }
 

@@ -21,7 +21,7 @@ describe('validateConfig', () => {
 
   it('throws when serviceName is missing', () => {
     expect(() => validateConfig({ ...validConfig, serviceName: '' })).toThrow(
-      'serviceName is required',
+      'serviceName is required (set top-level serviceName or ios.serviceName / android.serviceName)',
     );
   });
 
@@ -301,6 +301,72 @@ describe('validateConfig', () => {
           ignoreLogPatterns: [{ name: { source: '(broken[' } }],
         }),
       ).toThrow('invalid regex source');
+    });
+  });
+
+  describe('per-platform serviceName', () => {
+    afterEach(() => {
+      jest.dontMock('react-native');
+      jest.resetModules();
+    });
+
+    function loadValidator(platformOS: 'ios' | 'android'): (config: EdotConfig) => void {
+      jest.doMock('react-native', () => ({ Platform: { OS: platformOS } }));
+      jest.resetModules();
+      return require('../config').validateConfig;
+    }
+
+    function baseConfigWithoutServiceName(): EdotConfig {
+      const { serviceName: _omit, ...rest } = validConfig;
+      return rest;
+    }
+
+    it('accepts ios.serviceName when top-level serviceName is missing on iOS', () => {
+      const validate = loadValidator('ios');
+      expect(() =>
+        validate({ ...baseConfigWithoutServiceName(), ios: { serviceName: 'myapp-ios' } }),
+      ).not.toThrow();
+    });
+
+    it('accepts android.serviceName when top-level serviceName is missing on Android', () => {
+      const validate = loadValidator('android');
+      expect(() =>
+        validate({ ...baseConfigWithoutServiceName(), android: { serviceName: 'myapp-android' } }),
+      ).not.toThrow();
+    });
+
+    it('throws on Android when only ios.serviceName is provided', () => {
+      const validate = loadValidator('android');
+      expect(() =>
+        validate({ ...baseConfigWithoutServiceName(), ios: { serviceName: 'myapp-ios' } }),
+      ).toThrow(
+        'serviceName is required (set top-level serviceName or ios.serviceName / android.serviceName)',
+      );
+    });
+
+    it('throws on iOS when only android.serviceName is provided', () => {
+      const validate = loadValidator('ios');
+      expect(() =>
+        validate({ ...baseConfigWithoutServiceName(), android: { serviceName: 'myapp-android' } }),
+      ).toThrow(
+        'serviceName is required (set top-level serviceName or ios.serviceName / android.serviceName)',
+      );
+    });
+
+    it("rejects ios.serviceName containing ',' or '='", () => {
+      const validate = loadValidator('ios');
+      expect(() =>
+        validate({ ...baseConfigWithoutServiceName(), ios: { serviceName: 'foo,bar' } }),
+      ).toThrow("serviceName must not contain ',' or '='");
+    });
+
+    it('throws when active-platform serviceName is empty even with no top-level value', () => {
+      const validate = loadValidator('ios');
+      expect(() =>
+        validate({ ...baseConfigWithoutServiceName(), ios: { serviceName: '' } }),
+      ).toThrow(
+        'serviceName is required (set top-level serviceName or ios.serviceName / android.serviceName)',
+      );
     });
   });
 });

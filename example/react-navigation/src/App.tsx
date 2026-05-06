@@ -7,7 +7,8 @@ import { EdotReactNative } from '@inox/react-native-edot-sdk';
 import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
 import {
   EDOT_SERVER_URL,
-  EDOT_SERVICE_NAME,
+  EDOT_SERVICE_NAME_IOS,
+  EDOT_SERVICE_NAME_ANDROID,
   EDOT_SERVICE_VERSION,
   EDOT_SECRET_TOKEN,
   EDOT_DEPLOYMENT_ENVIRONMENT,
@@ -72,7 +73,8 @@ export function App(): React.JSX.Element {
       try {
         await EdotReactNative.initialize({
           serverUrl: EDOT_SERVER_URL,
-          serviceName: EDOT_SERVICE_NAME ?? 'edot-react-nav-example',
+          ios: { serviceName: EDOT_SERVICE_NAME_IOS ?? 'edot-react-nav-example-ios' },
+          android: { serviceName: EDOT_SERVICE_NAME_ANDROID ?? 'edot-react-nav-example-android' },
           serviceVersion: EDOT_SERVICE_VERSION ?? '0.1.0',
           deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT ?? 'development',
           secretToken: EDOT_SECRET_TOKEN,

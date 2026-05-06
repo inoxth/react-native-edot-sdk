@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import type { EdotConfig, EdotUser, TrackingConsent } from './types';
 import { DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE, EDOT_DEFAULTS } from './defaults';
-import { validateConfig } from './config';
+import { resolveResourceField, validateConfig } from './config';
 import { EdotNativeModule } from './nativeModule';
 import { redactedString } from '@inox/react-native-edot-shared';
 import type { RedactedString } from '@inox/react-native-edot-shared';
@@ -36,9 +36,12 @@ function mergeConfig(config: EdotConfig): InternalConfig {
   const platformConfig =
     Platform.OS === 'ios' ? config.ios : Platform.OS === 'android' ? config.android : undefined;
 
+  const { serviceName: _platformServiceName, ...platformExtras } = platformConfig ?? {};
+  const resolvedServiceName = resolveResourceField(config, 'serviceName') ?? '';
+
   return {
     serverUrl: config.serverUrl,
-    serviceName: config.serviceName,
+    serviceName: resolvedServiceName,
     serviceVersion: config.serviceVersion,
     deploymentEnvironment: config.deploymentEnvironment,
     debug: config.debug ?? EDOT_DEFAULTS.debug,
@@ -52,7 +55,7 @@ function mergeConfig(config: EdotConfig): InternalConfig {
     ...(config.apiKey ? { apiKey: redactedString(config.apiKey) } : {}),
     ...(config.exportProtocol ? { exportProtocol: config.exportProtocol } : {}),
     ...(config.globalAttributes ? { globalAttributes: config.globalAttributes } : {}),
-    ...platformConfig,
+    ...platformExtras,
   };
 }
 
@@ -78,7 +81,7 @@ async function doInitialize(config: EdotConfig): Promise<void> {
 
     debugLog(config, 'Initializing with config:', {
       serverUrl: config.serverUrl,
-      serviceName: config.serviceName,
+      serviceName: internalConfig.serviceName,
       debug: config.debug,
     });
 

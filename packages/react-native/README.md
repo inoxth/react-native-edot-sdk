@@ -72,90 +72,106 @@ await EdotReactNative.initialize({
 
 Auto-instrumentation for network, errors, and startup is enabled by default. Lifecycle events (`event.name="lifecycle"`, `event.domain="device"`) are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec.
 
+To report iOS and Android as distinct services in the Elastic APM service map, supply `serviceName` per platform — top-level `serviceName` then becomes optional:
+
+```typescript
+await EdotReactNative.initialize({
+  serverUrl: 'https://your-apm-server:8200',
+  serviceVersion: '1.0.0',
+  deploymentEnvironment: 'production',
+  ios: { serviceName: 'myapp-ios' },
+  android: { serviceName: 'myapp-android' },
+});
+```
+
+The platform-specific `serviceName` overrides the top-level value when both are present. At least one must resolve for the active platform.
+
 ## Configuration
 
 `EdotReactNative.initialize(config)` accepts the following options. The full type is exported as `EdotConfig`.
 
 ### Required
 
-| Option | Type | Description |
-|---|---|---|
-| `serverUrl` | `string` | EDOT / APM server URL |
-| `serviceName` | `string` | Service name (no `,` or `=`) |
-| `serviceVersion` | `string` | Service version (no `,` or `=`) |
-| `deploymentEnvironment` | `string` | `production`, `staging`, etc. |
+| Option                  | Type     | Description                                                                                                                                                            |
+| ----------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `serverUrl`             | `string` | EDOT / APM server URL                                                                                                                                                  |
+| `serviceName`           | `string` | Service name (no `,` or `=`). Optional if `ios.serviceName` / `android.serviceName` is set for the active platform; the per-platform value wins when both are present. |
+| `serviceVersion`        | `string` | Service version (no `,` or `=`)                                                                                                                                        |
+| `deploymentEnvironment` | `string` | `production`, `staging`, etc.                                                                                                                                          |
 
 ### Authentication (pick one)
 
-| Option | Type | Description |
-|---|---|---|
+| Option        | Type     | Description                                     |
+| ------------- | -------- | ----------------------------------------------- |
 | `secretToken` | `string` | Secret token. Mutually exclusive with `apiKey`. |
-| `apiKey` | `string` | API key. Mutually exclusive with `secretToken`. |
+| `apiKey`      | `string` | API key. Mutually exclusive with `secretToken`. |
 
 Both are wrapped in a redacted-string container immediately on receipt — `JSON.stringify(config)` will not leak them.
 
 ### Auto-instrumentation toggles
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `instrumentNetworkRequests` | `boolean` | `true` | `fetch` + XHR spans |
-| `instrumentJsErrors` | `boolean` | `true` | Uncaught exceptions + unhandled rejections |
-| `instrumentAppStartup` | `boolean` | `true` | Cold/warm start spans |
-| `appStateTracking` | `boolean` | `true` | Foreground/background screen-lifetime spans |
+| Option                      | Type      | Default | Description                                 |
+| --------------------------- | --------- | ------- | ------------------------------------------- |
+| `instrumentNetworkRequests` | `boolean` | `true`  | `fetch` + XHR spans                         |
+| `instrumentJsErrors`        | `boolean` | `true`  | Uncaught exceptions + unhandled rejections  |
+| `instrumentAppStartup`      | `boolean` | `true`  | Cold/warm start spans                       |
+| `appStateTracking`          | `boolean` | `true`  | Foreground/background screen-lifetime spans |
 
 ### Network filtering
 
-| Option | Type | Description |
-|---|---|---|
-| `tracePropagationTargets` | `(string \| RegExp)[]` | URLs to inject `traceparent` into. Defaults to none. |
-| `ignoreUrls` | `(string \| RegExp)[]` | URLs to skip span creation for. |
-| `graphqlUrls` | `(string \| RegExp)[]` | URLs treated as GraphQL endpoints (operation name parsed from body). |
-| `urlSanitizer` | `(url: string) => string` | Strip secrets/PII from `http.url` before export. |
+| Option                    | Type                      | Description                                                          |
+| ------------------------- | ------------------------- | -------------------------------------------------------------------- |
+| `tracePropagationTargets` | `(string \| RegExp)[]`    | URLs to inject `traceparent` into. Defaults to none.                 |
+| `ignoreUrls`              | `(string \| RegExp)[]`    | URLs to skip span creation for.                                      |
+| `graphqlUrls`             | `(string \| RegExp)[]`    | URLs treated as GraphQL endpoints (operation name parsed from body). |
+| `urlSanitizer`            | `(url: string) => string` | Strip secrets/PII from `http.url` before export.                     |
 
 ### Sampling & consent
 
-| Option | Type | Description |
-|---|---|---|
-| `sessionSamplingRate` | `number` | `0.0`–`1.0`. Defaults to native agent's default. |
-| `trackingConsent` | `'granted' \| 'pending' \| 'not_granted'` | JS-side emission gate. |
+| Option                | Type                                      | Description                                      |
+| --------------------- | ----------------------------------------- | ------------------------------------------------ |
+| `sessionSamplingRate` | `number`                                  | `0.0`–`1.0`. Defaults to native agent's default. |
+| `trackingConsent`     | `'granted' \| 'pending' \| 'not_granted'` | JS-side emission gate.                           |
 
 ### Transport
 
-| Option | Type | Description |
-|---|---|---|
+| Option           | Type               | Description                                                     |
+| ---------------- | ------------------ | --------------------------------------------------------------- |
 | `exportProtocol` | `'http' \| 'grpc'` | Defaults to `'grpc'` (matches apm-agent-ios trace/log default). |
 
 ### Attributes
 
-| Option | Type | Description |
-|---|---|---|
-| `globalAttributes` | `Record<string, string \| number \| boolean>` | Attributes attached to every signal. |
-| `userAttributes.includeInSpans` | `'all' \| 'id-only' \| 'none'` | How user identity propagates onto span attributes. Defaults to `'id-only'`. |
+| Option                          | Type                                          | Description                                                                 |
+| ------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------- |
+| `globalAttributes`              | `Record<string, string \| number \| boolean>` | Attributes attached to every signal.                                        |
+| `userAttributes.includeInSpans` | `'all' \| 'id-only' \| 'none'`                | How user identity propagates onto span attributes. Defaults to `'id-only'`. |
 
 ### iOS-only
 
 Pass these under `ios: { … }` in the config:
 
-| Option | Type | Description |
-|---|---|---|
-| `ios.enableCrashReporting` | `boolean` | Enable native crash reporting. |
-| `ios.enableURLSessionInstrumentation` | `boolean` | Enable native `URLSession` HTTP spans. Off by default — JS-side fetch/XHR instrumentation is the canonical path. |
-| `ios.enableViewControllerInstrumentation` | `boolean` | Enable `UIViewController` lifecycle spans. Off by default — JS navigation plugin is the canonical path. |
-| `ios.enableAppMetricInstrumentation` | `boolean` | Enable native app metrics. Defaults to `true`. |
-| `ios.enableSystemMetrics` | `boolean` | Enable native CPU / memory / battery metrics. Defaults to `true`. |
-| `ios.enableLifecycleEvents` | `boolean` | Enable foreground/background/inactive/terminate lifecycle events. |
-| `ios.useOpAMP` | `boolean` | Use OpAMP transport for central config. |
+| Option                                    | Type      | Description                                                                                                      |
+| ----------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------- |
+| `ios.serviceName`                         | `string`  | Override `serviceName` on iOS. Falls back to top-level `serviceName` when omitted.                               |
+| `ios.enableCrashReporting`                | `boolean` | Enable native crash reporting.                                                                                   |
+| `ios.enableURLSessionInstrumentation`     | `boolean` | Enable native `URLSession` HTTP spans. Off by default — JS-side fetch/XHR instrumentation is the canonical path. |
+| `ios.enableViewControllerInstrumentation` | `boolean` | Enable `UIViewController` lifecycle spans. Off by default — JS navigation plugin is the canonical path.          |
+| `ios.enableAppMetricInstrumentation`      | `boolean` | Enable native app metrics. Defaults to `true`.                                                                   |
+| `ios.enableSystemMetrics`                 | `boolean` | Enable native CPU / memory / battery metrics. Defaults to `true`.                                                |
+| `ios.enableLifecycleEvents`               | `boolean` | Enable foreground/background/inactive/terminate lifecycle events.                                                |
+| `ios.useOpAMP`                            | `boolean` | Use OpAMP transport for central config.                                                                          |
 
 ### Android-only
 
-| Option | Type | Description |
-|---|---|---|
-| `android.diskBufferingEnabled` | `boolean` | Persist signals across process restarts. |
+| Option                         | Type      | Description                                                                            |
+| ------------------------------ | --------- | -------------------------------------------------------------------------------------- |
+| `android.serviceName`          | `string`  | Override `serviceName` on Android. Falls back to top-level `serviceName` when omitted. |
+| `android.diskBufferingEnabled` | `boolean` | Persist signals across process restarts.                                               |
 
 ### Debug
 
-| Option | Type | Description |
-|---|---|---|
+| Option  | Type      | Description                                     |
+| ------- | --------- | ----------------------------------------------- |
 | `debug` | `boolean` | Enables `[EDOT]` console logs from the JS side. |
 
 ## Error boundary
@@ -188,7 +204,7 @@ import { TouchableOpacity } from 'react-native';
 const TrackedButton = withEdotTracking(TouchableOpacity, 'CheckoutButton');
 
 // Renders normally; emits a tap action when pressed.
-<TrackedButton onPress={handleCheckout}>...</TrackedButton>
+<TrackedButton onPress={handleCheckout}>...</TrackedButton>;
 ```
 
 ### `useEdotAction` hook

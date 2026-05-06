@@ -22,10 +22,11 @@ Each app owns its own `.env` and `.env.example` at the app root — there is no 
 cp example/<app>/.env.example example/<app>/.env
 ```
 
-All four templates declare the same five vars: `EDOT_SERVER_URL`, `EDOT_SERVICE_NAME`,
-`EDOT_SERVICE_VERSION`, `EDOT_SECRET_TOKEN`, `EDOT_DEPLOYMENT_ENVIRONMENT`. They are consumed via
-`react-native-dotenv` (`import ... from '@env'`). If `EDOT_SERVER_URL` is empty, each app surfaces
-a user-visible "Missing .env" message and skips SDK init without crashing the app.
+All four templates declare the same six vars: `EDOT_SERVER_URL`, `EDOT_SERVICE_NAME_IOS`,
+`EDOT_SERVICE_NAME_ANDROID`, `EDOT_SERVICE_VERSION`, `EDOT_SECRET_TOKEN`,
+`EDOT_DEPLOYMENT_ENVIRONMENT`. They are consumed via `react-native-dotenv`
+(`import ... from '@env'`). If `EDOT_SERVER_URL` is empty, each app surfaces a user-visible
+"Missing .env" message and skips SDK init without crashing the app.
 
 ## Architecture Coverage
 
@@ -58,13 +59,16 @@ All apps initialize in their entry point (`App.tsx` or `index.js`):
 ```js
 await EdotReactNative.initialize({
   serverUrl: EDOT_SERVER_URL,
-  serviceName: EDOT_SERVICE_NAME ?? 'edot-<app>-example',
+  ios: { serviceName: EDOT_SERVICE_NAME_IOS ?? 'edot-<app>-example-ios' },
+  android: { serviceName: EDOT_SERVICE_NAME_ANDROID ?? 'edot-<app>-example-android' },
   serviceVersion: EDOT_SERVICE_VERSION ?? '0.1.0',
   deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT ?? 'development',
   secretToken: EDOT_SECRET_TOKEN,
   debug: true,
 });
 ```
+
+All four templates demonstrate the per-platform `serviceName` override — `EDOT_SERVICE_NAME_IOS` and `EDOT_SERVICE_NAME_ANDROID` are independent env vars, so each platform shows up as a distinct service in the APM service map. The previous combined `EDOT_SERVICE_NAME` env var is replaced by the two platform-specific ones.
 
 Config values come from `.env` via `react-native-dotenv` (`@env` import).
 
