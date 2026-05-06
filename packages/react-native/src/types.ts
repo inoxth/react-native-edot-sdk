@@ -132,7 +132,8 @@ export interface EdotConfig {
    *
    * Falls back to `serverUrl` when omitted.
    *
-   * iOS only. Has no effect on Android.
+   * Wired on both iOS and Android (`apm-agent-ios.withManagementUrl` /
+   * `ElasticApmAgent.Builder.setManagementUrl`).
    */
   managementUrl?: string;
 
@@ -141,7 +142,8 @@ export interface EdotConfig {
    * Defaults to `true` when omitted. Set to `false` to disable polling
    * entirely regardless of `managementUrl`.
    *
-   * iOS only. Has no effect on Android.
+   * iOS only. `apm-agent-android` v1.5.0 has no public API to disable
+   * central-config polling, so this flag has no effect on Android.
    */
   remoteManagement?: boolean;
 

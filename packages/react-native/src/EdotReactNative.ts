@@ -1,5 +1,12 @@
 import { Platform } from 'react-native';
-import type { EdotConfig, EdotUser, TrackingConsent } from './types';
+import type {
+  EdotConfig,
+  EdotUser,
+  IgnoreLogRule,
+  IgnoreSpanRule,
+  RegexSource,
+  TrackingConsent,
+} from './types';
 import { DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE, EDOT_DEFAULTS } from './defaults';
 import { resolveResourceField, validateConfig } from './config';
 import { EdotNativeModule } from './nativeModule';
@@ -55,8 +62,43 @@ function mergeConfig(config: EdotConfig): InternalConfig {
     ...(config.apiKey ? { apiKey: redactedString(config.apiKey) } : {}),
     ...(config.exportProtocol ? { exportProtocol: config.exportProtocol } : {}),
     ...(config.globalAttributes ? { globalAttributes: config.globalAttributes } : {}),
+    ...(config.disableAgent !== undefined ? { disableAgent: config.disableAgent } : {}),
+    ...(config.managementUrl !== undefined ? { managementUrl: config.managementUrl } : {}),
+    ...(config.remoteManagement !== undefined ? { remoteManagement: config.remoteManagement } : {}),
+    ...(config.persistencePreset !== undefined
+      ? { persistencePreset: config.persistencePreset }
+      : {}),
+    ...(config.attributeRedactions !== undefined
+      ? { attributeRedactions: config.attributeRedactions }
+      : {}),
+    ...(config.ignoreSpanNames !== undefined
+      ? { ignoreSpanNames: serializeSpanRules(config.ignoreSpanNames) }
+      : {}),
+    ...(config.ignoreLogPatterns !== undefined
+      ? { ignoreLogPatterns: serializeLogRules(config.ignoreLogPatterns) }
+      : {}),
     ...platformExtras,
   };
+}
+
+type SerializedSpanRule = string | RegexSource;
+type SerializedLogRule = { name?: string | RegexSource; minSeverity?: string };
+
+function serializeSpanRules(rules: ReadonlyArray<IgnoreSpanRule>): SerializedSpanRule[] {
+  return rules.map((rule) => rule);
+}
+
+function serializeLogRules(rules: ReadonlyArray<IgnoreLogRule>): SerializedLogRule[] {
+  return rules.map((rule) => {
+    const out: SerializedLogRule = {};
+    if (rule.name !== undefined) {
+      out.name = rule.name;
+    }
+    if (rule.minSeverity !== undefined) {
+      out.minSeverity = rule.minSeverity;
+    }
+    return out;
+  });
 }
 
 function revealCredentials(config: InternalConfig): Record<string, unknown> {
