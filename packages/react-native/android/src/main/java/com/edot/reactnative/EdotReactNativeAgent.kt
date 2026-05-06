@@ -37,6 +37,7 @@ object EdotReactNativeAgent {
         sessionSamplingRate: Double? = null,
         exportProtocol: String? = null,
         diskBufferingEnabled: Boolean? = null,
+        managementUrl: String? = null,
     ) {
         require(serverUrl.isNotBlank()) { "[EDOT] serverUrl must not be blank" }
         requireResourceIdentity("serviceName", serviceName)
@@ -69,6 +70,7 @@ object EdotReactNativeAgent {
                 if (it) DiskBufferingConfiguration.enabled() else DiskBufferingConfiguration.disabled()
             )
         }
+        managementUrl?.takeIf { it.isNotBlank() }?.let { builder.setManagementUrl(it) }
         attachSpanAttributesInterceptor(builder)
 
         val builtAgent = builder.build()
@@ -127,6 +129,7 @@ object EdotReactNativeAgent {
         serviceName: String?,
         serviceVersion: String?,
         deploymentEnvironment: String?,
+        managementUrl: String? = null,
         spanAttributeRedactor: Interceptor<Attributes>? = null,
         logAttributeRedactor: Interceptor<Attributes>? = null,
         spanExporterFilter: Interceptor<SpanExporter>? = null,
@@ -155,6 +158,7 @@ object EdotReactNativeAgent {
         serviceName?.takeIf { it.isNotBlank() }?.let { builder.setServiceName(it) }
         serviceVersion?.takeIf { it.isNotBlank() }?.let { builder.setServiceVersion(it) }
         deploymentEnvironment?.takeIf { it.isNotBlank() }?.let { builder.setDeploymentEnvironment(it) }
+        managementUrl?.takeIf { it.isNotBlank() }?.let { builder.setManagementUrl(it) }
         attachSpanAttributesInterceptor(builder)
         // User-supplied redactors are registered AFTER the user/session/global
         // interceptor so consumers can drop or mask values we just injected

@@ -157,6 +157,7 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
                     serviceName = config.getStringSafe("serviceName"),
                     serviceVersion = config.getStringSafe("serviceVersion"),
                     deploymentEnvironment = config.getStringSafe("deploymentEnvironment"),
+                    managementUrl = config.getStringSafe("managementUrl"),
                     spanAttributeRedactor = EdotConfigCompilers.compileAttributeRedactor(
                         redactions?.takeIf { it.hasKey("spans") }?.getMap("spans")
                     ),
