@@ -16,7 +16,9 @@ src/
 ├── types.ts                    # EdotConfig, EdotUser, platform config types
 ├── defaults.ts                 # EDOT_DEFAULTS for instrumentation toggles
 ├── activeViewContext.ts        # Re-export from @inox/react-native-edot-shared
+├── globals.d.ts                # Ambient typings for global / ErrorUtils / requestIdleCallback
 ├── instrumentation/
+│   ├── app-state.ts            # AppState listener — ends screen-lifetime span on background, re-emits on foreground
 │   ├── fetch.ts                # fetch() monkey-patch with span creation
 │   ├── xhr.ts                  # XMLHttpRequest monkey-patch
 │   ├── errors.ts               # Global error + promise rejection handlers
