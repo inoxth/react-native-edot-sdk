@@ -1,3 +1,6 @@
+// oxlint-disable-next-line typescript/triple-slash-reference -- ambient global declarations need to load
+/// <reference path="./globals.d.ts" />
+
 export { EdotReactNative } from './EdotReactNative';
 export { EdotErrorBoundary } from './components/EdotErrorBoundary';
 export { ActiveViewContext } from './activeViewContext';

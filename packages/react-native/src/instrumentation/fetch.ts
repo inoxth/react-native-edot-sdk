@@ -22,11 +22,12 @@ const DEDUP_HEADER = 'X-Edot-RN-Traced';
 export function setupFetchInstrumentation(config: EdotConfig): () => void {
   const originalFetch = global.fetch;
 
-  global.fetch = async (input: RequestInfo, init?: RequestInit): Promise<Response> => {
+  global.fetch = async (input: URL | RequestInfo, init?: RequestInit): Promise<Response> => {
+    const forwardInput: RequestInfo = input instanceof URL ? input.toString() : input;
     const url = extractUrl(input);
 
     if (shouldIgnore(url, config.ignoreUrls, config.serverUrl)) {
-      return originalFetch(input, init);
+      return originalFetch(forwardInput, init);
     }
 
     let nativeSpanId: string | undefined;
@@ -90,7 +91,7 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
         );
       }
 
-      const response = await originalFetch(input, patchedInit);
+      const response = await originalFetch(forwardInput, patchedInit);
 
       EdotNativeModule.setSpanAttributeNumber(nativeSpanId, 'http.status_code', response.status);
 

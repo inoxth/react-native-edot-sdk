@@ -1,7 +1,8 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",
+  "extends": "@react-native/typescript-config",
   "compilerOptions": {
     "jsx": "react-native",
+    "types": ["react-native", "jest"],
     "paths": {
       "@inox/react-native-edot-sdk": ["../../packages/react-native/src"],
       "@inox/react-native-edot-tracer-provider": ["../../packages/react-native-tracer-provider/src"]

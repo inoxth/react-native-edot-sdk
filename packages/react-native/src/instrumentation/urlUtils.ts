@@ -49,19 +49,22 @@ export function shouldPropagate(url: string, targets: (string | RegExp)[] | unde
   });
 }
 
-export function extractMethod(input: RequestInfo, init?: RequestInit): string {
+export function extractMethod(input: URL | RequestInfo, init?: RequestInit): string {
   if (init?.method) {
     return init.method.toUpperCase();
   }
-  if (typeof input !== 'string' && 'method' in input) {
+  if (typeof input !== 'string' && !(input instanceof URL) && 'method' in input) {
     return input.method.toUpperCase();
   }
   return 'GET';
 }
 
-export function extractUrl(input: RequestInfo): string {
+export function extractUrl(input: URL | RequestInfo): string {
   if (typeof input === 'string') {
     return input;
+  }
+  if (input instanceof URL) {
+    return input.toString();
   }
   return input.url;
 }

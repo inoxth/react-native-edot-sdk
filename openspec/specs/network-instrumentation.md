@@ -8,6 +8,7 @@ as OpenTelemetry spans with W3C trace context propagation.
 
 ### Auto-Instrumentation
 - MUST monkey-patch `global.fetch` to create spans for all outgoing HTTP requests
+- MUST accept any input type that the spec form of `fetch(input, init?)` accepts — including `string`, `Request`, and `URL`. When a `URL` instance is provided, the wrapper SHALL convert it to its string form for URL extraction, span attribute population, and forwarding to the original `fetch`.
 - MUST monkey-patch `XMLHttpRequest` to create spans for all XHR-based requests (including Axios)
 - MUST set span attributes following OpenTelemetry HTTP Semantic Conventions: `http.method`, `http.url`, `http.status_code`, `http.request_content_length`, `http.response_content_length`
 - MUST set span status to ERROR for HTTP status codes >= 400
