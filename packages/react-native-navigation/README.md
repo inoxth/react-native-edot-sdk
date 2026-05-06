@@ -174,13 +174,11 @@ Both surfaces accept a `screenNameMapper` to normalize raw route names into stab
 
 ```typescript
 // Strip dynamic ids out of expo-router pathnames
-screenNameMapper: (name) => name.replace(/\/\d+/g, '/:id')
+screenNameMapper: (name) => name.replace(/\/\d+/g, '/:id');
 
 // Use a friendly display name based on params
 screenNameMapper: (name, params) =>
-  name === 'Profile' && typeof params?.tab === 'string'
-    ? `Profile.${params.tab}`
-    : name
+  name === 'Profile' && typeof params?.tab === 'string' ? `Profile.${params.tab}` : name;
 ```
 
 ## What gets emitted

@@ -30,15 +30,15 @@ npx @inox/react-native-edot-cli upload-sourcemap \
 
 ### Options
 
-| Flag | Required | Description |
-|---|---|---|
-| `--server-url` | yes | EDOT / APM server URL (matches the SDK's `serverUrl`) |
-| `--service-name` | yes | Service name (matches the SDK's `serviceName`) |
-| `--service-version` | yes | Service version (matches the SDK's `serviceVersion`) |
-| `--bundle-path` | yes | Path to the minified JS bundle |
-| `--sourcemap-path` | yes | Path to the source map file |
-| `--secret-token` | one of | Secret token authentication |
-| `--api-key` | one of | API key authentication |
+| Flag                | Required | Description                                           |
+| ------------------- | -------- | ----------------------------------------------------- |
+| `--server-url`      | yes      | EDOT / APM server URL (matches the SDK's `serverUrl`) |
+| `--service-name`    | yes      | Service name (matches the SDK's `serviceName`)        |
+| `--service-version` | yes      | Service version (matches the SDK's `serviceVersion`)  |
+| `--bundle-path`     | yes      | Path to the minified JS bundle                        |
+| `--sourcemap-path`  | yes      | Path to the source map file                           |
+| `--secret-token`    | one of   | Secret token authentication                           |
+| `--api-key`         | one of   | API key authentication                                |
 
 Provide either `--secret-token` or `--api-key`, not both.
 

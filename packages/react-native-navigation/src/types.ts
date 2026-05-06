@@ -16,9 +16,9 @@ export interface WixComponentDidAppearEvent {
 }
 
 export interface WixNavigationEvents {
-  registerComponentDidAppearListener: (
-    callback: (event: WixComponentDidAppearEvent) => void,
-  ) => { remove: () => void };
+  registerComponentDidAppearListener: (callback: (event: WixComponentDidAppearEvent) => void) => {
+    remove: () => void;
+  };
 }
 
 export interface WixNavigationLike {

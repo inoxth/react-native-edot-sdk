@@ -21,10 +21,7 @@ See the [SDK README](../react-native) for native setup (iOS pod install, Android
 ## Custom spans
 
 ```typescript
-import {
-  getTracerProvider,
-  SpanStatusCode,
-} from '@inox/react-native-edot-tracer-provider';
+import { getTracerProvider, SpanStatusCode } from '@inox/react-native-edot-tracer-provider';
 
 const tracer = getTracerProvider().getTracer('checkout');
 
