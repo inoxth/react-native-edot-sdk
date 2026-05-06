@@ -197,9 +197,9 @@ describe('EdotReactNative', () => {
 
       await Fresh.initialize({
         ...validConfig,
+        enableSystemMetrics: false,
         ios: {
           enableCrashReporting: false,
-          enableSystemMetrics: false,
         },
       });
 

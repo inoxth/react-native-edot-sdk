@@ -115,18 +115,6 @@ export interface EdotConfig {
   disableAgent?: boolean;
 
   /**
-   * Tunes the on-disk persistence buffer used by the iOS agent for failed
-   * export retries. Applies to metrics, traces, and logs on iOS.
-   *
-   * - `'default'` — low runtime impact, 4 MB per file, 512 MB directory cap (default).
-   * - `'lowUsage'` — alias for `'default'`; use on storage-constrained devices.
-   * - `'highVolume'` — instant delivery, shorter rotation interval; use on lossy networks.
-   *
-   * Has no effect on Android.
-   */
-  persistencePreset?: 'default' | 'lowUsage' | 'highVolume';
-
-  /**
    * Overrides the central-config polling endpoint without affecting OTLP
    * exports. Must be an absolute `http://` or `https://` URL.
    *
@@ -138,14 +126,23 @@ export interface EdotConfig {
   managementUrl?: string;
 
   /**
-   * Enables or disables central-config remote management polling.
-   * Defaults to `true` when omitted. Set to `false` to disable polling
-   * entirely regardless of `managementUrl`.
+   * Enables the `application.launch.time` histogram. Defaults to `true`.
+   * Set to `false` to skip installing the launch-time instrumentation.
    *
-   * iOS only. `apm-agent-android` v1.5.0 has no public API to disable
-   * central-config polling, so this flag has no effect on Android.
+   * Implemented natively on both platforms (iOS via MetricKit, Android via
+   * Choreographer + Process.getStartUptimeMillis).
    */
-  remoteManagement?: boolean;
+  enableAppMetricInstrumentation?: boolean;
+
+  /**
+   * Enables the `system.cpu.usage` and `system.memory.usage` observable
+   * gauges. Defaults to `true`. Set to `false` to skip installing the
+   * system-metrics instrumentation.
+   *
+   * Implemented natively on both platforms (iOS via Mach task APIs,
+   * Android via Process.getElapsedCpuTime and Debug.MemoryInfo).
+   */
+  enableSystemMetrics?: boolean;
 
   /**
    * Drop or mask span / log attributes before export.
@@ -180,10 +177,28 @@ export interface EdotIosConfig {
   enableCrashReporting?: boolean;
   enableURLSessionInstrumentation?: boolean;
   enableViewControllerInstrumentation?: boolean;
-  enableAppMetricInstrumentation?: boolean;
-  enableSystemMetrics?: boolean;
   enableLifecycleEvents?: boolean;
   useOpAMP?: boolean;
+
+  /**
+   * Tunes the on-disk persistence buffer used by the iOS agent for failed
+   * export retries. Applies to metrics, traces, and logs on iOS.
+   *
+   * - `'default'` — low runtime impact, 4 MB per file, 512 MB directory cap (default).
+   * - `'lowUsage'` — alias for `'default'`; use on storage-constrained devices.
+   * - `'highVolume'` — instant delivery, shorter rotation interval; use on lossy networks.
+   */
+  persistencePreset?: 'default' | 'lowUsage' | 'highVolume';
+
+  /**
+   * Enables or disables central-config remote management polling.
+   * Defaults to `true` when omitted. Set to `false` to disable polling
+   * entirely regardless of `managementUrl`.
+   *
+   * `apm-agent-android` v1.5.0 has no public API to disable central-config
+   * polling, so this flag is iOS-only.
+   */
+  remoteManagement?: boolean;
 }
 
 export interface EdotAndroidConfig {

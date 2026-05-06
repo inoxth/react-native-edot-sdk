@@ -93,16 +93,22 @@ describe('validateConfig', () => {
     );
   });
 
-  it('accepts valid persistencePreset values', () => {
-    expect(() => validateConfig({ ...validConfig, persistencePreset: 'default' })).not.toThrow();
-    expect(() => validateConfig({ ...validConfig, persistencePreset: 'lowUsage' })).not.toThrow();
-    expect(() => validateConfig({ ...validConfig, persistencePreset: 'highVolume' })).not.toThrow();
+  it('accepts valid ios.persistencePreset values', () => {
+    expect(() =>
+      validateConfig({ ...validConfig, ios: { persistencePreset: 'default' } }),
+    ).not.toThrow();
+    expect(() =>
+      validateConfig({ ...validConfig, ios: { persistencePreset: 'lowUsage' } }),
+    ).not.toThrow();
+    expect(() =>
+      validateConfig({ ...validConfig, ios: { persistencePreset: 'highVolume' } }),
+    ).not.toThrow();
   });
 
-  it('throws on invalid persistencePreset value', () => {
+  it('throws on invalid ios.persistencePreset value', () => {
     expect(() =>
-      validateConfig({ ...validConfig, persistencePreset: 'invalid' as 'default' }),
-    ).toThrow('persistencePreset must be one of: default, lowUsage, highVolume');
+      validateConfig({ ...validConfig, ios: { persistencePreset: 'invalid' as 'default' } }),
+    ).toThrow('ios.persistencePreset must be one of: default, lowUsage, highVolume');
   });
 
   it('accepts valid managementUrl', () => {

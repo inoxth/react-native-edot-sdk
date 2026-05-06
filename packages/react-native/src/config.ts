@@ -136,10 +136,12 @@ export function validateConfig(config: EdotConfig): void {
 
   const PERSISTENCE_PRESETS = ['default', 'lowUsage', 'highVolume'] as const;
   if (
-    config.persistencePreset !== undefined &&
-    !PERSISTENCE_PRESETS.includes(config.persistencePreset)
+    config.ios?.persistencePreset !== undefined &&
+    !PERSISTENCE_PRESETS.includes(config.ios.persistencePreset)
   ) {
-    throw new Error(`[EDOT] persistencePreset must be one of: ${PERSISTENCE_PRESETS.join(', ')}`);
+    throw new Error(
+      `[EDOT] ios.persistencePreset must be one of: ${PERSISTENCE_PRESETS.join(', ')}`,
+    );
   }
 
   if (config.managementUrl !== undefined) {

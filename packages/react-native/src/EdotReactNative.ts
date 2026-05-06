@@ -64,9 +64,11 @@ function mergeConfig(config: EdotConfig): InternalConfig {
     ...(config.globalAttributes ? { globalAttributes: config.globalAttributes } : {}),
     ...(config.disableAgent !== undefined ? { disableAgent: config.disableAgent } : {}),
     ...(config.managementUrl !== undefined ? { managementUrl: config.managementUrl } : {}),
-    ...(config.remoteManagement !== undefined ? { remoteManagement: config.remoteManagement } : {}),
-    ...(config.persistencePreset !== undefined
-      ? { persistencePreset: config.persistencePreset }
+    ...(config.enableAppMetricInstrumentation !== undefined
+      ? { enableAppMetricInstrumentation: config.enableAppMetricInstrumentation }
+      : {}),
+    ...(config.enableSystemMetrics !== undefined
+      ? { enableSystemMetrics: config.enableSystemMetrics }
       : {}),
     ...(config.attributeRedactions !== undefined
       ? { attributeRedactions: config.attributeRedactions }
