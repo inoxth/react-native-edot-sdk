@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Alert, Text } from 'react-native';
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { useEdot } from '@inox/react-native-edot-sdk';
 import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
 import {
   EDOT_SERVER_URL,
@@ -61,34 +61,37 @@ function screenNameMapper(routeName: string): string {
 }
 
 export function App(): React.JSX.Element {
-  const [sdkReady, setSdkReady] = useState(false);
-  const navigationRef = useNavigationContainerRef();
-
   useEffect(() => {
-    async function init(): Promise<void> {
-      if (!EDOT_SERVER_URL) {
-        Alert.alert('Missing .env', 'Copy .env.example to .env');
-        return;
-      }
-      try {
-        await EdotReactNative.initialize({
-          serverUrl: EDOT_SERVER_URL,
-          ios: { serviceName: EDOT_SERVICE_NAME_IOS ?? 'edot-react-nav-example-ios' },
-          android: { serviceName: EDOT_SERVICE_NAME_ANDROID ?? 'edot-react-nav-example-android' },
-          serviceVersion: EDOT_SERVICE_VERSION ?? '0.1.0',
-          deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT ?? 'development',
-          secretToken: EDOT_SECRET_TOKEN,
-          debug: true,
-        });
-        setSdkReady(true);
-      } catch (e) {
-        console.error('[EDOT] Init failed:', e);
-      }
+    if (!EDOT_SERVER_URL) {
+      Alert.alert('Missing .env', 'Copy .env.example to .env');
     }
-    init();
   }, []);
 
-  if (!sdkReady) return <></>;
+  if (!EDOT_SERVER_URL) {
+    return <></>;
+  }
+
+  return <InitializedApp />;
+}
+
+function InitializedApp(): React.JSX.Element {
+  const navigationRef = useNavigationContainerRef();
+  const { ready, error } = useEdot({
+    serverUrl: EDOT_SERVER_URL,
+    ios: { serviceName: EDOT_SERVICE_NAME_IOS ?? 'edot-react-nav-example-ios' },
+    android: { serviceName: EDOT_SERVICE_NAME_ANDROID ?? 'edot-react-nav-example-android' },
+    serviceVersion: EDOT_SERVICE_VERSION ?? '0.1.0',
+    deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT ?? 'development',
+    secretToken: EDOT_SECRET_TOKEN,
+    debug: true,
+  });
+
+  if (error) {
+    console.error('[EDOT] Init failed:', error);
+  }
+  if (!ready) {
+    return <></>;
+  }
 
   return (
     <EdotNavigationProvider navigationRef={navigationRef} screenNameMapper={screenNameMapper}>

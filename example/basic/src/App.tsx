@@ -12,6 +12,7 @@ import {
 import {
   EdotReactNative,
   EdotErrorBoundary,
+  useEdot,
   withEdotTracking,
   useEdotAction,
 } from '@inox/react-native-edot-sdk';
@@ -143,8 +144,30 @@ function InteractionDemo({
 }
 
 export function App(): React.JSX.Element {
+  if (!EDOT_SERVER_URL) {
+    return <MissingEnvScreen />;
+  }
+  return <InitializedApp />;
+}
+
+function MissingEnvScreen(): React.JSX.Element {
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      <ScrollView contentInsetAdjustmentBehavior="automatic" style={styles.scroll}>
+        <Text style={styles.title}>EDOT React Native SDK</Text>
+        <View style={styles.section}>
+          <Text style={styles.label}>
+            Status: Missing .env -- copy .env.example to .env
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function InitializedApp(): React.JSX.Element {
   const [sessionId, setSessionId] = useState<string>('');
-  const [status, setStatus] = useState<string>('Not initialized');
   const [log, setLog] = useState<string[]>([]);
 
   const addLog = useCallback((message: string) => {
@@ -154,37 +177,40 @@ export function App(): React.JSX.Element {
     ]);
   }, []);
 
-  useEffect(() => {
-    async function init(): Promise<void> {
-      if (!EDOT_SERVER_URL) {
-        setStatus('Missing .env -- copy .env.example to .env');
-        return;
-      }
-      try {
-        await EdotReactNative.initialize({
-          serverUrl: EDOT_SERVER_URL,
-          ios: { serviceName: EDOT_SERVICE_NAME_IOS || 'edot-basic-example-ios' },
-          android: { serviceName: EDOT_SERVICE_NAME_ANDROID || 'edot-basic-example-android' },
-          serviceVersion: EDOT_SERVICE_VERSION || '0.1.0',
-          deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT || 'development',
-          secretToken: EDOT_SECRET_TOKEN,
-          debug: true,
-          exportProtocol: 'http',
-        });
-        setStatus('Initialized');
-        addLog('SDK initialized');
+  const { ready, error } = useEdot({
+    serverUrl: EDOT_SERVER_URL,
+    ios: { serviceName: EDOT_SERVICE_NAME_IOS || 'edot-basic-example-ios' },
+    android: { serviceName: EDOT_SERVICE_NAME_ANDROID || 'edot-basic-example-android' },
+    serviceVersion: EDOT_SERVICE_VERSION || '0.1.0',
+    deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT || 'development',
+    secretToken: EDOT_SECRET_TOKEN,
+    debug: true,
+    exportProtocol: 'http',
+  });
 
-        const id = await EdotReactNative.getCurrentSessionId();
+  const status = error ? `Error: ${error.message}` : ready ? 'Initialized' : 'Initializing...';
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+    addLog('SDK initialized');
+    EdotReactNative.getCurrentSessionId()
+      .then((id) => {
         setSessionId(id);
         addLog(id ? `Session ID: ${id}` : 'Session ID: unavailable (Android)');
-      } catch (e) {
+      })
+      .catch((e: unknown) => {
         const message = e instanceof Error ? e.message : String(e);
-        setStatus(`Error: ${message}`);
-        addLog(`Init error: ${message}`);
-      }
+        addLog(`Session ID fetch failed: ${message}`);
+      });
+  }, [ready, addLog]);
+
+  useEffect(() => {
+    if (error) {
+      addLog(`Init error: ${error.message}`);
     }
-    init();
-  }, [addLog]);
+  }, [error, addLog]);
 
   // --- User & Session ---
   const handleSetUser = useCallback(() => {

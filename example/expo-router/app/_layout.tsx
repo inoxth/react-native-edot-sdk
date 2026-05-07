@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Stack, useNavigationContainerRef } from 'expo-router';
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { useEdot } from '@inox/react-native-edot-sdk';
 import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
 import {
   EDOT_SERVER_URL,
@@ -11,38 +10,36 @@ import {
   EDOT_DEPLOYMENT_ENVIRONMENT,
 } from '@env';
 
-type InitState = 'missing-env' | 'initializing' | 'ready';
-
 function screenNameMapper(routeName: string): string {
   return routeName;
 }
 
-function titleFor(state: InitState): string {
-  if (state === 'ready') return 'EDOT Expo Router';
-  if (state === 'missing-env') return 'Missing .env -- copy .env.example';
-  return 'Initializing...';
+export default function RootLayout(): React.ReactElement {
+  if (!EDOT_SERVER_URL) {
+    return (
+      <Stack
+        screenOptions={{ headerShown: true, title: 'Missing .env -- copy .env.example' }}
+      />
+    );
+  }
+  return <InitializedLayout />;
 }
 
-export default function RootLayout(): React.ReactElement {
-  const [initState, setInitState] = useState<InitState>(
-    EDOT_SERVER_URL ? 'initializing' : 'missing-env',
-  );
+function InitializedLayout(): React.ReactElement {
   const navigationRef = useNavigationContainerRef();
+  const { ready, error } = useEdot({
+    serverUrl: EDOT_SERVER_URL,
+    ios: { serviceName: EDOT_SERVICE_NAME_IOS ?? 'edot-expo-router-example-ios' },
+    android: { serviceName: EDOT_SERVICE_NAME_ANDROID ?? 'edot-expo-router-example-android' },
+    serviceVersion: EDOT_SERVICE_VERSION,
+    secretToken: EDOT_SECRET_TOKEN,
+    deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT,
+    debug: true,
+  });
 
-  useEffect(() => {
-    if (!EDOT_SERVER_URL) return;
-    EdotReactNative.initialize({
-      serverUrl: EDOT_SERVER_URL,
-      ios: { serviceName: EDOT_SERVICE_NAME_IOS ?? 'edot-expo-router-example-ios' },
-      android: { serviceName: EDOT_SERVICE_NAME_ANDROID ?? 'edot-expo-router-example-android' },
-      serviceVersion: EDOT_SERVICE_VERSION,
-      secretToken: EDOT_SECRET_TOKEN,
-      deploymentEnvironment: EDOT_DEPLOYMENT_ENVIRONMENT,
-      debug: true,
-    })
-      .then(() => setInitState('ready'))
-      .catch((err: unknown) => console.error('[EDOT] Init failed:', err));
-  }, []);
+  if (error) {
+    console.error('[EDOT] Init failed:', error);
+  }
 
   return (
     <EdotNavigationProvider
@@ -52,7 +49,7 @@ export default function RootLayout(): React.ReactElement {
       <Stack
         screenOptions={{
           headerShown: true,
-          title: titleFor(initState),
+          title: ready ? 'EDOT Expo Router' : 'Initializing...',
         }}
       />
     </EdotNavigationProvider>
