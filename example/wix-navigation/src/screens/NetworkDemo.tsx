@@ -5,54 +5,57 @@ export function NetworkDemo(): React.JSX.Element {
   const [log, setLog] = useState<string[]>([]);
 
   const addLog = useCallback((message: string) => {
-    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 19)]);
+    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 29)]);
   }, []);
 
   const handleFetchData = useCallback(async () => {
     try {
+      addLog('Fetching data...');
       const response = await fetch('https://jsonplaceholder.typicode.com/posts/1');
       const data = await response.json();
-      addLog(`Fetch OK: ${data.title?.substring(0, 30)}...`);
+      addLog(`OK: ${data.title?.substring(0, 40)}...`);
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      addLog(`Fetch error: ${message}`);
+      addLog(`Error: ${e instanceof Error ? e.message : String(e)}`);
     }
   }, [addLog]);
 
   const handleFetchError = useCallback(async () => {
     try {
-      await fetch('https://httpstat.us/500');
-      addLog('Fetch 500: server error response');
+      addLog('Fetching invalid URL...');
+      await fetch('https://invalid.example.test/not-found');
+      addLog('Unexpected success');
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      addLog(`Fetch error: ${message}`);
+      addLog(`Expected error: ${e instanceof Error ? e.message : String(e)}`);
     }
   }, [addLog]);
 
   const handleFetchMultiple = useCallback(async () => {
-    try {
-      const urls = [
-        'https://jsonplaceholder.typicode.com/posts/1',
-        'https://jsonplaceholder.typicode.com/posts/2',
-        'https://jsonplaceholder.typicode.com/posts/3',
-      ];
-      const results = await Promise.all(urls.map((url) => fetch(url)));
-      addLog(`Fetch multiple: ${results.length} requests completed`);
-    } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      addLog(`Fetch multiple error: ${message}`);
+    addLog('Fetching 3 requests sequentially...');
+    for (let i = 1; i <= 3; i++) {
+      try {
+        const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${i}`);
+        const data = await response.json();
+        addLog(`#${i} OK: ${data.title?.substring(0, 30)}...`);
+      } catch (e) {
+        addLog(`#${i} Error: ${e instanceof Error ? e.message : String(e)}`);
+      }
     }
+    addLog('All 3 requests complete');
   }, [addLog]);
 
-  const handleXhrRequest = useCallback(() => {
+  const handleXhr = useCallback(() => {
+    addLog('XHR request...');
     const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://jsonplaceholder.typicode.com/users/1');
     xhr.onload = () => {
-      addLog(`XHR OK: status ${xhr.status}`);
+      try {
+        const data = JSON.parse(xhr.responseText);
+        addLog(`XHR OK: ${data.name}`);
+      } catch {
+        addLog(`XHR parse error`);
+      }
     };
-    xhr.onerror = () => {
-      addLog('XHR error');
-    };
-    xhr.open('GET', 'https://jsonplaceholder.typicode.com/posts/1');
+    xhr.onerror = () => addLog('XHR network error');
     xhr.send();
   }, [addLog]);
 
@@ -60,15 +63,16 @@ export function NetworkDemo(): React.JSX.Element {
     <View style={styles.container}>
       <ScrollView style={styles.scroll}>
         <Text style={styles.title}>Network Requests</Text>
+        <Text style={styles.subtitle}>All requests are auto-instrumented by the SDK</Text>
 
         <View style={styles.buttons}>
-          <Button testID="network-btn-fetch" title="Fetch Data" onPress={handleFetchData} />
-          <Button testID="network-btn-fetch-error" title="Fetch Error" onPress={handleFetchError} />
-          <Button testID="network-btn-fetch-multiple" title="Fetch Multiple" onPress={handleFetchMultiple} />
-          <Button testID="network-btn-xhr" title="XHR Request" onPress={handleXhrRequest} />
+          <Button title="Fetch Data" onPress={handleFetchData} testID="network-btn-fetch" />
+          <Button title="Fetch Error" onPress={handleFetchError} testID="network-btn-fetch-error" />
+          <Button title="Fetch Multiple (3)" onPress={handleFetchMultiple} testID="network-btn-fetch-multiple" />
+          <Button title="XHR Request" onPress={handleXhr} testID="network-btn-xhr" />
         </View>
 
-        <View style={styles.section}>
+        <View style={styles.section} testID="network-result">
           <Text style={styles.label}>Log:</Text>
           {log.map((entry, i) => (
             <Text key={i} style={styles.logEntry}>{entry}</Text>
@@ -79,9 +83,9 @@ export function NetworkDemo(): React.JSX.Element {
   );
 }
 
-function Button({ testID, title, onPress }: { testID: string; title: string; onPress: () => void }): React.JSX.Element {
+function Button({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }): React.JSX.Element {
   return (
-    <TouchableOpacity testID={testID} style={styles.button} onPress={onPress}>
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );
@@ -90,7 +94,8 @@ function Button({ testID, title, onPress }: { testID: string; title: string; onP
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   scroll: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: '#333' },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 4, color: '#333' },
+  subtitle: { fontSize: 13, color: '#999', marginBottom: 16 },
   section: { marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8 },
   label: { fontSize: 14, color: '#666', marginBottom: 4 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },

@@ -18,6 +18,7 @@ import { TracingDemo } from './src/screens/TracingDemo';
 import { MetricsDemo } from './src/screens/MetricsDemo';
 import { LogsDemo } from './src/screens/LogsDemo';
 import { ErrorDemo } from './src/screens/ErrorDemo';
+import { InteractionDemo } from './src/screens/InteractionDemo';
 import { withSafeAreaProvider } from './src/withSafeAreaProvider';
 
 Navigation.registerComponent('HomeScreen', () => withSafeAreaProvider(HomeScreen));
@@ -28,16 +29,18 @@ Navigation.registerComponent('TracingDemo', () => withSafeAreaProvider(TracingDe
 Navigation.registerComponent('MetricsDemo', () => withSafeAreaProvider(MetricsDemo));
 Navigation.registerComponent('LogsDemo', () => withSafeAreaProvider(LogsDemo));
 Navigation.registerComponent('ErrorDemo', () => withSafeAreaProvider(ErrorDemo));
+Navigation.registerComponent('InteractionDemo', () => withSafeAreaProvider(InteractionDemo));
 
 const SCREEN_NAME_MAP = {
   HomeScreen: 'Home',
   DemosScreen: 'Demos',
   SettingsScreen: 'Settings',
-  NetworkDemo: 'Network Demo',
-  TracingDemo: 'Tracing Demo',
-  MetricsDemo: 'Metrics Demo',
-  LogsDemo: 'Logs Demo',
-  ErrorDemo: 'Error Demo',
+  NetworkDemo: 'Network',
+  TracingDemo: 'Tracing',
+  MetricsDemo: 'Metrics',
+  LogsDemo: 'Logs',
+  ErrorDemo: 'Errors',
+  InteractionDemo: 'Interaction',
 };
 
 Navigation.events().registerAppLaunchedListener(async () => {

@@ -1,35 +1,38 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getMeterProvider } from '@inox/react-native-edot-tracer-provider';
 
 export function MetricsDemo(): React.JSX.Element {
   const [log, setLog] = useState<string[]>([]);
+  const meter = useRef(getMeterProvider().getMeter('demo', '1.0.0'));
+  const counter = useRef(meter.current.createCounter('demo.button_clicks'));
+  const histogram = useRef(meter.current.createHistogram('demo.response_time'));
+  const upDown = useRef(meter.current.createUpDownCounter('demo.active_items'));
 
   const addLog = useCallback((message: string) => {
-    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 19)]);
+    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 29)]);
   }, []);
 
-  const meter = useMemo(() => getMeterProvider().getMeter('wix-nav-example'), []);
-
   const handleCounter = useCallback(() => {
-    const counter = meter.createCounter('demo.button_clicks');
-    counter.add(1, { screen: 'MetricsDemo', action: 'counter' });
-    addLog('Counter incremented: demo.button_clicks +1');
-  }, [meter, addLog]);
+    counter.current.add(1, { 'demo.action': 'increment' });
+    addLog('Counter incremented by 1');
+  }, [addLog]);
 
   const handleHistogram = useCallback(() => {
-    const histogram = meter.createHistogram('demo.response_time');
     const value = Math.round(Math.random() * 500);
-    histogram.record(value, { screen: 'MetricsDemo', unit: 'ms' });
-    addLog(`Histogram recorded: demo.response_time = ${value}ms`);
-  }, [meter, addLog]);
+    histogram.current.record(value, { 'demo.unit': 'ms' });
+    addLog(`Histogram recorded: ${value}ms`);
+  }, [addLog]);
 
-  const handleUpDownCounter = useCallback(() => {
-    const upDown = meter.createUpDownCounter('demo.active_connections');
-    const delta = Math.random() > 0.5 ? 1 : -1;
-    upDown.add(delta, { screen: 'MetricsDemo' });
-    addLog(`UpDownCounter: demo.active_connections ${delta > 0 ? '+' : ''}${delta}`);
-  }, [meter, addLog]);
+  const handleUpDownIncrement = useCallback(() => {
+    upDown.current.add(1, { 'demo.direction': 'up' });
+    addLog('UpDownCounter +1');
+  }, [addLog]);
+
+  const handleUpDownDecrement = useCallback(() => {
+    upDown.current.add(-1, { 'demo.direction': 'down' });
+    addLog('UpDownCounter -1');
+  }, [addLog]);
 
   return (
     <View style={styles.container}>
@@ -37,9 +40,10 @@ export function MetricsDemo(): React.JSX.Element {
         <Text style={styles.title}>Metrics</Text>
 
         <View style={styles.buttons}>
-          <Button testID="metrics-btn-counter" title="Counter +1" onPress={handleCounter} />
-          <Button testID="metrics-btn-histogram" title="Histogram Record" onPress={handleHistogram} />
-          <Button testID="metrics-btn-updown" title="UpDownCounter" onPress={handleUpDownCounter} />
+          <Button title="Increment Counter" onPress={handleCounter} testID="metrics-btn-counter" />
+          <Button title="Record Histogram" onPress={handleHistogram} testID="metrics-btn-histogram" />
+          <Button title="UpDown +1" onPress={handleUpDownIncrement} testID="metrics-btn-updown-up" />
+          <Button title="UpDown -1" onPress={handleUpDownDecrement} testID="metrics-btn-updown-down" />
         </View>
 
         <View style={styles.section}>
@@ -53,9 +57,9 @@ export function MetricsDemo(): React.JSX.Element {
   );
 }
 
-function Button({ testID, title, onPress }: { testID: string; title: string; onPress: () => void }): React.JSX.Element {
+function Button({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }): React.JSX.Element {
   return (
-    <TouchableOpacity testID={testID} style={styles.button} onPress={onPress}>
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );
@@ -64,7 +68,7 @@ function Button({ testID, title, onPress }: { testID: string; title: string; onP
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   scroll: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: '#333' },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, color: '#333' },
   section: { marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8 },
   label: { fontSize: 14, color: '#666', marginBottom: 4 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },

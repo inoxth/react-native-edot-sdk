@@ -12,19 +12,17 @@ export function HomeScreen(): React.JSX.Element {
   }, []);
 
   useEffect(() => {
-    async function checkStatus(): Promise<void> {
+    async function check(): Promise<void> {
       try {
         const id = await EdotReactNative.getCurrentSessionId();
         setSessionId(id);
         setStatus('Initialized');
-        addLog(id ? `Session ID: ${id}` : 'Session ID: unavailable (Android)');
-      } catch (e) {
-        const message = e instanceof Error ? e.message : String(e);
-        setStatus(`Error: ${message}`);
-        addLog(`Status check error: ${message}`);
+        addLog(id ? `Session: ${id}` : 'Session: unavailable (Android)');
+      } catch {
+        setStatus('Not initialized');
       }
     }
-    checkStatus();
+    check();
   }, [addLog]);
 
   const handleSetUser = useCallback(() => {
@@ -37,37 +35,37 @@ export function HomeScreen(): React.JSX.Element {
     addLog('User cleared');
   }, [addLog]);
 
-  const handleSetSessionAttribute = useCallback(() => {
+  const handleSetSessionAttr = useCallback(() => {
     EdotReactNative.setSessionAttribute('test_key', 'test_value');
-    addLog('Session attribute set: test_key=test_value');
+    addLog('Session attr: test_key=test_value');
   }, [addLog]);
 
-  const handleSetGlobalAttribute = useCallback(() => {
+  const handleSetGlobalAttr = useCallback(() => {
     EdotReactNative.setGlobalAttribute('tenant_id', 'acme-corp');
-    addLog('Global attribute set: tenant_id=acme-corp');
+    addLog('Global attr: tenant_id=acme-corp');
   }, [addLog]);
 
-  const handleRemoveGlobalAttribute = useCallback(() => {
+  const handleRemoveGlobalAttr = useCallback(() => {
     EdotReactNative.removeGlobalAttribute('tenant_id');
-    addLog('Global attribute removed: tenant_id');
+    addLog('Global attr removed: tenant_id');
   }, [addLog]);
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll}>
-        <Text style={styles.title}>EDOT Wix Navigation</Text>
+        <Text style={styles.title}>EDOT Example</Text>
 
         <View style={styles.section}>
-          <Text testID="home-status" style={styles.label}>Status: {status}</Text>
-          <Text testID="home-session" style={styles.label}>Session: {sessionId || 'N/A'}</Text>
+          <Text style={styles.label} testID="home-status">Status: {status}</Text>
+          <Text style={styles.label} testID="home-session">Session: {sessionId || 'N/A'}</Text>
         </View>
 
         <View style={styles.buttons}>
-          <Button testID="home-btn-set-user" title="Set User" onPress={handleSetUser} />
-          <Button testID="home-btn-clear-user" title="Clear User" onPress={handleClearUser} />
-          <Button testID="home-btn-set-session-attr" title="Set Session Attr" onPress={handleSetSessionAttribute} />
-          <Button testID="home-btn-set-global-attr" title="Set Global Attr" onPress={handleSetGlobalAttribute} />
-          <Button testID="home-btn-remove-global-attr" title="Remove Global Attr" onPress={handleRemoveGlobalAttribute} />
+          <Button title="Set User" onPress={handleSetUser} testID="home-btn-set-user" />
+          <Button title="Clear User" onPress={handleClearUser} testID="home-btn-clear-user" />
+          <Button title="Set Session Attr" onPress={handleSetSessionAttr} testID="home-btn-set-session-attr" />
+          <Button title="Set Global Attr" onPress={handleSetGlobalAttr} testID="home-btn-set-global-attr" />
+          <Button title="Remove Global Attr" onPress={handleRemoveGlobalAttr} testID="home-btn-remove-global-attr" />
         </View>
 
         <View style={styles.section}>
@@ -81,9 +79,9 @@ export function HomeScreen(): React.JSX.Element {
   );
 }
 
-function Button({ testID, title, onPress }: { testID: string; title: string; onPress: () => void }): React.JSX.Element {
+function Button({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }): React.JSX.Element {
   return (
-    <TouchableOpacity testID={testID} style={styles.button} onPress={onPress}>
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );
@@ -92,7 +90,7 @@ function Button({ testID, title, onPress }: { testID: string; title: string; onP
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   scroll: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: '#333' },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, color: '#333' },
   section: { marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8 },
   label: { fontSize: 14, color: '#666', marginBottom: 4 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },

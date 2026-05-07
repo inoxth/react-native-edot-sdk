@@ -6,12 +6,43 @@ interface Props {
   componentId: string;
 }
 
-const DEMOS = [
-  { name: 'NetworkDemo', label: 'Network Requests', testID: 'demos-btn-network' },
-  { name: 'TracingDemo', label: 'Manual Tracing', testID: 'demos-btn-tracing' },
-  { name: 'MetricsDemo', label: 'Metrics', testID: 'demos-btn-metrics' },
-  { name: 'LogsDemo', label: 'Structured Logs', testID: 'demos-btn-logs' },
-  { name: 'ErrorDemo', label: 'Error Tracking', testID: 'demos-btn-errors' },
+const DEMO_SCREENS = [
+  {
+    name: 'NetworkDemo',
+    title: 'Network Requests',
+    description: 'Auto-instrumented fetch and XHR',
+    testID: 'demos-btn-network',
+  },
+  {
+    name: 'TracingDemo',
+    title: 'Manual Tracing',
+    description: 'Custom spans and nested spans',
+    testID: 'demos-btn-tracing',
+  },
+  {
+    name: 'MetricsDemo',
+    title: 'Metrics',
+    description: 'Counter, Histogram, UpDownCounter',
+    testID: 'demos-btn-metrics',
+  },
+  {
+    name: 'LogsDemo',
+    title: 'Logs',
+    description: 'Structured log messages',
+    testID: 'demos-btn-logs',
+  },
+  {
+    name: 'ErrorDemo',
+    title: 'Errors',
+    description: 'Error tracking and boundaries',
+    testID: 'demos-btn-errors',
+  },
+  {
+    name: 'InteractionDemo',
+    title: 'User Interaction',
+    description: 'Track taps with HOC and hook',
+    testID: 'demos-btn-interaction',
+  },
 ] as const;
 
 export function DemosScreen({ componentId }: Props): React.JSX.Element {
@@ -26,17 +57,17 @@ export function DemosScreen({ componentId }: Props): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scroll}>
-        <Text style={styles.title}>Demos</Text>
-        {DEMOS.map((demo) => (
+      <ScrollView testID="demos-scroll" style={styles.scroll} contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Demo Screens</Text>
+        {DEMO_SCREENS.map((screen) => (
           <TouchableOpacity
-            key={demo.name}
-            testID={demo.testID}
-            style={styles.row}
-            onPress={() => navigateTo(demo.name, demo.label)}
+            key={screen.name}
+            style={styles.card}
+            testID={screen.testID}
+            onPress={() => navigateTo(screen.name, screen.title)}
           >
-            <Text style={styles.rowText}>{demo.label}</Text>
-            <Text style={styles.arrow}>{'>'}</Text>
+            <Text style={styles.cardTitle}>{screen.title}</Text>
+            <Text style={styles.cardDescription}>{screen.description}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -46,17 +77,15 @@ export function DemosScreen({ componentId }: Props): React.JSX.Element {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  scroll: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: '#333' },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+  scroll: { flex: 1 },
+  content: { padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, color: '#333' },
+  card: {
     padding: 16,
+    backgroundColor: '#fff',
     borderRadius: 8,
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  rowText: { fontSize: 16, color: '#333' },
-  arrow: { fontSize: 16, color: '#999' },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 4 },
+  cardDescription: { fontSize: 14, color: '#666' },
 });

@@ -1,53 +1,50 @@
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import {
-  getTracerProvider,
-  withSpanContext,
-  SpanStatusCode,
-} from '@inox/react-native-edot-tracer-provider';
+import { getTracerProvider, withSpanContext, SpanStatusCode } from '@inox/react-native-edot-tracer-provider';
 
 export function TracingDemo(): React.JSX.Element {
   const [log, setLog] = useState<string[]>([]);
 
   const addLog = useCallback((message: string) => {
-    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 19)]);
+    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 29)]);
   }, []);
 
   const handleCreateSpan = useCallback(() => {
-    const tracer = getTracerProvider().getTracer('wix-nav-example');
+    const tracer = getTracerProvider().getTracer('demo', '1.0.0');
     const span = tracer.startSpan('demo-operation', {
-      attributes: { 'demo.type': 'single-span' },
+      attributes: { 'demo.type': 'simple', 'demo.screen': 'TracingDemo' },
     });
-    span.setAttribute('demo.timestamp', Date.now());
+    addLog(`Span started: ${span.spanId}`);
+
+    span.setAttribute('demo.step', 'processing');
     span.setStatus(SpanStatusCode.OK);
     span.end();
-    addLog(`Span created: ${span.spanId}`);
+    addLog('Span ended with OK status');
   }, [addLog]);
 
   const handleNestedSpans = useCallback(() => {
-    const tracer = getTracerProvider().getTracer('wix-nav-example');
+    const tracer = getTracerProvider().getTracer('demo', '1.0.0');
 
     const parentSpan = tracer.startSpan('parent-operation', {
-      attributes: { 'demo.type': 'nested-spans' },
+      attributes: { 'demo.type': 'nested' },
     });
+    addLog(`Parent span: ${parentSpan.spanId}`);
 
     withSpanContext(parentSpan, () => {
-      const childSpan = tracer.startSpan('child-operation-1');
-      childSpan.setAttribute('child.index', 1);
+      const childSpan = tracer.startSpan('child-operation', {
+        attributes: { 'demo.parent': parentSpan.spanId },
+      });
+      addLog(`Child span: ${childSpan.spanId}`);
+
+      childSpan.setAttribute('demo.step', 'child-work');
       childSpan.setStatus(SpanStatusCode.OK);
       childSpan.end();
-      addLog(`Child span 1: ${childSpan.spanId}`);
-
-      const childSpan2 = tracer.startSpan('child-operation-2');
-      childSpan2.setAttribute('child.index', 2);
-      childSpan2.setStatus(SpanStatusCode.OK);
-      childSpan2.end();
-      addLog(`Child span 2: ${childSpan2.spanId}`);
+      addLog('Child span ended');
     });
 
     parentSpan.setStatus(SpanStatusCode.OK);
     parentSpan.end();
-    addLog(`Parent span: ${parentSpan.spanId}`);
+    addLog('Parent span ended');
   }, [addLog]);
 
   return (
@@ -56,8 +53,8 @@ export function TracingDemo(): React.JSX.Element {
         <Text style={styles.title}>Manual Tracing</Text>
 
         <View style={styles.buttons}>
-          <Button testID="tracing-btn-create-span" title="Create Span" onPress={handleCreateSpan} />
-          <Button testID="tracing-btn-nested-spans" title="Nested Spans" onPress={handleNestedSpans} />
+          <Button title="Create Span" onPress={handleCreateSpan} testID="tracing-btn-create-span" />
+          <Button title="Nested Spans" onPress={handleNestedSpans} testID="tracing-btn-nested-spans" />
         </View>
 
         <View style={styles.section}>
@@ -71,9 +68,9 @@ export function TracingDemo(): React.JSX.Element {
   );
 }
 
-function Button({ testID, title, onPress }: { testID: string; title: string; onPress: () => void }): React.JSX.Element {
+function Button({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }): React.JSX.Element {
   return (
-    <TouchableOpacity testID={testID} style={styles.button} onPress={onPress}>
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );
@@ -82,7 +79,7 @@ function Button({ testID, title, onPress }: { testID: string; title: string; onP
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   scroll: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: '#333' },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, color: '#333' },
   section: { marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8 },
   label: { fontSize: 14, color: '#666', marginBottom: 4 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },

@@ -1,37 +1,38 @@
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { EdotReactNative } from '@inox/react-native-edot-sdk';
 
 export function LogsDemo(): React.JSX.Element {
   const [log, setLog] = useState<string[]>([]);
 
   const addLog = useCallback((message: string) => {
-    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 19)]);
+    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 29)]);
   }, []);
 
-  const handleInfoLog = useCallback(() => {
-    console.info('[EDOT] Info: User viewed logs demo screen');
-    addLog('INFO: User viewed logs demo screen');
+  const handleLogInfo = useCallback(() => {
+    EdotReactNative.log('info', 'Informational log from demo', { 'demo.screen': 'LogsDemo' });
+    addLog('Sent: info log');
   }, [addLog]);
 
-  const handleWarnLog = useCallback(() => {
-    console.warn('[EDOT] Warn: Cache miss for user preferences');
-    addLog('WARN: Cache miss for user preferences');
+  const handleLogWarn = useCallback(() => {
+    EdotReactNative.log('warn', 'Warning log from demo', { 'demo.screen': 'LogsDemo' });
+    addLog('Sent: warn log');
   }, [addLog]);
 
-  const handleErrorLog = useCallback(() => {
-    console.error('[EDOT] Error: Failed to sync data with backend');
-    addLog('ERROR: Failed to sync data with backend');
+  const handleLogError = useCallback(() => {
+    EdotReactNative.log('error', 'Error log from demo', { 'demo.screen': 'LogsDemo', 'demo.code': '500' });
+    addLog('Sent: error log');
   }, [addLog]);
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll}>
-        <Text style={styles.title}>Structured Logs</Text>
+        <Text style={styles.title}>Logs</Text>
 
         <View style={styles.buttons}>
-          <Button testID="logs-btn-info" title="Info Log" onPress={handleInfoLog} />
-          <Button testID="logs-btn-warn" title="Warn Log" onPress={handleWarnLog} />
-          <Button testID="logs-btn-error" title="Error Log" onPress={handleErrorLog} />
+          <Button title="Log Info" onPress={handleLogInfo} color="#34C759" testID="logs-btn-info" />
+          <Button title="Log Warn" onPress={handleLogWarn} color="#FF9500" testID="logs-btn-warn" />
+          <Button title="Log Error" onPress={handleLogError} color="#FF3B30" testID="logs-btn-error" />
         </View>
 
         <View style={styles.section}>
@@ -45,9 +46,9 @@ export function LogsDemo(): React.JSX.Element {
   );
 }
 
-function Button({ testID, title, onPress }: { testID: string; title: string; onPress: () => void }): React.JSX.Element {
+function Button({ title, onPress, color, testID }: { title: string; onPress: () => void; color?: string; testID?: string }): React.JSX.Element {
   return (
-    <TouchableOpacity testID={testID} style={styles.button} onPress={onPress}>
+    <TouchableOpacity style={[styles.button, color ? { backgroundColor: color } : undefined]} onPress={onPress} testID={testID}>
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );
@@ -56,7 +57,7 @@ function Button({ testID, title, onPress }: { testID: string; title: string; onP
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   scroll: { flex: 1, padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: '#333' },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, color: '#333' },
   section: { marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8 },
   label: { fontSize: 14, color: '#666', marginBottom: 4 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
