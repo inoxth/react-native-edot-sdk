@@ -1,84 +1,106 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
 
-function CrashyComponent(): React.ReactElement {
-  throw new Error('ErrorBoundary demo: component render error');
+function CrashComponent(): React.JSX.Element {
+  throw new Error('ErrorBoundary test: component render crash');
 }
 
-export default function ErrorsDemo(): React.ReactElement {
-  const [showCrashy, setShowCrashy] = useState(false);
-  const [result, setResult] = useState<string>('');
+export default function ErrorDemo(): React.JSX.Element {
+  const [log, setLog] = useState<string[]>([]);
+  const [showCrashComponent, setShowCrashComponent] = useState(false);
 
-  function throwJsError(): void {
-    setResult('Throwing JS error...');
-    throw new Error('Demo JS error from Expo Router example');
-  }
+  const addLog = useCallback((message: string) => {
+    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 29)]);
+  }, []);
 
-  function rejectPromise(): void {
-    setResult('Rejecting promise...');
-    Promise.reject(new Error('Demo unhandled promise rejection'));
-  }
+  const handleJsError = useCallback(() => {
+    addLog('Throwing JS error...');
+    setTimeout(() => {
+      throw new Error('Demo: intentional JS error');
+    }, 0);
+  }, [addLog]);
 
-  function toggleErrorBoundary(): void {
-    setShowCrashy((prev) => !prev);
-    setResult(showCrashy ? 'ErrorBoundary hidden' : 'ErrorBoundary shown');
-  }
+  const handlePromiseReject = useCallback(() => {
+    addLog('Rejecting promise...');
+    Promise.reject(new Error('Demo: intentional promise rejection'));
+  }, [addLog]);
 
-  function nativeCrash(): void {
-    setResult('Native crash not available in JS-only demo');
-  }
+  const handleErrorBoundary = useCallback(() => {
+    addLog('Triggering ErrorBoundary crash...');
+    setShowCrashComponent(true);
+  }, [addLog]);
+
+  const handleNativeCrash = useCallback(() => {
+    Alert.alert(
+      'Native Crash',
+      'Native crash simulation is not available in JS-only mode. Run on a device with native modules to test.',
+    );
+    addLog('Native crash: alert shown (placeholder)');
+  }, [addLog]);
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Error Tracking' }} />
-      <ScrollView style={styles.container}>
-        <Text style={styles.title}>Error Tracking</Text>
-        <Text style={styles.description}>
-          Trigger various error types to test SDK error tracking.
-        </Text>
+      <Stack.Screen options={{ title: 'Errors' }} />
+      <View style={styles.container}>
+        <ScrollView style={styles.scroll}>
+          <Text style={styles.title}>Errors</Text>
+          <Text style={styles.subtitle}>These will trigger real errors captured by the SDK</Text>
 
-        <TouchableOpacity testID="errors-btn-js-error" style={[styles.button, styles.dangerButton]} onPress={throwJsError}>
-          <Text style={styles.buttonText}>Throw JS Error</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="errors-btn-promise-reject" style={[styles.button, styles.dangerButton]} onPress={rejectPromise}>
-          <Text style={styles.buttonText}>Reject Promise</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="errors-btn-error-boundary" style={[styles.button, styles.dangerButton]} onPress={toggleErrorBoundary}>
-          <Text style={styles.buttonText}>
-            {showCrashy ? 'Hide' : 'Show'} ErrorBoundary Demo
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="errors-btn-native-crash" style={[styles.button, styles.disabledButton]} onPress={nativeCrash}>
-          <Text style={styles.buttonText}>Native Crash (placeholder)</Text>
-        </TouchableOpacity>
+          <View style={styles.buttons}>
+            <Button title="Throw JS Error" onPress={handleJsError} color="#FF3B30" testID="errors-btn-js-error" />
+            <Button title="Reject Promise" onPress={handlePromiseReject} color="#FF3B30" testID="errors-btn-promise-reject" />
+            <Button title="Trigger ErrorBoundary" onPress={handleErrorBoundary} color="#FF3B30" testID="errors-btn-error-boundary" />
+            <Button title="Native Crash" onPress={handleNativeCrash} color="#FF9500" testID="errors-btn-native-crash" />
+          </View>
 
-        <EdotErrorBoundary
-          fallback={
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>Caught by EdotErrorBoundary</Text>
-            </View>
-          }
-        >
-          {showCrashy ? <CrashyComponent /> : null}
-        </EdotErrorBoundary>
+          <EdotErrorBoundary
+            fallback={
+              <View style={styles.section}>
+                <Text style={styles.errorText}>ErrorBoundary caught a crash!</Text>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => setShowCrashComponent(false)}
+                >
+                  <Text style={styles.buttonText}>Reset</Text>
+                </TouchableOpacity>
+              </View>
+            }
+          >
+            {showCrashComponent && <CrashComponent />}
+          </EdotErrorBoundary>
 
-        {result ? <Text style={styles.result}>{result}</Text> : null}
-      </ScrollView>
+          <View style={styles.section}>
+            <Text style={styles.label}>Log:</Text>
+            {log.map((entry, i) => (
+              <Text key={i} style={styles.logEntry}>{entry}</Text>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
     </>
   );
 }
 
+function Button({ title, onPress, color, testID }: { title: string; onPress: () => void; color?: string; testID?: string }): React.JSX.Element {
+  return (
+    <TouchableOpacity style={[styles.button, color ? { backgroundColor: color } : undefined]} onPress={onPress} testID={testID}>
+      <Text style={styles.buttonText}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 4 },
-  description: { fontSize: 14, color: '#666', marginBottom: 16 },
-  button: { backgroundColor: '#007AFF', padding: 12, borderRadius: 8, marginBottom: 8 },
-  dangerButton: { backgroundColor: '#FF3B30' },
-  disabledButton: { backgroundColor: '#999' },
-  buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
-  errorBox: { marginTop: 16, padding: 16, backgroundColor: '#FFF3CD', borderRadius: 8 },
-  errorText: { color: '#856404', fontWeight: '600' },
-  result: { marginTop: 16, fontSize: 14, color: '#333', fontFamily: 'monospace' },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  scroll: { flex: 1, padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 4, color: '#333' },
+  subtitle: { fontSize: 13, color: '#999', marginBottom: 16 },
+  section: { marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8 },
+  label: { fontSize: 14, color: '#666', marginBottom: 4 },
+  buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  button: { backgroundColor: '#007AFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
+  buttonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  logEntry: { fontSize: 11, color: '#999', fontFamily: 'monospace', marginTop: 2 },
+  errorText: { fontSize: 14, color: '#FF3B30', fontWeight: '600', marginBottom: 8 },
 });

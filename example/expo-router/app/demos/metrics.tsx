@@ -1,62 +1,82 @@
-import { useState } from 'react';
-import { Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { getMeterProvider } from '@inox/react-native-edot-tracer-provider';
 
-export default function MetricsDemo(): React.ReactElement {
-  const [result, setResult] = useState<string>('');
-  const meter = getMeterProvider().getMeter('expo-router-demo', '1.0.0');
+export default function MetricsDemo(): React.JSX.Element {
+  const [log, setLog] = useState<string[]>([]);
+  const meter = useRef(getMeterProvider().getMeter('demo', '1.0.0'));
+  const counter = useRef(meter.current.createCounter('demo.button_clicks'));
+  const histogram = useRef(meter.current.createHistogram('demo.response_time'));
+  const upDown = useRef(meter.current.createUpDownCounter('demo.active_items'));
 
-  function recordCounter(): void {
-    const counter = meter.createCounter('demo.button_clicks');
-    counter.add(1, { screen: 'metrics', action: 'counter' });
-    setResult('Counter incremented by 1');
-  }
+  const addLog = useCallback((message: string) => {
+    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 29)]);
+  }, []);
 
-  function recordHistogram(): void {
-    const histogram = meter.createHistogram('demo.response_time');
-    const value = Math.floor(Math.random() * 500) + 50;
-    histogram.record(value, { screen: 'metrics', unit: 'ms' });
-    setResult(`Histogram recorded: ${value}ms`);
-  }
+  const handleCounter = useCallback(() => {
+    counter.current.add(1, { 'demo.action': 'increment' });
+    addLog('Counter incremented by 1');
+  }, [addLog]);
 
-  function recordUpDownCounter(): void {
-    const upDown = meter.createUpDownCounter('demo.active_tasks');
-    const delta = Math.random() > 0.5 ? 1 : -1;
-    upDown.add(delta, { screen: 'metrics' });
-    setResult(`UpDownCounter adjusted by ${delta}`);
-  }
+  const handleHistogram = useCallback(() => {
+    const value = Math.round(Math.random() * 500);
+    histogram.current.record(value, { 'demo.unit': 'ms' });
+    addLog(`Histogram recorded: ${value}ms`);
+  }, [addLog]);
+
+  const handleUpDownIncrement = useCallback(() => {
+    upDown.current.add(1, { 'demo.direction': 'up' });
+    addLog('UpDownCounter +1');
+  }, [addLog]);
+
+  const handleUpDownDecrement = useCallback(() => {
+    upDown.current.add(-1, { 'demo.direction': 'down' });
+    addLog('UpDownCounter -1');
+  }, [addLog]);
 
   return (
     <>
       <Stack.Screen options={{ title: 'Metrics' }} />
-      <ScrollView style={styles.container}>
-        <Text style={styles.title}>Metrics</Text>
-        <Text style={styles.description}>
-          Record Counter, Histogram, and UpDownCounter metrics.
-        </Text>
+      <View style={styles.container}>
+        <ScrollView style={styles.scroll}>
+          <Text style={styles.title}>Metrics</Text>
 
-        <TouchableOpacity testID="metrics-btn-counter" style={styles.button} onPress={recordCounter}>
-          <Text style={styles.buttonText}>Increment Counter</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="metrics-btn-histogram" style={styles.button} onPress={recordHistogram}>
-          <Text style={styles.buttonText}>Record Histogram</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="metrics-btn-updown" style={styles.button} onPress={recordUpDownCounter}>
-          <Text style={styles.buttonText}>UpDownCounter +/-</Text>
-        </TouchableOpacity>
+          <View style={styles.buttons}>
+            <Button title="Increment Counter" onPress={handleCounter} testID="metrics-btn-counter" />
+            <Button title="Record Histogram" onPress={handleHistogram} testID="metrics-btn-histogram" />
+            <Button title="UpDown +1" onPress={handleUpDownIncrement} testID="metrics-btn-updown-up" />
+            <Button title="UpDown -1" onPress={handleUpDownDecrement} testID="metrics-btn-updown-down" />
+          </View>
 
-        {result ? <Text style={styles.result}>{result}</Text> : null}
-      </ScrollView>
+          <View style={styles.section}>
+            <Text style={styles.label}>Log:</Text>
+            {log.map((entry, i) => (
+              <Text key={i} style={styles.logEntry}>{entry}</Text>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
     </>
   );
 }
 
+function Button({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }): React.JSX.Element {
+  return (
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
+      <Text style={styles.buttonText}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 4 },
-  description: { fontSize: 14, color: '#666', marginBottom: 16 },
-  button: { backgroundColor: '#007AFF', padding: 12, borderRadius: 8, marginBottom: 8 },
-  buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
-  result: { marginTop: 16, fontSize: 14, color: '#333', fontFamily: 'monospace' },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  scroll: { flex: 1, padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, color: '#333' },
+  section: { marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8 },
+  label: { fontSize: 14, color: '#666', marginBottom: 4 },
+  buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  button: { backgroundColor: '#007AFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
+  buttonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  logEntry: { fontSize: 11, color: '#999', fontFamily: 'monospace', marginTop: 2 },
 });

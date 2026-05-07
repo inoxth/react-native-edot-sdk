@@ -1,93 +1,100 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
 
-export default function HomeScreen(): React.ReactElement {
-  const [sessionId, setSessionId] = useState<string>('');
-  const [status, setStatus] = useState<string>('Ready');
+export default function HomeScreen(): React.JSX.Element {
+  const [sessionId, setSessionId] = useState('');
+  const [status, setStatus] = useState('Checking...');
+  const [log, setLog] = useState<string[]>([]);
 
-  async function fetchSessionId(): Promise<void> {
-    try {
-      const id = await EdotReactNative.getCurrentSessionId();
-      setSessionId(id);
-      setStatus(id ? 'Session ID fetched' : 'Session ID unavailable (Android)');
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      setStatus(`Error: ${message}`);
+  const addLog = useCallback((message: string) => {
+    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 19)]);
+  }, []);
+
+  useEffect(() => {
+    async function check(): Promise<void> {
+      try {
+        const id = await EdotReactNative.getCurrentSessionId();
+        setSessionId(id);
+        setStatus('Initialized');
+        addLog(id ? `Session: ${id}` : 'Session: unavailable (Android)');
+      } catch {
+        setStatus('Not initialized');
+      }
     }
-  }
+    check();
+  }, [addLog]);
 
-  function setUser(): void {
-    EdotReactNative.setUser({ id: 'user-123', email: 'demo@example.com', name: 'Demo User' });
-    setStatus('User set');
-  }
+  const handleSetUser = useCallback(() => {
+    EdotReactNative.setUser({ id: 'user-123', email: 'test@example.com', name: 'Test User' });
+    addLog('User set: user-123');
+  }, [addLog]);
 
-  function clearUser(): void {
+  const handleClearUser = useCallback(() => {
     EdotReactNative.clearUser();
-    setStatus('User cleared');
-  }
+    addLog('User cleared');
+  }, [addLog]);
 
-  function setSessionAttr(): void {
-    EdotReactNative.setSessionAttribute('screen_mode', 'expo-router');
-    setStatus('Session attribute set');
-  }
+  const handleSetSessionAttr = useCallback(() => {
+    EdotReactNative.setSessionAttribute('test_key', 'test_value');
+    addLog('Session attr: test_key=test_value');
+  }, [addLog]);
 
-  function setGlobalAttr(): void {
-    EdotReactNative.setGlobalAttribute('app.variant', 'expo-router-example');
-    setStatus('Global attribute set');
-  }
+  const handleSetGlobalAttr = useCallback(() => {
+    EdotReactNative.setGlobalAttribute('tenant_id', 'acme-corp');
+    addLog('Global attr: tenant_id=acme-corp');
+  }, [addLog]);
 
-  function removeGlobalAttr(): void {
-    EdotReactNative.removeGlobalAttribute('app.variant');
-    setStatus('Global attribute removed');
-  }
+  const handleRemoveGlobalAttr = useCallback(() => {
+    EdotReactNative.removeGlobalAttribute('tenant_id');
+    addLog('Global attr removed: tenant_id');
+  }, [addLog]);
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>EDOT Expo Router Example</Text>
-      <Text testID="home-status" style={styles.status}>Status: {status}</Text>
-      {sessionId ? <Text testID="home-session" style={styles.sessionId}>Session: {sessionId}</Text> : null}
+    <View style={styles.container}>
+      <ScrollView style={styles.scroll}>
+        <Text style={styles.title}>EDOT Example</Text>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Session</Text>
-        <TouchableOpacity testID="home-btn-get-session" style={styles.button} onPress={fetchSessionId}>
-          <Text style={styles.buttonText}>Get Session ID</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.label} testID="home-status">Status: {status}</Text>
+          <Text style={styles.label} testID="home-session">Session: {sessionId || 'N/A'}</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>User</Text>
-        <TouchableOpacity testID="home-btn-set-user" style={styles.button} onPress={setUser}>
-          <Text style={styles.buttonText}>Set User</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="home-btn-clear-user" style={styles.button} onPress={clearUser}>
-          <Text style={styles.buttonText}>Clear User</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.buttons}>
+          <Button title="Set User" onPress={handleSetUser} testID="home-btn-set-user" />
+          <Button title="Clear User" onPress={handleClearUser} testID="home-btn-clear-user" />
+          <Button title="Set Session Attr" onPress={handleSetSessionAttr} testID="home-btn-set-session-attr" />
+          <Button title="Set Global Attr" onPress={handleSetGlobalAttr} testID="home-btn-set-global-attr" />
+          <Button title="Remove Global Attr" onPress={handleRemoveGlobalAttr} testID="home-btn-remove-global-attr" />
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Attributes</Text>
-        <TouchableOpacity testID="home-btn-set-session-attr" style={styles.button} onPress={setSessionAttr}>
-          <Text style={styles.buttonText}>Set Session Attribute</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="home-btn-set-global-attr" style={styles.button} onPress={setGlobalAttr}>
-          <Text style={styles.buttonText}>Set Global Attribute</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="home-btn-remove-global-attr" style={styles.button} onPress={removeGlobalAttr}>
-          <Text style={styles.buttonText}>Remove Global Attribute</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        <View style={styles.section}>
+          <Text style={styles.label}>Log:</Text>
+          {log.map((entry, i) => (
+            <Text key={i} style={styles.logEntry}>{entry}</Text>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+function Button({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }): React.JSX.Element {
+  return (
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
+      <Text style={styles.buttonText}>{title}</Text>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 8 },
-  status: { fontSize: 14, color: '#666', marginBottom: 4 },
-  sessionId: { fontSize: 12, color: '#999', marginBottom: 16, fontFamily: 'monospace' },
-  section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8 },
-  button: { backgroundColor: '#007AFF', padding: 12, borderRadius: 8, marginBottom: 8 },
-  buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  scroll: { flex: 1, padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, color: '#333' },
+  section: { marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8 },
+  label: { fontSize: 14, color: '#666', marginBottom: 4 },
+  buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  button: { backgroundColor: '#007AFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
+  buttonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  logEntry: { fontSize: 11, color: '#999', fontFamily: 'monospace', marginTop: 2 },
 });

@@ -1,100 +1,109 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Stack } from 'expo-router';
 
-export default function NetworkDemo(): React.ReactElement {
-  const [result, setResult] = useState<string>('');
+export default function NetworkDemo(): React.JSX.Element {
+  const [log, setLog] = useState<string[]>([]);
 
-  async function fetchData(): Promise<void> {
-    setResult('Fetching...');
+  const addLog = useCallback((message: string) => {
+    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 29)]);
+  }, []);
+
+  const handleFetchData = useCallback(async () => {
     try {
-      const response = await fetch('https://httpbin.org/get');
-      const data: unknown = await response.json();
-      setResult(`OK ${response.status}: ${JSON.stringify(data).slice(0, 200)}`);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      setResult(`Error: ${message}`);
+      addLog('Fetching data...');
+      const response = await fetch('https://jsonplaceholder.typicode.com/posts/1');
+      const data = await response.json();
+      addLog(`OK: ${data.title?.substring(0, 40)}...`);
+    } catch (e) {
+      addLog(`Error: ${e instanceof Error ? e.message : String(e)}`);
     }
-  }
+  }, [addLog]);
 
-  async function fetchError(): Promise<void> {
-    setResult('Fetching...');
+  const handleFetchError = useCallback(async () => {
     try {
-      const response = await fetch('https://httpbin.org/status/500');
-      setResult(`Response: ${response.status} ${response.statusText}`);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      setResult(`Error: ${message}`);
+      addLog('Fetching invalid URL...');
+      await fetch('https://invalid.example.test/not-found');
+      addLog('Unexpected success');
+    } catch (e) {
+      addLog(`Expected error: ${e instanceof Error ? e.message : String(e)}`);
     }
-  }
+  }, [addLog]);
 
-  async function fetchMultiple(): Promise<void> {
-    setResult('Fetching 3 requests...');
-    try {
-      const results = await Promise.all([
-        fetch('https://httpbin.org/delay/1'),
-        fetch('https://httpbin.org/delay/2'),
-        fetch('https://httpbin.org/get'),
-      ]);
-      const statuses = results.map((r) => r.status).join(', ');
-      setResult(`All done: [${statuses}]`);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      setResult(`Error: ${message}`);
+  const handleFetchMultiple = useCallback(async () => {
+    addLog('Fetching 3 requests sequentially...');
+    for (let i = 1; i <= 3; i++) {
+      try {
+        const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${i}`);
+        const data = await response.json();
+        addLog(`#${i} OK: ${data.title?.substring(0, 30)}...`);
+      } catch (e) {
+        addLog(`#${i} Error: ${e instanceof Error ? e.message : String(e)}`);
+      }
     }
-  }
+    addLog('All 3 requests complete');
+  }, [addLog]);
 
-  function xhrRequest(): void {
-    setResult('XHR sending...');
+  const handleXhr = useCallback(() => {
+    addLog('XHR request...');
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://httpbin.org/get');
+    xhr.open('GET', 'https://jsonplaceholder.typicode.com/users/1');
     xhr.onload = () => {
-      setResult(`XHR ${xhr.status}: ${xhr.responseText.slice(0, 200)}`);
+      try {
+        const data = JSON.parse(xhr.responseText);
+        addLog(`XHR OK: ${data.name}`);
+      } catch {
+        addLog(`XHR parse error`);
+      }
     };
-    xhr.onerror = () => {
-      setResult('XHR error');
-    };
+    xhr.onerror = () => addLog('XHR network error');
     xhr.send();
-  }
+  }, [addLog]);
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Network Requests' }} />
-      <ScrollView style={styles.container}>
-        <Text style={styles.title}>Network Requests</Text>
-        <Text style={styles.description}>
-          All fetch/XHR requests are auto-instrumented by the SDK.
-        </Text>
+      <Stack.Screen options={{ title: 'Network' }} />
+      <View style={styles.container}>
+        <ScrollView style={styles.scroll}>
+          <Text style={styles.title}>Network Requests</Text>
+          <Text style={styles.subtitle}>All requests are auto-instrumented by the SDK</Text>
 
-        <TouchableOpacity testID="network-btn-fetch" style={styles.button} onPress={fetchData}>
-          <Text style={styles.buttonText}>Fetch Data</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="network-btn-fetch-error" style={styles.button} onPress={fetchError}>
-          <Text style={styles.buttonText}>Fetch Error (500)</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="network-btn-fetch-multiple" style={styles.button} onPress={fetchMultiple}>
-          <Text style={styles.buttonText}>Fetch Multiple</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="network-btn-xhr" style={styles.button} onPress={xhrRequest}>
-          <Text style={styles.buttonText}>XHR Request</Text>
-        </TouchableOpacity>
-
-        {result ? (
-          <View style={styles.resultBox}>
-            <Text style={styles.resultText}>{result}</Text>
+          <View style={styles.buttons}>
+            <Button title="Fetch Data" onPress={handleFetchData} testID="network-btn-fetch" />
+            <Button title="Fetch Error" onPress={handleFetchError} testID="network-btn-fetch-error" />
+            <Button title="Fetch Multiple (3)" onPress={handleFetchMultiple} testID="network-btn-fetch-multiple" />
+            <Button title="XHR Request" onPress={handleXhr} testID="network-btn-xhr" />
           </View>
-        ) : null}
-      </ScrollView>
+
+          <View style={styles.section} testID="network-result">
+            <Text style={styles.label}>Log:</Text>
+            {log.map((entry, i) => (
+              <Text key={i} style={styles.logEntry}>{entry}</Text>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
     </>
   );
 }
 
+function Button({ title, onPress, testID }: { title: string; onPress: () => void; testID?: string }): React.JSX.Element {
+  return (
+    <TouchableOpacity style={styles.button} onPress={onPress} testID={testID}>
+      <Text style={styles.buttonText}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 4 },
-  description: { fontSize: 14, color: '#666', marginBottom: 16 },
-  button: { backgroundColor: '#007AFF', padding: 12, borderRadius: 8, marginBottom: 8 },
-  buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
-  resultBox: { marginTop: 16, padding: 12, backgroundColor: '#f5f5f5', borderRadius: 8 },
-  resultText: { fontSize: 12, fontFamily: 'monospace', color: '#333' },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  scroll: { flex: 1, padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 4, color: '#333' },
+  subtitle: { fontSize: 13, color: '#999', marginBottom: 16 },
+  section: { marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8 },
+  label: { fontSize: 14, color: '#666', marginBottom: 4 },
+  buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  button: { backgroundColor: '#007AFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
+  buttonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  logEntry: { fontSize: 11, color: '#999', fontFamily: 'monospace', marginTop: 2 },
 });

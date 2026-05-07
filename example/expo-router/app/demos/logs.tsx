@@ -1,69 +1,71 @@
-import { useState } from 'react';
-import { Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
 
-export default function LogsDemo(): React.ReactElement {
-  const [result, setResult] = useState<string>('');
+export default function LogsDemo(): React.JSX.Element {
+  const [log, setLog] = useState<string[]>([]);
 
-  function logInfo(): void {
-    EdotReactNative.log('info', 'User viewed the logs demo screen', {
-      screen: 'logs',
-      action: 'info',
-    });
-    setResult('Info log emitted');
-  }
+  const addLog = useCallback((message: string) => {
+    setLog((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 29)]);
+  }, []);
 
-  function logWarn(): void {
-    EdotReactNative.log('warn', 'Something might need attention', {
-      screen: 'logs',
-      action: 'warn',
-      threshold: 80,
-    });
-    setResult('Warning log emitted');
-  }
+  const handleLogInfo = useCallback(() => {
+    EdotReactNative.log('info', 'Informational log from demo', { 'demo.screen': 'LogsDemo' });
+    addLog('Sent: info log');
+  }, [addLog]);
 
-  function logError(): void {
-    EdotReactNative.log('error', 'An error occurred during demo operation', {
-      screen: 'logs',
-      action: 'error',
-      error_code: 'DEMO_ERROR',
-    });
-    setResult('Error log emitted');
-  }
+  const handleLogWarn = useCallback(() => {
+    EdotReactNative.log('warn', 'Warning log from demo', { 'demo.screen': 'LogsDemo' });
+    addLog('Sent: warn log');
+  }, [addLog]);
+
+  const handleLogError = useCallback(() => {
+    EdotReactNative.log('error', 'Error log from demo', { 'demo.screen': 'LogsDemo', 'demo.code': '500' });
+    addLog('Sent: error log');
+  }, [addLog]);
 
   return (
     <>
       <Stack.Screen options={{ title: 'Logs' }} />
-      <ScrollView style={styles.container}>
-        <Text style={styles.title}>Structured Logs</Text>
-        <Text style={styles.description}>
-          Emit structured log messages with different severity levels.
-        </Text>
+      <View style={styles.container}>
+        <ScrollView style={styles.scroll}>
+          <Text style={styles.title}>Logs</Text>
 
-        <TouchableOpacity testID="logs-btn-info" style={styles.button} onPress={logInfo}>
-          <Text style={styles.buttonText}>Log Info</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="logs-btn-warn" style={[styles.button, styles.warnButton]} onPress={logWarn}>
-          <Text style={styles.buttonText}>Log Warning</Text>
-        </TouchableOpacity>
-        <TouchableOpacity testID="logs-btn-error" style={[styles.button, styles.errorButton]} onPress={logError}>
-          <Text style={styles.buttonText}>Log Error</Text>
-        </TouchableOpacity>
+          <View style={styles.buttons}>
+            <Button title="Log Info" onPress={handleLogInfo} color="#34C759" testID="logs-btn-info" />
+            <Button title="Log Warn" onPress={handleLogWarn} color="#FF9500" testID="logs-btn-warn" />
+            <Button title="Log Error" onPress={handleLogError} color="#FF3B30" testID="logs-btn-error" />
+          </View>
 
-        {result ? <Text style={styles.result}>{result}</Text> : null}
-      </ScrollView>
+          <View style={styles.section}>
+            <Text style={styles.label}>Log:</Text>
+            {log.map((entry, i) => (
+              <Text key={i} style={styles.logEntry}>{entry}</Text>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
     </>
   );
 }
 
+function Button({ title, onPress, color, testID }: { title: string; onPress: () => void; color?: string; testID?: string }): React.JSX.Element {
+  return (
+    <TouchableOpacity style={[styles.button, color ? { backgroundColor: color } : undefined]} onPress={onPress} testID={testID}>
+      <Text style={styles.buttonText}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 4 },
-  description: { fontSize: 14, color: '#666', marginBottom: 16 },
-  button: { backgroundColor: '#007AFF', padding: 12, borderRadius: 8, marginBottom: 8 },
-  warnButton: { backgroundColor: '#FF9500' },
-  errorButton: { backgroundColor: '#FF3B30' },
-  buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
-  result: { marginTop: 16, fontSize: 14, color: '#333', fontFamily: 'monospace' },
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  scroll: { flex: 1, padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, color: '#333' },
+  section: { marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8 },
+  label: { fontSize: 14, color: '#666', marginBottom: 4 },
+  buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  button: { backgroundColor: '#007AFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 6 },
+  buttonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  logEntry: { fontSize: 11, color: '#999', fontFamily: 'monospace', marginTop: 2 },
 });
