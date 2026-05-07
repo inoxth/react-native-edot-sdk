@@ -13,20 +13,16 @@ export function registerEdotNavigationListener(
 ): () => void {
   const mapper = options?.screenNameMapper;
 
-  let lastEvent: WixComponentDidAppearEvent | null = null;
-
   function resolveScreenName(event: WixComponentDidAppearEvent): string {
     return mapper ? mapper(event.componentName) : event.componentName;
   }
 
   const lifecycle = createNavigationLifecycle({
     instrumentationName: INSTRUMENTATION_NAME,
-    getCurrentScreenName: () => (lastEvent ? resolveScreenName(lastEvent) : null),
   });
 
   const subscription = Navigation.events().registerComponentDidAppearListener(
     (event: WixComponentDidAppearEvent) => {
-      lastEvent = event;
       lifecycle.onScreen(resolveScreenName(event));
     },
   );
@@ -34,6 +30,5 @@ export function registerEdotNavigationListener(
   return () => {
     subscription.remove();
     lifecycle.cleanup();
-    lastEvent = null;
   };
 }

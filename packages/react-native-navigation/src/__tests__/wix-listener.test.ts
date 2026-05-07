@@ -7,7 +7,11 @@ const mockNativeModule = {
   endSpan: jest.fn(),
 };
 
-const reEmitters: Array<() => void> = [];
+jest.mock('react-native', () => ({
+  InteractionManager: {
+    runAfterInteractions: jest.fn(() => ({ cancel: jest.fn() })),
+  },
+}));
 
 jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
@@ -17,22 +21,9 @@ jest.mock('@inox/react-native-edot-shared', () => ({
   ActiveViewContext: {
     setActiveView: jest.fn(),
     clearActiveView: jest.fn(),
-    registerForegroundReEmitter: jest.fn((fn: () => void) => {
-      reEmitters.push(fn);
-      return () => {
-        const index = reEmitters.indexOf(fn);
-        if (index !== -1) reEmitters.splice(index, 1);
-      };
-    }),
   },
   getNativeModule: () => mockNativeModule,
 }));
-
-function triggerForegroundReEmit(): void {
-  for (const fn of reEmitters.slice()) {
-    fn();
-  }
-}
 
 function createMockNavigation(): {
   navigation: WixNavigationLike;
@@ -62,7 +53,6 @@ describe('registerEdotNavigationListener', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockNativeModule.startSpan.mockReturnValue('view-span-1');
-    reEmitters.length = 0;
   });
 
   it('creates a span on ComponentDidAppear with screen.name', () => {
@@ -143,49 +133,5 @@ describe('registerEdotNavigationListener', () => {
 
     expect(mockNativeModule.startSpan).not.toHaveBeenCalled();
     expect(mockNativeModule.endSpan).not.toHaveBeenCalled();
-  });
-
-  it('foreground re-emit replays last component without last.screen.name', () => {
-    const { navigation, fireEvent } = createMockNavigation();
-
-    registerEdotNavigationListener(navigation);
-    fireEvent({ componentName: 'HomeScreen', componentId: 'h1' });
-    jest.clearAllMocks();
-    mockNativeModule.startSpan.mockReturnValue('view-span-2');
-
-    triggerForegroundReEmit();
-
-    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
-    expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'HomeScreen',
-      { 'screen.name': 'HomeScreen' },
-      null,
-      '@inox/react-native-edot-navigation',
-    );
-    const attrs = mockNativeModule.startSpan.mock.calls[0]?.[1] as Record<string, string>;
-    expect(attrs).not.toHaveProperty('last.screen.name');
-  });
-
-  it('foreground re-emit without prior event is a no-op', () => {
-    const { navigation } = createMockNavigation();
-
-    registerEdotNavigationListener(navigation);
-
-    triggerForegroundReEmit();
-
-    expect(mockNativeModule.startSpan).not.toHaveBeenCalled();
-  });
-
-  it('cleanup unregisters foreground re-emitter', () => {
-    const { navigation, fireEvent } = createMockNavigation();
-
-    const cleanup = registerEdotNavigationListener(navigation);
-    fireEvent({ componentName: 'HomeScreen', componentId: 'h1' });
-    cleanup();
-    jest.clearAllMocks();
-
-    triggerForegroundReEmit();
-
-    expect(mockNativeModule.startSpan).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,7 @@
-import { createNavigationLifecycle } from '../navigation-lifecycle';
+import {
+  createNavigationLifecycle,
+  markCurrentScreenLoaded,
+} from '../navigation-lifecycle';
 import { ActiveViewContext } from '@inox/react-native-edot-shared';
 
 const mockNativeModule = {
@@ -6,7 +9,23 @@ const mockNativeModule = {
   endSpan: jest.fn(),
 };
 
-const reEmitters: Array<() => void> = [];
+let mockPendingCallbacks: Array<{ id: number; cb: () => void; cancelled: boolean }> = [];
+let mockNextId = 0;
+
+jest.mock('react-native', () => ({
+  InteractionManager: {
+    runAfterInteractions: jest.fn((cb: () => void) => {
+      const id = mockNextId++;
+      const entry = { id, cb, cancelled: false };
+      mockPendingCallbacks.push(entry);
+      return {
+        cancel: () => {
+          entry.cancelled = true;
+        },
+      };
+    }),
+  },
+}));
 
 jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
@@ -16,35 +35,27 @@ jest.mock('@inox/react-native-edot-shared', () => ({
   ActiveViewContext: {
     setActiveView: jest.fn(),
     clearActiveView: jest.fn(),
-    registerForegroundReEmitter: jest.fn((fn: () => void) => {
-      reEmitters.push(fn);
-      return () => {
-        const index = reEmitters.indexOf(fn);
-        if (index !== -1) reEmitters.splice(index, 1);
-      };
-    }),
   },
   getNativeModule: () => mockNativeModule,
 }));
 
-function triggerForegroundReEmit(): void {
-  for (const fn of reEmitters.slice()) {
-    fn();
+function flushInteractions(): void {
+  for (const entry of mockPendingCallbacks.slice()) {
+    if (!entry.cancelled) entry.cb();
   }
+  mockPendingCallbacks = [];
 }
 
 describe('createNavigationLifecycle', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockNativeModule.startSpan.mockReturnValue('view-span-1');
-    reEmitters.length = 0;
+    mockPendingCallbacks = [];
+    mockNextId = 0;
   });
 
   it('starts a span on the first onScreen call', () => {
-    const lifecycle = createNavigationLifecycle({
-      instrumentationName: 'test',
-      getCurrentScreenName: () => null,
-    });
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
 
     lifecycle.onScreen('Home');
 
@@ -62,11 +73,28 @@ describe('createNavigationLifecycle', () => {
     });
   });
 
+  it('auto-ends the span when interactions idle', () => {
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
+
+    lifecycle.onScreen('Home');
+    expect(mockNativeModule.endSpan).not.toHaveBeenCalled();
+
+    flushInteractions();
+
+    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
+  });
+
+  it('does not clear ActiveViewContext when the span auto-ends', () => {
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
+
+    lifecycle.onScreen('Home');
+    flushInteractions();
+
+    expect(ActiveViewContext.clearActiveView).not.toHaveBeenCalled();
+  });
+
   it('ends the previous span and includes last.screen.name on the next', () => {
-    const lifecycle = createNavigationLifecycle({
-      instrumentationName: 'test',
-      getCurrentScreenName: () => null,
-    });
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
 
     lifecycle.onScreen('Home');
     jest.clearAllMocks();
@@ -84,10 +112,7 @@ describe('createNavigationLifecycle', () => {
   });
 
   it('does not re-emit when called with the same screen name', () => {
-    const lifecycle = createNavigationLifecycle({
-      instrumentationName: 'test',
-      getCurrentScreenName: () => null,
-    });
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
 
     lifecycle.onScreen('Home');
     jest.clearAllMocks();
@@ -98,11 +123,69 @@ describe('createNavigationLifecycle', () => {
     expect(mockNativeModule.endSpan).not.toHaveBeenCalled();
   });
 
-  it('cleanup ends the active span and clears context', () => {
-    const lifecycle = createNavigationLifecycle({
-      instrumentationName: 'test',
-      getCurrentScreenName: () => null,
-    });
+  it('cancels the pending auto-end when navigating to a new screen', () => {
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
+
+    lifecycle.onScreen('Home');
+    mockNativeModule.startSpan.mockReturnValue('view-span-2');
+    lifecycle.onScreen('Details');
+
+    // The first runAfterInteractions callback was scheduled for view-span-1.
+    // After navigating away, it should be cancelled and never end view-span-2 by mistake.
+    flushInteractions();
+
+    // The Home span was ended exactly once (by the navigation, not by the cancelled timer).
+    expect(mockNativeModule.endSpan.mock.calls.filter((c) => c[0] === 'view-span-1')).toHaveLength(
+      1,
+    );
+    // The Details span ends via its own runAfterInteractions, exactly once.
+    expect(mockNativeModule.endSpan.mock.calls.filter((c) => c[0] === 'view-span-2')).toHaveLength(
+      1,
+    );
+  });
+
+  it('markScreenLoaded ends the current span early', () => {
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
+
+    lifecycle.onScreen('Home');
+    expect(mockNativeModule.endSpan).not.toHaveBeenCalled();
+
+    lifecycle.markScreenLoaded();
+
+    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
+  });
+
+  it('markScreenLoaded cancels the pending auto-end so the span ends only once', () => {
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
+
+    lifecycle.onScreen('Home');
+    lifecycle.markScreenLoaded();
+    flushInteractions();
+
+    expect(mockNativeModule.endSpan).toHaveBeenCalledTimes(1);
+  });
+
+  it('markScreenLoaded called twice is a no-op the second time', () => {
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
+
+    lifecycle.onScreen('Home');
+    lifecycle.markScreenLoaded();
+    lifecycle.markScreenLoaded();
+
+    expect(mockNativeModule.endSpan).toHaveBeenCalledTimes(1);
+  });
+
+  it('module-level markCurrentScreenLoaded targets the most recently created lifecycle', () => {
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
+
+    lifecycle.onScreen('Home');
+    markCurrentScreenLoaded();
+
+    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
+  });
+
+  it('cleanup ends the active span and clears active view', () => {
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
 
     lifecycle.onScreen('Home');
     jest.clearAllMocks();
@@ -113,66 +196,23 @@ describe('createNavigationLifecycle', () => {
     expect(ActiveViewContext.clearActiveView).toHaveBeenCalled();
   });
 
-  it('foreground re-emit replays the screen returned by getCurrentScreenName without last.screen.name', () => {
-    const lifecycle = createNavigationLifecycle({
-      instrumentationName: 'test',
-      getCurrentScreenName: () => 'Home',
-    });
-
-    lifecycle.onScreen('Home');
-    jest.clearAllMocks();
-    mockNativeModule.startSpan.mockReturnValue('view-span-2');
-
-    triggerForegroundReEmit();
-
-    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
-    expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'Home',
-      { 'screen.name': 'Home' },
-      null,
-      'test',
-    );
-    const attrs = mockNativeModule.startSpan.mock.calls[0]?.[1] as Record<string, string>;
-    expect(attrs).not.toHaveProperty('last.screen.name');
-  });
-
-  it('foreground re-emit is a no-op when getCurrentScreenName returns null', () => {
-    createNavigationLifecycle({
-      instrumentationName: 'test',
-      getCurrentScreenName: () => null,
-    });
-
-    triggerForegroundReEmit();
-
-    expect(mockNativeModule.startSpan).not.toHaveBeenCalled();
-  });
-
-  it('cleanup unregisters the foreground re-emitter', () => {
-    const lifecycle = createNavigationLifecycle({
-      instrumentationName: 'test',
-      getCurrentScreenName: () => 'Home',
-    });
+  it('cleanup detaches markCurrentScreenLoaded so subsequent module-level calls are no-ops', () => {
+    const lifecycle = createNavigationLifecycle({ instrumentationName: 'test' });
 
     lifecycle.onScreen('Home');
     lifecycle.cleanup();
     jest.clearAllMocks();
 
-    triggerForegroundReEmit();
+    markCurrentScreenLoaded();
 
-    expect(mockNativeModule.startSpan).not.toHaveBeenCalled();
+    expect(mockNativeModule.endSpan).not.toHaveBeenCalled();
   });
 
   it('keeps span state isolated between concurrent lifecycles', () => {
     mockNativeModule.startSpan.mockReturnValueOnce('span-a-1').mockReturnValueOnce('span-b-1');
 
-    const a = createNavigationLifecycle({
-      instrumentationName: 'a',
-      getCurrentScreenName: () => null,
-    });
-    const b = createNavigationLifecycle({
-      instrumentationName: 'b',
-      getCurrentScreenName: () => null,
-    });
+    const a = createNavigationLifecycle({ instrumentationName: 'a' });
+    const b = createNavigationLifecycle({ instrumentationName: 'b' });
 
     a.onScreen('AScreen');
     b.onScreen('BScreen');

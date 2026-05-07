@@ -3,8 +3,16 @@ export type { EdotNavigationProviderProps } from './navigation-provider';
 
 export { registerEdotNavigationListener } from './wix-listener';
 
-export { createNavigationLifecycle } from './navigation-lifecycle';
-export type { CreateNavigationLifecycleOptions, NavigationLifecycle } from './navigation-lifecycle';
+export {
+  createNavigationLifecycle,
+  markCurrentScreenLoaded,
+} from './navigation-lifecycle';
+export type {
+  CreateNavigationLifecycleOptions,
+  NavigationLifecycle,
+} from './navigation-lifecycle';
+
+export { useScreenLoaded } from './use-screen-loaded';
 
 export type {
   EdotWixNavigationOptions,

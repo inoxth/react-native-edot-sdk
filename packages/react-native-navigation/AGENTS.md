@@ -72,10 +72,23 @@ For consumers building support for a navigator we don't ship out of the box. Ret
 
 ## Span Shape
 
+These spans measure **screen load latency**, not screen view duration.
+
 - Span name: the route segment name (e.g. `'index'`, `'demos'`, `'network'`, `'(tabs)'`) after any `screenNameMapper` transformation
 - Span kind: `INTERNAL` (default)
 - Tracer scope (`instrumentationName`): `"@inox/react-native-edot-navigation"` for all three navigators (component-based + Wix listener share the same scope since they live in the same package)
-- Attributes: `screen.name`, plus `last.screen.name` only when a prior screen exists _and_ differs from the current
+- Attributes: `screen.name`, plus `last.screen.name` only when a prior screen exists _and_ differs from the current. If the app backgrounds during the load window, the span ends with status `ERROR` and `screen.load.aborted=true`.
+
+### Lifecycle
+
+- **Start** on `onScreen` (state change for ref-based navigators, `componentDidAppear` for Wix). Ignored if name matches the previous screen.
+- **End** automatically via `InteractionManager.runAfterInteractions(...)` — fires when the navigation transition animation has completed and the JS thread is idle. Typical 100–500ms.
+- **Override** with `markCurrentScreenLoaded()` (imperative) or `useScreenLoaded(ready)` (React hook) to end the span as soon as the screen considers itself "loaded" (e.g. after async data arrives). First end wins; cancel the pending `runAfterInteractions` so the span ends exactly once.
+- **Abort** if `AppState` fires `'background'` before the load completes — span ends with status `ERROR` and `screen.load.aborted=true`.
+
+### `ActiveViewContext` lifetime
+
+`ActiveViewContext.setActiveView({ name, spanId })` is called when `onScreen` fires, providing other instrumentation (network/error spans, logs, metrics) with the screen name to attach. The active view is **not cleared when the load span ends** — it remains until either (a) a new `onScreen` swaps it or (b) provider cleanup. The recorded `spanId` becomes stale once the span has ended (~300ms after appear); consumers that only need `name` are unaffected, consumers that link spans to the load span will get a parent reference that has already closed.
 
 ## Initialization ordering
 

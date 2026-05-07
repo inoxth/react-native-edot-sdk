@@ -30,7 +30,6 @@ export function EdotNavigationProvider({
   useEffect(() => {
     const lifecycle = createNavigationLifecycle({
       instrumentationName: INSTRUMENTATION_NAME,
-      getCurrentScreenName: () => resolveScreenName(navigationRef, mapperRef.current),
     });
 
     const emitCurrent = (): void => {

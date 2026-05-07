@@ -1,6 +1,6 @@
 # @inox/react-native-edot-navigation
 
-Unified navigation tracking plugin for the EDOT React Native SDK. Emits a screen-lifetime span on every navigation, enriches network/error spans with `screen.name` + `screen.id`, and replays the active screen on app foreground.
+Unified navigation tracking plugin for the EDOT React Native SDK. On every navigation it emits a **screen-load-latency** span (from screen-appear until the JS thread is idle, i.e. the screen is interactive) and enriches network/error spans created during that screen's lifetime with `screen.name` + `screen.id`.
 
 A single package covers all three popular React Native navigators:
 
@@ -184,16 +184,34 @@ screenNameMapper: (name, params) =>
 
 ## What gets emitted
 
-For every navigation, a span is created with:
+For every navigation, a screen-load-latency span is created with:
 
 - name = the (post-mapper) screen name
 - kind = `INTERNAL`
 - attribute `screen.name`
 - attribute `last.screen.name` (only when a previous screen exists and differs)
 
-Network and error spans created while the screen is active automatically include `screen.name` and `screen.id` as well.
+The span starts when the screen appears and **ends automatically when `InteractionManager.runAfterInteractions` fires** — i.e. when navigation/transition animations have finished and the JS thread is idle. Typical span durations are 100–500ms, suitable for a Latency SLO.
 
-When the app returns from background, the active screen is re-emitted as a fresh visit (so `last.screen.name` is omitted) — see the SDK's `appStateTracking` config for details.
+Network and error spans created while the screen is active automatically include `screen.name` and `screen.id` as well — that correlation continues for the full time the screen is the active view, even after the load-latency span has already ended.
+
+If the app is sent to background while the load span is still running (rare, only during the brief load window), the span is closed with status `ERROR` and attribute `screen.load.aborted=true` so SLOs see the abort honestly.
+
+### Custom load completion signal
+
+For screens that need to wait for async data (e.g. an initial fetch) before they're truly "interactive", use `useScreenLoaded(ready)` to override the default `runAfterInteractions` end-trigger:
+
+```tsx
+import { useScreenLoaded } from '@inox/react-native-edot-navigation';
+
+function ProductScreen() {
+  const { data } = useQuery('/product');
+  useScreenLoaded(!!data); // ends the load span as soon as data arrives
+  return /* ... */;
+}
+```
+
+Whichever fires first — your `useScreenLoaded` flip or the automatic `runAfterInteractions` — wins; the span ends only once. Imperative callers can use `markCurrentScreenLoaded()` directly.
 
 ## Requirements
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { InteractionManager, View } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { EdotNavigationProvider } from '../navigation-provider';
 import { ActiveViewContext } from '@inox/react-native-edot-shared';
@@ -10,8 +10,6 @@ const mockNativeModule = {
   endSpan: jest.fn(),
 };
 
-const reEmitters: Array<() => void> = [];
-
 jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
 }));
@@ -20,22 +18,9 @@ jest.mock('@inox/react-native-edot-shared', () => ({
   ActiveViewContext: {
     setActiveView: jest.fn(),
     clearActiveView: jest.fn(),
-    registerForegroundReEmitter: jest.fn((fn: () => void) => {
-      reEmitters.push(fn);
-      return () => {
-        const index = reEmitters.indexOf(fn);
-        if (index !== -1) reEmitters.splice(index, 1);
-      };
-    }),
   },
   getNativeModule: () => mockNativeModule,
 }));
-
-function triggerForegroundReEmit(): void {
-  for (const fn of reEmitters.slice()) {
-    fn();
-  }
-}
 
 function TestChild(): React.ReactElement {
   return <View />;
@@ -86,7 +71,15 @@ describe('EdotNavigationProvider', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockNativeModule.startSpan.mockReturnValue('view-span-1');
-    reEmitters.length = 0;
+    jest.spyOn(InteractionManager, 'runAfterInteractions').mockImplementation(() => ({
+      then: () => Promise.resolve(),
+      done: () => undefined,
+      cancel: () => undefined,
+    }));
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('creates initial view span on mount from the navigationRef', () => {
@@ -208,31 +201,6 @@ describe('EdotNavigationProvider', () => {
     expect(mockNativeModule.endSpan).not.toHaveBeenCalled();
   });
 
-  it('foreground re-emit replays current screen without last.screen.name', () => {
-    const handle = createFakeNavigationRef({ name: 'index', key: 'k1' });
-
-    render(
-      <EdotNavigationProvider navigationRef={handle.ref}>
-        <TestChild />
-      </EdotNavigationProvider>,
-    );
-
-    jest.clearAllMocks();
-    mockNativeModule.startSpan.mockReturnValue('view-span-2');
-
-    triggerForegroundReEmit();
-
-    expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
-    expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'index',
-      { 'screen.name': 'index' },
-      null,
-      '@inox/react-native-edot-navigation',
-    );
-    const attrs = mockNativeModule.startSpan.mock.calls[0]?.[1] as Record<string, string>;
-    expect(attrs).not.toHaveProperty('last.screen.name');
-  });
-
   it('ends span and clears context on unmount', () => {
     const handle = createFakeNavigationRef({ name: 'index', key: 'k1' });
 
@@ -249,22 +217,5 @@ describe('EdotNavigationProvider', () => {
     expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
     expect(ActiveViewContext.clearActiveView).toHaveBeenCalled();
     expect(handle.removedListeners).toBe(1);
-  });
-
-  it('unmount unregisters the foreground re-emitter', () => {
-    const handle = createFakeNavigationRef({ name: 'index', key: 'k1' });
-
-    const { unmount } = render(
-      <EdotNavigationProvider navigationRef={handle.ref}>
-        <TestChild />
-      </EdotNavigationProvider>,
-    );
-
-    unmount();
-    jest.clearAllMocks();
-
-    triggerForegroundReEmit();
-
-    expect(mockNativeModule.startSpan).not.toHaveBeenCalled();
   });
 });
