@@ -4,9 +4,15 @@ Unified navigation tracking plugin for the EDOT React Native SDK. Emits a screen
 
 A single package covers all three popular React Native navigators:
 
-- [`@react-navigation/native`](#react-navigation)
-- [`expo-router`](#expo-router)
-- [`react-native-navigation` (Wix)](#wix-react-native-navigation)
+- [@inox/react-native-edot-navigation](#inoxreact-native-edot-navigation)
+  - [Install](#install)
+  - [React Navigation](#react-navigation)
+  - [Expo Router](#expo-router)
+  - [Wix react-native-navigation](#wix-react-native-navigation)
+  - [Screen name mapping](#screen-name-mapping)
+  - [What gets emitted](#what-gets-emitted)
+  - [Requirements](#requirements)
+  - [License](#license)
 
 Pick the section that matches your navigator — each is self-contained.
 
@@ -84,13 +90,20 @@ export default function RootLayout() {
   const navigationRef = useNavigationContainerRef();
 
   useEffect(() => {
-    EdotReactNative.initialize({
-      serverUrl: 'https://your-apm-server:8200',
-      serviceName: 'my-app',
-      serviceVersion: '1.0.0',
-      deploymentEnvironment: 'production',
-      secretToken: process.env.EDOT_SECRET_TOKEN,
-    }).catch((err: unknown) => console.error('[EDOT] Init failed:', err));
+    async function init(): Promise<void> {
+      try {
+        await EdotReactNative.initialize({
+          serverUrl: 'https://your-apm-server:8200',
+          serviceName: 'my-app',
+          serviceVersion: '1.0.0',
+          deploymentEnvironment: 'production',
+          secretToken: process.env.EDOT_SECRET_TOKEN,
+        })
+      } catch (err) {
+        console.error('[EDOT] Init failed:', err);
+      }
+    }
+    init();
   }, []);
 
   return (
