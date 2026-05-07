@@ -10,17 +10,31 @@ Supports both Old Architecture (Bridge) and New Architecture (TurboModules/Fabri
 yarn add @inox/react-native-edot-sdk
 ```
 
-```typescript
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+```tsx
+import { useEdot } from '@inox/react-native-edot-sdk';
 
-await EdotReactNative.initialize({
-  serverUrl: 'https://your-apm-server:8200',
-  serviceName: 'my-app',
-  serviceVersion: '1.0.0',
-  deploymentEnvironment: 'production',
-  secretToken: process.env.EDOT_SECRET_TOKEN,
-});
+export function App() {
+  const { ready, error } = useEdot({
+    serverUrl: 'https://your-apm-server:8200',
+    serviceName: 'my-app',
+    serviceVersion: '1.0.0',
+    deploymentEnvironment: 'production',
+    secretToken: process.env.EDOT_SECRET_TOKEN,
+  });
+
+  if (error) {
+    return <Text>Telemetry unavailable: {error.message}</Text>;
+  }
+  
+  if (!ready) {
+    return <ActivityIndicator />;
+  }
+
+  return <RootNavigator />;
+}
 ```
+
+`useEdot` calls `initialize` once on mount and returns reactive `{ ready, error }` state. For non-React contexts, the imperative `EdotReactNative.initialize(config)` is also available.
 
 iOS pod install + Android Gradle plugin setup, the full configuration reference, error boundary, interactions, and user/session APIs all live in **[`packages/react-native/README.md`](./packages/react-native/README.md)**.
 

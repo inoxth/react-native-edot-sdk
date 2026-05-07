@@ -29,6 +29,8 @@ src/
 │   └── urlUtils.ts             # URL parsing, sanitization, filtering
 ├── components/
 │   └── EdotErrorBoundary.tsx   # React error boundary
+├── hooks/
+│   └── useEdot.ts              # useEdot(config) — React-friendly init hook (first-wins, returns { ready, error })
 └── interactions/
     ├── use-edot-action.ts      # useEdotAction() hook
     └── with-edot-tracking.tsx  # withEdotTracking() HOC
@@ -53,6 +55,8 @@ This package exposes subpath imports used by sibling packages:
 ## Key Patterns
 
 ### Initialization Flow
+
+`useEdot(config)` from `hooks/useEdot.ts` is the React-friendly entry point — calls `EdotReactNative.initialize` once via `useEffect`, captures config in a ref so subsequent renders never re-init, and returns `{ ready, error }`. First-wins: a `__DEV__` `console.warn` fires when a native-relevant primitive key (`serverUrl`, `serviceName`, `serviceVersion`, `deploymentEnvironment`, `secretToken`, `apiKey`, `exportProtocol`, `sessionSamplingRate`, `trackingConsent`, `managementUrl`, `disableAgent`, `enableAppMetricInstrumentation`, `enableSystemMetrics`, `instrumentNetworkRequests`, `instrumentJsErrors`, `instrumentAppStartup`, `appStateTracking`, `debug`) changes after first render. Object-shaped fields (`globalAttributes`, `attributeRedactions`, `ignoreSpanNames`, `ignoreLogPatterns`, `ios`, `android`) are excluded from the compare to avoid identity false-positives. Init failures are passive — `console.warn`'d once, never thrown — so observability degrades silently rather than crashing the app via an `EdotErrorBoundary`. The imperative `EdotReactNative.initialize(config)` remains for non-React contexts.
 
 `EdotReactNative.initialize(config)`:
 

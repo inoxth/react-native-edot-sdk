@@ -36,33 +36,26 @@ See the [SDK README](../react-native) for native setup and `EdotReactNative.init
 yarn add @react-navigation/native
 ```
 
-Initialize the SDK once at app startup, then wrap your `NavigationContainer` with `<EdotNavigationProvider>` sharing the same ref:
+Initialize the SDK with `useEdot` at the app root, then wrap your `NavigationContainer` with `<EdotNavigationProvider>` sharing the same ref. **Wait for `ready` before mounting `NavigationContainer`** — the navigator emits its initial screen span synchronously on mount, and on iOS the OTel TracerProvider only points at the agent's exporter once the agent has started. Mounting before the SDK is ready silently drops the first screen span.
 
 ```tsx
-import { useEffect } from 'react';
+import { ActivityIndicator, Text } from 'react-native';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { useEdot } from '@inox/react-native-edot-sdk';
 import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
 
 export function App() {
   const navigationRef = useNavigationContainerRef();
+  const { ready, error } = useEdot({
+    serverUrl: 'https://your-apm-server:8200',
+    serviceName: 'my-app',
+    serviceVersion: '1.0.0',
+    deploymentEnvironment: 'production',
+    secretToken: process.env.EDOT_SECRET_TOKEN,
+  });
 
-  useEffect(() => {
-    async function init(): Promise<void> {
-      try {
-        await EdotReactNative.initialize({
-          serverUrl: 'https://your-apm-server:8200',
-          serviceName: 'my-app',
-          serviceVersion: '1.0.0',
-          deploymentEnvironment: 'production',
-          secretToken: process.env.EDOT_SECRET_TOKEN,
-        });
-      } catch (err) {
-        console.error('[EDOT] Init failed:', err);
-      }
-    }
-    init();
-  }, []);
+  if (error) return <Text>Telemetry unavailable: {error.message}</Text>;
+  if (!ready) return <ActivityIndicator />;
 
   return (
     <NavigationContainer ref={navigationRef}>
@@ -78,33 +71,26 @@ Working example: [`example/react-navigation/`](../../example/react-navigation).
 
 ## Expo Router
 
-Expo Router is built on top of React Navigation and exposes the same `useNavigationContainerRef` hook. Initialize the SDK from your root layout:
+Expo Router is built on top of React Navigation and exposes the same `useNavigationContainerRef` hook. Initialize the SDK from your root layout with `useEdot` and gate the navigator on `ready` — the same first-screen-span ordering rule from the React Navigation section applies here:
 
 ```tsx
-import { useEffect } from 'react';
+import { ActivityIndicator, Text } from 'react-native';
 import { Slot, useNavigationContainerRef } from 'expo-router';
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { useEdot } from '@inox/react-native-edot-sdk';
 import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
 
 export default function RootLayout() {
   const navigationRef = useNavigationContainerRef();
+  const { ready, error } = useEdot({
+    serverUrl: 'https://your-apm-server:8200',
+    serviceName: 'my-app',
+    serviceVersion: '1.0.0',
+    deploymentEnvironment: 'production',
+    secretToken: process.env.EDOT_SECRET_TOKEN,
+  });
 
-  useEffect(() => {
-    async function init(): Promise<void> {
-      try {
-        await EdotReactNative.initialize({
-          serverUrl: 'https://your-apm-server:8200',
-          serviceName: 'my-app',
-          serviceVersion: '1.0.0',
-          deploymentEnvironment: 'production',
-          secretToken: process.env.EDOT_SECRET_TOKEN,
-        })
-      } catch (err) {
-        console.error('[EDOT] Init failed:', err);
-      }
-    }
-    init();
-  }, []);
+  if (error) return <Text>Telemetry unavailable: {error.message}</Text>;
+  if (!ready) return <ActivityIndicator />;
 
   return (
     <EdotNavigationProvider
@@ -120,6 +106,8 @@ export default function RootLayout() {
 Working example: [`example/expo-router/`](../../example/expo-router).
 
 ## Wix react-native-navigation
+
+> Wix cannot use the `useEdot` hook. Init has to run inside `Navigation.events().registerAppLaunchedListener` — that's a callback executed by the native navigator before any React component mounts, so there is no React tree yet. Use the imperative `EdotReactNative.initialize(config)` here.
 
 Wix has no continuously-mounted React root, so registration is imperative and the order matters. Do this in your `index.js`:
 

@@ -6,6 +6,8 @@ export { EdotErrorBoundary } from './components/EdotErrorBoundary';
 export { ActiveViewContext } from './activeViewContext';
 export { withEdotTracking } from './interactions/with-edot-tracking';
 export { useEdotAction } from './interactions/use-edot-action';
+export { useEdot } from './hooks/useEdot';
+export type { UseEdotResult } from './hooks/useEdot';
 export type { ActiveView } from './activeViewContext';
 export type {
   EdotConfig,

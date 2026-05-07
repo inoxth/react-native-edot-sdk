@@ -104,6 +104,7 @@ apm-agent-ios v2.0.0 builds the global `MeterProvider` without `.setResource(...
 | Need | Location |
 |---|---|
 | Public API surface | `packages/react-native/src/index.ts` |
+| React init hook | `packages/react-native/src/hooks/useEdot.ts` — `useEdot(config)` returns `{ ready, error }`, first-wins capture, dev warning on native-key change |
 | Config shape / defaults | `types.ts`, `defaults.ts`, `config.ts` |
 | Native method signatures | `NativeEdotReactNative.ts` (TurboModule spec) |
 | iOS native implementation | `packages/react-native/ios/EdotReactNative.swift` (Swift) + `EdotReactNative.m` (RCT_EXTERN_MODULE bridge) |

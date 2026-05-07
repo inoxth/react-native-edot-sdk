@@ -4,6 +4,7 @@ OpenTelemetry-compliant observability SDK for React Native. Wraps the native [ED
 
 ## What you get
 
+- **React init hook** — `useEdot(config)` for declarative initialization with reactive `{ ready, error }` state; the imperative `EdotReactNative.initialize(config)` is also available for non-React contexts
 - **Network instrumentation** — automatic span creation for `fetch` and `XMLHttpRequest` (including Axios) with W3C trace context propagation
 - **Error tracking** — captures uncaught JS exceptions, unhandled Promise rejections, and React render errors via `EdotErrorBoundary`
 - **Startup tracing** — cold and warm start performance with JS bundle load and first render phases
@@ -89,6 +90,46 @@ await EdotReactNative.initialize({
 ```
 
 The platform-specific `serviceName` overrides the top-level value when both are present. At least one must resolve for the active platform.
+
+### React init hook
+
+For React apps, `useEdot(config)` is the idiomatic entry point — it calls `initialize` once on mount and exposes reactive `{ ready, error }` state:
+
+```tsx
+import { useEdot, EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+import { ActivityIndicator, Text } from 'react-native';
+
+export function App() {
+  const { ready, error } = useEdot({
+    serverUrl: 'https://your-apm-server:8200',
+    serviceName: 'my-app',
+    serviceVersion: '1.0.0',
+    deploymentEnvironment: 'production',
+    secretToken: process.env.EDOT_SECRET_TOKEN,
+  });
+
+  if (error) {
+    return <Text>Telemetry unavailable: {error.message}</Text>;
+  }
+  if (!ready) {
+    return <ActivityIndicator />;
+  }
+
+  return (
+    <EdotErrorBoundary fallback={<Text>Something went wrong</Text>}>
+      <RootNavigator />
+    </EdotErrorBoundary>
+  );
+}
+```
+
+Behavior:
+
+- **First-wins.** Config is captured on the first render and reused on every subsequent render — re-renders never re-initialize. In `__DEV__`, a `console.warn` fires when a native-relevant primitive key (`serverUrl`, `serviceName`, `secretToken`, etc.) changes after first render.
+- **Passive errors.** Init failures are stored in `error` and warned once to the console — never thrown. Observability degrades silently rather than crashing the app.
+- **StrictMode-safe.** The underlying singleton guard in `EdotReactNative.initialize` short-circuits duplicate calls, so React 18+ double-mount in dev costs nothing.
+
+For navigation-aware apps, mount the navigation root only once `ready` flips to `true` so the initial screen span is captured by the active tracer provider — see [`@inox/react-native-edot-navigation`](../react-native-navigation).
 
 ### Host-app pre-initialization (advanced)
 
