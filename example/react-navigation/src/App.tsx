@@ -3,6 +3,7 @@ import { NavigationContainer, useNavigationContainerRef } from '@react-navigatio
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Alert, Text } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useEdot } from '@inox/react-native-edot-sdk';
 import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
 import {
@@ -94,43 +95,45 @@ function InitializedApp(): React.JSX.Element {
   }
 
   return (
-    <EdotNavigationProvider navigationRef={navigationRef} screenNameMapper={screenNameMapper}>
-      <NavigationContainer ref={navigationRef}>
-        <Tab.Navigator
-          screenOptions={{
-            headerShown: false,
-            tabBarLabelStyle: { fontSize: 12 },
-          }}
-        >
-          <Tab.Screen
-            name="HomeTab"
-            component={HomeStackScreen}
-            options={{
-              tabBarLabel: 'Home',
-              tabBarButtonTestID: 'tab-home',
-              tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>H</Text>,
+    <SafeAreaProvider>
+      <EdotNavigationProvider navigationRef={navigationRef} screenNameMapper={screenNameMapper}>
+        <NavigationContainer ref={navigationRef}>
+          <Tab.Navigator
+            screenOptions={{
+              headerShown: false,
+              tabBarLabelStyle: { fontSize: 12 },
             }}
-          />
-          <Tab.Screen
-            name="DemosTab"
-            component={DemosStackScreen}
-            options={{
-              tabBarLabel: 'Demos',
-              tabBarButtonTestID: 'tab-demos',
-              tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>D</Text>,
-            }}
-          />
-          <Tab.Screen
-            name="SettingsTab"
-            component={SettingsStackScreen}
-            options={{
-              tabBarLabel: 'Settings',
-              tabBarButtonTestID: 'tab-settings',
-              tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>S</Text>,
-            }}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
-    </EdotNavigationProvider>
+          >
+            <Tab.Screen
+              name="HomeTab"
+              component={HomeStackScreen}
+              options={{
+                tabBarLabel: 'Home',
+                tabBarButtonTestID: 'tab-home',
+                tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>H</Text>,
+              }}
+            />
+            <Tab.Screen
+              name="DemosTab"
+              component={DemosStackScreen}
+              options={{
+                tabBarLabel: 'Demos',
+                tabBarButtonTestID: 'tab-demos',
+                tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>D</Text>,
+              }}
+            />
+            <Tab.Screen
+              name="SettingsTab"
+              component={SettingsStackScreen}
+              options={{
+                tabBarLabel: 'Settings',
+                tabBarButtonTestID: 'tab-settings',
+                tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 18 }}>S</Text>,
+              }}
+            />
+          </Tab.Navigator>
+        </NavigationContainer>
+      </EdotNavigationProvider>
+    </SafeAreaProvider>
   );
 }

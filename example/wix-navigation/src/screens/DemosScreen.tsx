@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Navigation } from 'react-native-navigation';
 
 interface Props {
@@ -31,7 +25,7 @@ export function DemosScreen({ componentId }: Props): React.JSX.Element {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scroll}>
         <Text style={styles.title}>Demos</Text>
         {DEMOS.map((demo) => (
@@ -46,7 +40,7 @@ export function DemosScreen({ componentId }: Props): React.JSX.Element {
           </TouchableOpacity>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

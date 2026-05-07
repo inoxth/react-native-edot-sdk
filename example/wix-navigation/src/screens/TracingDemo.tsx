@@ -1,12 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   getTracerProvider,
   withSpanContext,
@@ -58,7 +51,7 @@ export function TracingDemo(): React.JSX.Element {
   }, [addLog]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scroll}>
         <Text style={styles.title}>Manual Tracing</Text>
 
@@ -74,7 +67,7 @@ export function TracingDemo(): React.JSX.Element {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

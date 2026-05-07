@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   EDOT_SERVER_URL,
   EDOT_SERVICE_NAME_IOS,
@@ -29,7 +22,7 @@ const CONFIG_ITEMS = [
 
 export function SettingsScreen(): React.JSX.Element {
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scroll}>
         <Text style={styles.title}>Configuration</Text>
         <Text style={styles.subtitle}>Values from .env file</Text>
@@ -43,7 +36,7 @@ export function SettingsScreen(): React.JSX.Element {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

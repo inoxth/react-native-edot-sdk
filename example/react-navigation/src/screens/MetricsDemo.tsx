@@ -1,12 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getMeterProvider } from '@inox/react-native-edot-tracer-provider';
 
 export function MetricsDemo(): React.JSX.Element {
@@ -42,7 +35,7 @@ export function MetricsDemo(): React.JSX.Element {
   }, [addLog]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scroll}>
         <Text style={styles.title}>Metrics Demos</Text>
 
@@ -60,7 +53,7 @@ export function MetricsDemo(): React.JSX.Element {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

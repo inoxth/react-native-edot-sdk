@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import {
   EdotReactNative,
   EdotErrorBoundary,
@@ -144,10 +144,11 @@ function InteractionDemo({
 }
 
 export function App(): React.JSX.Element {
-  if (!EDOT_SERVER_URL) {
-    return <MissingEnvScreen />;
-  }
-  return <InitializedApp />;
+  return (
+    <SafeAreaProvider>
+      {EDOT_SERVER_URL ? <InitializedApp /> : <MissingEnvScreen />}
+    </SafeAreaProvider>
+  );
 }
 
 function MissingEnvScreen(): React.JSX.Element {

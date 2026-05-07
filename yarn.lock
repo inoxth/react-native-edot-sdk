@@ -5676,6 +5676,7 @@ __metadata:
     react-native: "npm:0.83.4"
     react-native-dotenv: "npm:^3.4.11"
     react-native-navigation: "npm:^8.8.2"
+    react-native-safe-area-context: "npm:^5.5.2"
     typescript: "npm:~5.8.3"
   languageName: unknown
   linkType: soft
@@ -5697,6 +5698,7 @@ __metadata:
     react: "npm:19.2.3"
     react-native: "npm:0.85.1"
     react-native-dotenv: "npm:^3.4.11"
+    react-native-safe-area-context: "npm:^5.5.2"
     typescript: "npm:~5.8.3"
   languageName: unknown
   linkType: soft

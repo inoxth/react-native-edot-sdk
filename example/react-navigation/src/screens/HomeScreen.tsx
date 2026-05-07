@@ -1,12 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
 
 export function HomeScreen(): React.JSX.Element {
@@ -58,7 +51,7 @@ export function HomeScreen(): React.JSX.Element {
   }, [addLog]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scroll}>
         <Text style={styles.title}>EDOT React Navigation</Text>
 
@@ -82,7 +75,7 @@ export function HomeScreen(): React.JSX.Element {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -1,12 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { EdotReactNative } from '@inox/react-native-edot-sdk';
 
 export function LogsDemo(): React.JSX.Element {
@@ -32,7 +25,7 @@ export function LogsDemo(): React.JSX.Element {
   }, [addLog]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scroll}>
         <Text style={styles.title}>Logs Demos</Text>
 
@@ -49,7 +42,7 @@ export function LogsDemo(): React.JSX.Element {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

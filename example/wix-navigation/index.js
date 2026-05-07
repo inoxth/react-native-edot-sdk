@@ -18,15 +18,16 @@ import { TracingDemo } from './src/screens/TracingDemo';
 import { MetricsDemo } from './src/screens/MetricsDemo';
 import { LogsDemo } from './src/screens/LogsDemo';
 import { ErrorDemo } from './src/screens/ErrorDemo';
+import { withSafeAreaProvider } from './src/withSafeAreaProvider';
 
-Navigation.registerComponent('HomeScreen', () => HomeScreen);
-Navigation.registerComponent('DemosScreen', () => DemosScreen);
-Navigation.registerComponent('SettingsScreen', () => SettingsScreen);
-Navigation.registerComponent('NetworkDemo', () => NetworkDemo);
-Navigation.registerComponent('TracingDemo', () => TracingDemo);
-Navigation.registerComponent('MetricsDemo', () => MetricsDemo);
-Navigation.registerComponent('LogsDemo', () => LogsDemo);
-Navigation.registerComponent('ErrorDemo', () => ErrorDemo);
+Navigation.registerComponent('HomeScreen', () => withSafeAreaProvider(HomeScreen));
+Navigation.registerComponent('DemosScreen', () => withSafeAreaProvider(DemosScreen));
+Navigation.registerComponent('SettingsScreen', () => withSafeAreaProvider(SettingsScreen));
+Navigation.registerComponent('NetworkDemo', () => withSafeAreaProvider(NetworkDemo));
+Navigation.registerComponent('TracingDemo', () => withSafeAreaProvider(TracingDemo));
+Navigation.registerComponent('MetricsDemo', () => withSafeAreaProvider(MetricsDemo));
+Navigation.registerComponent('LogsDemo', () => withSafeAreaProvider(LogsDemo));
+Navigation.registerComponent('ErrorDemo', () => withSafeAreaProvider(ErrorDemo));
 
 const SCREEN_NAME_MAP = {
   HomeScreen: 'Home',

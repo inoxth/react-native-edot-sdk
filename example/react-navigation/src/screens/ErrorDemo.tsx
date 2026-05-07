@@ -1,13 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import {
-  Alert,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
 
 function CrashComponent(): React.JSX.Element {
@@ -48,7 +40,7 @@ export function ErrorDemo(): React.JSX.Element {
   }, [addLog]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scroll}>
         <Text style={styles.title}>Error Demos</Text>
         <Text style={styles.subtitle}>These will trigger real errors captured by the SDK</Text>
@@ -83,7 +75,7 @@ export function ErrorDemo(): React.JSX.Element {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

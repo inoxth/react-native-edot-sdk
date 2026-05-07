@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 
@@ -30,7 +24,7 @@ export function DemosScreen(): React.JSX.Element {
   const navigation = useNavigation<NativeStackNavigationProp<DemosStackParamList>>();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView testID="demos-scroll" style={styles.scroll} contentContainerStyle={styles.content}>
         <Text style={styles.title}>SDK Demos</Text>
         {DEMO_SCREENS.map((screen) => (
@@ -45,7 +39,7 @@ export function DemosScreen(): React.JSX.Element {
           </TouchableOpacity>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
