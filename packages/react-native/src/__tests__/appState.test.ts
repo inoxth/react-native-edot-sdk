@@ -6,6 +6,7 @@ import { EdotNativeModule } from '../nativeModule';
 jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
     endSpan: jest.fn(),
+    setSpanAttributeBoolean: jest.fn(),
   },
 }));
 
@@ -39,13 +40,18 @@ describe('setupAppStateTracking', () => {
     jest.restoreAllMocks();
   });
 
-  it('ends the active screen span on background', () => {
+  it('ends the active screen span as aborted on background', () => {
     ActiveViewContext.setActiveView({ name: 'Home', spanId: 'home-1' });
     setupAppStateTracking();
 
     emit('background');
 
-    expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('home-1', 1);
+    expect(EdotNativeModule.setSpanAttributeBoolean).toHaveBeenCalledWith(
+      'home-1',
+      'screen.load.aborted',
+      true,
+    );
+    expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('home-1', 2);
     expect(ActiveViewContext.getActiveView()).toBeNull();
   });
 
@@ -55,6 +61,7 @@ describe('setupAppStateTracking', () => {
     emit('background');
 
     expect(EdotNativeModule.endSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.setSpanAttributeBoolean).not.toHaveBeenCalled();
   });
 
   it('ignores inactive transitions', () => {
