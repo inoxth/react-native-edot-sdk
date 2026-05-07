@@ -50,7 +50,7 @@ export function TracingDemo(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll}>
-        <Text style={styles.title}>Tracing Demos</Text>
+        <Text style={styles.title}>Manual Tracing</Text>
 
         <View style={styles.buttons}>
           <Button title="Create Span" onPress={handleCreateSpan} testID="tracing-btn-create-span" />

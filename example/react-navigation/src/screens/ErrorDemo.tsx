@@ -42,7 +42,7 @@ export function ErrorDemo(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll}>
-        <Text style={styles.title}>Error Demos</Text>
+        <Text style={styles.title}>Errors</Text>
         <Text style={styles.subtitle}>These will trigger real errors captured by the SDK</Text>
 
         <View style={styles.buttons}>

@@ -10,14 +10,51 @@ type DemosStackParamList = {
   MetricsDemo: undefined;
   LogsDemo: undefined;
   ErrorDemo: undefined;
+  InteractionDemo: undefined;
 };
 
-const DEMO_SCREENS: Array<{ name: keyof DemosStackParamList; label: string; testID: string }> = [
-  { name: 'NetworkDemo', label: 'Network Requests', testID: 'demos-btn-network' },
-  { name: 'TracingDemo', label: 'Manual Tracing', testID: 'demos-btn-tracing' },
-  { name: 'MetricsDemo', label: 'Metrics', testID: 'demos-btn-metrics' },
-  { name: 'LogsDemo', label: 'Structured Logs', testID: 'demos-btn-logs' },
-  { name: 'ErrorDemo', label: 'Error Handling', testID: 'demos-btn-errors' },
+const DEMO_SCREENS: Array<{
+  name: keyof DemosStackParamList;
+  title: string;
+  description: string;
+  testID: string;
+}> = [
+  {
+    name: 'NetworkDemo',
+    title: 'Network Requests',
+    description: 'Auto-instrumented fetch and XHR',
+    testID: 'demos-btn-network',
+  },
+  {
+    name: 'TracingDemo',
+    title: 'Manual Tracing',
+    description: 'Custom spans and nested spans',
+    testID: 'demos-btn-tracing',
+  },
+  {
+    name: 'MetricsDemo',
+    title: 'Metrics',
+    description: 'Counter, Histogram, UpDownCounter',
+    testID: 'demos-btn-metrics',
+  },
+  {
+    name: 'LogsDemo',
+    title: 'Logs',
+    description: 'Structured log messages',
+    testID: 'demos-btn-logs',
+  },
+  {
+    name: 'ErrorDemo',
+    title: 'Errors',
+    description: 'Error tracking and boundaries',
+    testID: 'demos-btn-errors',
+  },
+  {
+    name: 'InteractionDemo',
+    title: 'User Interaction',
+    description: 'Track taps with HOC and hook',
+    testID: 'demos-btn-interaction',
+  },
 ];
 
 export function DemosScreen(): React.JSX.Element {
@@ -26,16 +63,16 @@ export function DemosScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <ScrollView testID="demos-scroll" style={styles.scroll} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>SDK Demos</Text>
+        <Text style={styles.title}>Demo Screens</Text>
         {DEMO_SCREENS.map((screen) => (
           <TouchableOpacity
             key={screen.name}
-            style={styles.row}
+            style={styles.card}
             testID={screen.testID}
             onPress={() => navigation.navigate(screen.name)}
           >
-            <Text style={styles.rowText}>{screen.label}</Text>
-            <Text style={styles.arrow}>{'>'}</Text>
+            <Text style={styles.cardTitle}>{screen.title}</Text>
+            <Text style={styles.cardDescription}>{screen.description}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -48,15 +85,12 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { padding: 16 },
   title: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, color: '#333' },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+  card: {
     padding: 16,
+    backgroundColor: '#fff',
     borderRadius: 8,
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  rowText: { fontSize: 16, color: '#333' },
-  arrow: { fontSize: 16, color: '#999' },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 4 },
+  cardDescription: { fontSize: 14, color: '#666' },
 });

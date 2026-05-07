@@ -53,7 +53,7 @@ export function HomeScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll}>
-        <Text style={styles.title}>EDOT React Navigation</Text>
+        <Text style={styles.title}>EDOT Example</Text>
 
         <View style={styles.section}>
           <Text style={styles.label} testID="home-status">Status: {status}</Text>

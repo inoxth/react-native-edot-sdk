@@ -62,7 +62,7 @@ export function NetworkDemo(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll}>
-        <Text style={styles.title}>Network Demos</Text>
+        <Text style={styles.title}>Network Requests</Text>
         <Text style={styles.subtitle}>All requests are auto-instrumented by the SDK</Text>
 
         <View style={styles.buttons}>

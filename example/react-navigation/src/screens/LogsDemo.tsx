@@ -27,7 +27,7 @@ export function LogsDemo(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll}>
-        <Text style={styles.title}>Logs Demos</Text>
+        <Text style={styles.title}>Logs</Text>
 
         <View style={styles.buttons}>
           <Button title="Log Info" onPress={handleLogInfo} color="#34C759" testID="logs-btn-info" />

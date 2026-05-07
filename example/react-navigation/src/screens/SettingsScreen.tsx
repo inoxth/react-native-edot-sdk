@@ -24,7 +24,7 @@ export function SettingsScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll}>
-        <Text style={styles.title}>Configuration</Text>
+        <Text style={styles.title}>Settings</Text>
         <Text style={styles.subtitle}>Values from .env file</Text>
 
         <View style={styles.section}>

@@ -22,6 +22,7 @@ import { TracingDemo } from './screens/TracingDemo';
 import { MetricsDemo } from './screens/MetricsDemo';
 import { LogsDemo } from './screens/LogsDemo';
 import { ErrorDemo } from './screens/ErrorDemo';
+import { InteractionDemo } from './screens/InteractionDemo';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
@@ -45,6 +46,11 @@ function DemosStackScreen(): React.JSX.Element {
       <DemosStack.Screen name="MetricsDemo" component={MetricsDemo} options={{ title: 'Metrics' }} />
       <DemosStack.Screen name="LogsDemo" component={LogsDemo} options={{ title: 'Logs' }} />
       <DemosStack.Screen name="ErrorDemo" component={ErrorDemo} options={{ title: 'Errors' }} />
+      <DemosStack.Screen
+        name="InteractionDemo"
+        component={InteractionDemo}
+        options={{ title: 'Interaction' }}
+      />
     </DemosStack.Navigator>
   );
 }

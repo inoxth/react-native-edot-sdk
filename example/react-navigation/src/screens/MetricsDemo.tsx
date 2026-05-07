@@ -37,13 +37,13 @@ export function MetricsDemo(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll}>
-        <Text style={styles.title}>Metrics Demos</Text>
+        <Text style={styles.title}>Metrics</Text>
 
         <View style={styles.buttons}>
           <Button title="Increment Counter" onPress={handleCounter} testID="metrics-btn-counter" />
           <Button title="Record Histogram" onPress={handleHistogram} testID="metrics-btn-histogram" />
-          <Button title="UpDown +1" onPress={handleUpDownIncrement} testID="metrics-btn-updown" />
-          <Button title="UpDown -1" onPress={handleUpDownDecrement} testID="metrics-btn-updown-decrement" />
+          <Button title="UpDown +1" onPress={handleUpDownIncrement} testID="metrics-btn-updown-up" />
+          <Button title="UpDown -1" onPress={handleUpDownDecrement} testID="metrics-btn-updown-down" />
         </View>
 
         <View style={styles.section}>
