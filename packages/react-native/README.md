@@ -30,6 +30,8 @@ cd ios && pod install
 
 That's it. The SDK podspec declares the EDOT iOS agent (`apm-agent-ios`) as a Swift Package dependency via React Native's `spm_dependency` helper, so `pod install` resolves the package and links the `ElasticApm` product onto the SDK's pod target automatically. No manual Xcode SPM configuration is required.
 
+On Expo, run `npx expo prebuild` (or `npx expo run:ios`) instead — it generates the `ios/` project and runs `pod install` for you.
+
 Requires React Native 0.75+ and CocoaPods 1.13+. The SDK's native files are conditionally compiled against `ELASTIC_APM_AVAILABLE`, which the podspec enables on its own pod target whenever `spm_dependency` is in scope.
 
 ### Android
@@ -58,6 +60,8 @@ apply plugin: "co.elastic.otel.android.agent"
 ```
 
 Requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36, minSdk 24. See [`example/react-navigation/android/`](../../example/react-navigation/android) for a reference setup.
+
+No extra command needed — RN Gradle autolinking wires the SDK on the next `yarn android` / `./gradlew` build.
 
 > ⚠️ **Do not apply `co.elastic.otel.android.instrumentation.okhttp`.** RN's `fetch` / `XHR` are already instrumented at the JS layer — adding the OkHttp Gradle plugin would emit a second span per HTTP call, doubling APM ingest cost. If you need OkHttp instrumentation for non-RN code paths in the same app, install an interceptor that skips requests carrying the `X-Edot-RN-Traced` header (set by the JS-layer instrumentation).
 
