@@ -769,6 +769,15 @@ class EdotReactNative: NSObject {
   private static func installURLSessionInstrumentation(serverUrl: String) {
     guard urlSessionInstrumentation == nil else { return }
 
+    // Brand native URLSession spans under the same scope as the JS HTTP client
+    // instrumentation so a single SLO filter (`service.framework.name :
+    // "@inox/react-native-edot-sdk/http"`) catches every HTTP request the app
+    // makes -- JS-initiated, native third-party SDKs, and WebViews alike.
+    let httpTracer = OpenTelemetry.instance.tracerProvider.get(
+      instrumentationName: "@inox/react-native-edot-sdk/http",
+      instrumentationVersion: "1.0.0"
+    )
+
     let urlSessionConfig = URLSessionInstrumentationConfiguration(
       shouldInstrument: { request in
         if let url = request.url?.absoluteString, url.hasPrefix(serverUrl) {
@@ -784,7 +793,11 @@ class EdotReactNative: NSObject {
           return nil
         }
         return "\(method) \(host)"
-      }
+      },
+      spanCustomization: { _, builder in
+        _ = builder.setAttribute(key: "http.client", value: AttributeValue.string("urlsession"))
+      },
+      tracer: httpTracer
     )
     urlSessionInstrumentation = URLSessionInstrumentation(configuration: urlSessionConfig)
   }

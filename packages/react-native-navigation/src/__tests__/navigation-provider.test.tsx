@@ -95,7 +95,7 @@ describe('EdotNavigationProvider', () => {
       'index',
       { 'screen.name': 'index' },
       null,
-      '@inox/react-native-edot-navigation',
+      '@inox/react-native-edot-sdk/navigation',
     );
     expect(ActiveViewContext.setActiveView).toHaveBeenCalledWith({
       name: 'index',
@@ -131,7 +131,7 @@ describe('EdotNavigationProvider', () => {
       'index',
       { 'screen.name': 'index' },
       null,
-      '@inox/react-native-edot-navigation',
+      '@inox/react-native-edot-sdk/navigation',
     );
   });
 
@@ -155,7 +155,7 @@ describe('EdotNavigationProvider', () => {
       'network',
       { 'screen.name': 'network', 'last.screen.name': 'index' },
       null,
-      '@inox/react-native-edot-navigation',
+      '@inox/react-native-edot-sdk/navigation',
     );
   });
 
@@ -180,7 +180,7 @@ describe('EdotNavigationProvider', () => {
       'UserProfile/:id',
       { 'screen.name': 'UserProfile/:id' },
       null,
-      '@inox/react-native-edot-navigation',
+      '@inox/react-native-edot-sdk/navigation',
     );
   });
 

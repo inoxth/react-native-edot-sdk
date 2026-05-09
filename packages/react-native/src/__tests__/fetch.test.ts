@@ -47,7 +47,7 @@ describe('setupFetchInstrumentation', () => {
       'GET api.example.com',
       expect.objectContaining({ 'http.method': 'GET' }),
       null,
-      '@inox/react-native-edot-sdk/fetch',
+      '@inox/react-native-edot-sdk/http',
     );
     expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('span-1', 1);
   });
@@ -67,7 +67,7 @@ describe('setupFetchInstrumentation', () => {
         'net.peer.port': 443,
       }),
       null,
-      '@inox/react-native-edot-sdk/fetch',
+      '@inox/react-native-edot-sdk/http',
     );
   });
 
@@ -124,7 +124,7 @@ describe('setupFetchInstrumentation', () => {
         'net.peer.port': 80,
       }),
       null,
-      '@inox/react-native-edot-sdk/fetch',
+      '@inox/react-native-edot-sdk/http',
     );
   });
 
@@ -136,7 +136,7 @@ describe('setupFetchInstrumentation', () => {
       expect.any(String),
       expect.objectContaining({ 'net.peer.port': 8443 }),
       null,
-      '@inox/react-native-edot-sdk/fetch',
+      '@inox/react-native-edot-sdk/http',
     );
   });
 
@@ -185,7 +185,7 @@ describe('setupFetchInstrumentation', () => {
       'GraphQL: GetUser',
       expect.anything(),
       null,
-      '@inox/react-native-edot-sdk/fetch',
+      '@inox/react-native-edot-sdk/http',
     );
   });
 

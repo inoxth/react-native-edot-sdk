@@ -65,7 +65,7 @@ describe('registerEdotNavigationListener', () => {
       'HomeScreen',
       { 'screen.name': 'HomeScreen' },
       null,
-      '@inox/react-native-edot-navigation',
+      '@inox/react-native-edot-sdk/navigation',
     );
     expect(ActiveViewContext.setActiveView).toHaveBeenCalledWith({
       name: 'HomeScreen',
@@ -88,7 +88,7 @@ describe('registerEdotNavigationListener', () => {
       'DemosScreen',
       { 'screen.name': 'DemosScreen', 'last.screen.name': 'HomeScreen' },
       null,
-      '@inox/react-native-edot-navigation',
+      '@inox/react-native-edot-sdk/navigation',
     );
   });
 
@@ -104,7 +104,7 @@ describe('registerEdotNavigationListener', () => {
       'Home',
       { 'screen.name': 'Home' },
       null,
-      '@inox/react-native-edot-navigation',
+      '@inox/react-native-edot-sdk/navigation',
     );
   });
 

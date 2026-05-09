@@ -53,7 +53,7 @@ describe('fetch view correlation', () => {
         'screen.id': 'vs1',
       }),
       null,
-      '@inox/react-native-edot-sdk/fetch',
+      '@inox/react-native-edot-sdk/http',
     );
   });
 
@@ -93,7 +93,7 @@ describe('fetch view correlation', () => {
         'screen.id': 'vs-a',
       }),
       null,
-      '@inox/react-native-edot-sdk/fetch',
+      '@inox/react-native-edot-sdk/http',
     );
   });
 });

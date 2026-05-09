@@ -53,7 +53,7 @@ describe('view correlation on fetch', () => {
         'screen.id': 'view-span-123',
       }),
       null,
-      '@inox/react-native-edot-sdk/fetch',
+      '@inox/react-native-edot-sdk/http',
     );
   });
 
@@ -119,7 +119,7 @@ describe('view correlation on XHR', () => {
         'screen.id': 'view-span-456',
       }),
       null,
-      '@inox/react-native-edot-sdk/xhr',
+      '@inox/react-native-edot-sdk/http',
     );
   });
 

@@ -52,6 +52,7 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       const spanAttributes: Record<string, string | number> = {
         'http.method': method,
         'http.url': sanitizedUrl,
+        'http.client': 'fetch',
       };
       const scheme = extractScheme(url);
       if (scheme) spanAttributes['http.scheme'] = scheme;
@@ -70,7 +71,7 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
         spanName,
         spanAttributes,
         null,
-        '@inox/react-native-edot-sdk/fetch',
+        '@inox/react-native-edot-sdk/http',
       );
       trackSpan(nativeSpanId);
 

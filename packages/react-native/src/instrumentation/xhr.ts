@@ -74,6 +74,7 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
       const spanAttributes: Record<string, string | number> = {
         'http.method': method,
         'http.url': sanitizedUrl,
+        'http.client': 'xhr',
       };
       const scheme = extractScheme(url);
       if (scheme) spanAttributes['http.scheme'] = scheme;
@@ -92,7 +93,7 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         spanName,
         spanAttributes,
         null,
-        '@inox/react-native-edot-sdk/xhr',
+        '@inox/react-native-edot-sdk/http',
       );
       state.spanId = nativeSpanId;
       trackSpan(nativeSpanId);
