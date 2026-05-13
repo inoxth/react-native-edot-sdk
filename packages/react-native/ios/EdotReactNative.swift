@@ -563,18 +563,13 @@ class EdotReactNative: NSObject {
     spanLock.lock()
     let span = activeSpans[spanHandle]
     spanLock.unlock()
-    guard let span else {
-      os_log("[EDOT diag] getTraceparent: unknown span handle '%{public}@'", log: log, type: .info, spanHandle)
-      return ""
-    }
+    guard let span else { return "" }
 
     let ctx = span.context
     let traceId = ctx.traceId.hexString
     let spanId = ctx.spanId.hexString
     let flags = ctx.traceFlags.sampled ? "01" : "00"
-    let traceparent = "00-\(traceId)-\(spanId)-\(flags)"
-    os_log("[EDOT diag] getTraceparent => %{public}@", log: log, type: .info, traceparent)
-    return traceparent
+    return "00-\(traceId)-\(spanId)-\(flags)"
     #else
     return ""
     #endif
