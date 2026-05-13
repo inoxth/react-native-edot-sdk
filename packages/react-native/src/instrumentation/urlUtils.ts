@@ -38,7 +38,10 @@ export function shouldIgnore(
 }
 
 export function shouldPropagate(url: string, targets: (string | RegExp)[] | undefined): boolean {
-  if (!targets || targets.length === 0) {
+  if (targets === undefined) {
+    return true;
+  }
+  if (targets.length === 0) {
     return false;
   }
   return targets.some((pattern) => {

@@ -2,7 +2,7 @@
 
 ## Overview
 
-EDOT React Native SDK — an OpenTelemetry-compliant observability SDK wrapping native EDOT iOS/Android agents. Auto-instruments network requests (fetch + XHR), JS errors, startup, and navigation. App lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec. Published under `@inox/*` scope.
+React Native EDOT SDK — an OpenTelemetry-compliant observability SDK wrapping native EDOT iOS/Android agents. Auto-instruments network requests (fetch + XHR), JS errors, startup, and navigation. App lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec. Published under `@inox/*` scope.
 
 React Native 0.75+ (required for the `spm_dependency` Cocoapods helper), supports both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric) from a single codebase via legacy interop.
 
@@ -81,7 +81,7 @@ A single package `@inox/react-native-edot-navigation` covers all three navigator
 
 ### Network Instrumentation
 
-Fetch and XHR are monkey-patched to create OTel spans using legacy Elastic mobile spec HTTP attribute names: `http.method`, `http.url` (sanitized via `config.urlSanitizer`), `http.request_body.size`, `http.status_code`, `http.response_body.size`. They inject a W3C `traceparent` header for URLs matching `tracePropagationTargets` and add an `X-Edot-RN-Traced: 1` dedup header on every traced request. When an active view exists, spans include `screen.name` and `screen.id` attributes (RN-specific value-add over apm-agent-android's `ScreenAttributesSpanProcessor`, which only emits `screen.name`). Each instrumentation passes its own `instrumentationName` (`@inox/react-native-edot-sdk/fetch`, `@inox/react-native-edot-sdk/xhr`) so spans carry distinguishable `instrumentation.scope.name`. Body/response sizes and status code are written via the typed `setSpanAttributeNumber` bridge method to preserve numeric type end-to-end.
+Fetch and XHR are monkey-patched to create OTel spans using legacy Elastic mobile spec HTTP attribute names: `http.method`, `http.url` (sanitized via `config.urlSanitizer`), `http.request_body.size`, `http.status_code`, `http.response_body.size`. They inject a W3C `traceparent` header on **all** outbound requests when `tracePropagationTargets` is omitted (matching the iOS `apm-agent-ios` default; `serverUrl` and `ignoreUrls` matches are still excluded via `shouldIgnore`). Pass `tracePropagationTargets: []` to opt out entirely, or a non-empty array to restrict propagation to an allowlist. Every traced request also carries an `X-Edot-RN-Traced: 1` dedup header. When an active view exists, spans include `screen.name` and `screen.id` attributes (RN-specific value-add over apm-agent-android's `ScreenAttributesSpanProcessor`, which only emits `screen.name`). Each instrumentation passes its own `instrumentationName` (`@inox/react-native-edot-sdk/fetch`, `@inox/react-native-edot-sdk/xhr`) so spans carry distinguishable `instrumentation.scope.name`. Body/response sizes and status code are written via the typed `setSpanAttributeNumber` bridge method to preserve numeric type end-to-end.
 
 ### iOS Metrics Pipeline (Custom MeterProvider)
 

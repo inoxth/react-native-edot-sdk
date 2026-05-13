@@ -42,7 +42,21 @@ The SDK SHALL replace `global.fetch` with a wrapper that creates an OTel span fo
 - **THEN** the fetch span's `view.id` is `'a1'` (captured at request start)
 
 ### Requirement: Trace context propagation on fetch
-The SDK SHALL inject a W3C `traceparent` header into fetch requests whose URL matches any pattern in `tracePropagationTargets`. The header SHALL NOT be injected for non-matching URLs.
+The SDK SHALL inject a W3C `traceparent` header into outbound fetch requests according to `tracePropagationTargets`:
+
+- When `tracePropagationTargets` is `undefined` (omitted), the SDK SHALL inject `traceparent` on **all** fetch requests, except those filtered upstream by `shouldIgnore` (EDOT `serverUrl` and `ignoreUrls` matches). This matches the iOS `apm-agent-ios` default.
+- When `tracePropagationTargets` is an empty array (`[]`), the SDK SHALL NOT inject `traceparent` on any request (explicit opt-out).
+- When `tracePropagationTargets` is a non-empty array, the SDK SHALL inject `traceparent` only on requests whose URL matches at least one pattern. String patterns use `url.includes(pattern)`; RegExp patterns use `pattern.test(url)`.
+
+#### Scenario: Traceparent injected for all URLs when targets is undefined
+- **WHEN** `tracePropagationTargets` is not configured
+- **WHEN** `fetch('https://any.example.com/users')` is called
+- **THEN** the request includes a `traceparent` header in `00-{traceId}-{spanId}-{flags}` format
+
+#### Scenario: Traceparent not injected when targets is an empty array
+- **WHEN** `tracePropagationTargets: []` is configured
+- **WHEN** `fetch('https://api.example.com/users')` is called
+- **THEN** the request does NOT include a `traceparent` header
 
 #### Scenario: Traceparent injected for matching URL
 - **WHEN** `tracePropagationTargets: [/api\.example\.com/]` is configured
@@ -53,6 +67,11 @@ The SDK SHALL inject a W3C `traceparent` header into fetch requests whose URL ma
 - **WHEN** `tracePropagationTargets: [/api\.example\.com/]` is configured
 - **WHEN** `fetch('https://other.example.com/data')` is called
 - **THEN** the request does NOT include a `traceparent` header
+
+#### Scenario: ignoreUrls suppresses propagation even when targets is undefined
+- **WHEN** `tracePropagationTargets` is not configured and `ignoreUrls: [/\/health$/]` is configured
+- **WHEN** `fetch('https://api.example.com/health')` is called
+- **THEN** the request does NOT include a `traceparent` header (and no span is created)
 
 ### Requirement: Deduplication header on fetch
 The SDK SHALL add `X-Edot-RN-Traced: 1` header to every JS-patched fetch request to prevent the native EDOT SDK from creating a duplicate span.

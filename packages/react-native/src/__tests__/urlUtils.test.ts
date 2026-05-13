@@ -67,8 +67,12 @@ describe('extractHost', () => {
 });
 
 describe('shouldPropagate', () => {
-  it('returns false when no targets', () => {
-    expect(shouldPropagate('https://api.example.com/users', undefined)).toBe(false);
+  it('returns true when targets is undefined (default propagates to all)', () => {
+    expect(shouldPropagate('https://api.example.com/users', undefined)).toBe(true);
+  });
+
+  it('returns false when targets is an empty array (explicit opt-out)', () => {
+    expect(shouldPropagate('https://api.example.com/users', [])).toBe(false);
   });
 
   it('returns true for matching regex target', () => {
@@ -77,6 +81,26 @@ describe('shouldPropagate', () => {
 
   it('returns false for non-matching target', () => {
     expect(shouldPropagate('https://other.example.com/data', [/api\.example\.com/])).toBe(false);
+  });
+
+  it('returns true for matching string target', () => {
+    expect(shouldPropagate('https://api.example.com/users', ['api.example.com'])).toBe(true);
+  });
+});
+
+describe('shouldIgnore vs propagate-all default', () => {
+  const serverUrl = 'https://apm.example.com:8200';
+
+  it('shouldIgnore still wins for the EDOT server URL even when propagate-all is the default', () => {
+    const url = 'https://apm.example.com:8200/intake';
+    expect(shouldIgnore(url, undefined, serverUrl)).toBe(true);
+    expect(shouldPropagate(url, undefined)).toBe(true);
+  });
+
+  it('shouldIgnore still wins for ignoreUrls matches even when propagate-all is the default', () => {
+    const url = 'https://api.example.com/health';
+    expect(shouldIgnore(url, [/\/health$/], serverUrl)).toBe(true);
+    expect(shouldPropagate(url, undefined)).toBe(true);
   });
 });
 

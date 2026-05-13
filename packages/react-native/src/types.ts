@@ -102,6 +102,20 @@ export interface EdotConfig {
   instrumentAppStartup?: boolean;
   appStateTracking?: boolean;
 
+  /**
+   * Controls which outbound URLs receive a W3C `traceparent` header for
+   * distributed tracing.
+   *
+   * - Omit (`undefined`): inject `traceparent` on **all** outbound HTTP
+   *   requests, excluding the EDOT server URL and any `ignoreUrls` matches.
+   *   Matches the iOS `apm-agent-ios` default.
+   * - `[]` (empty array): explicit opt-out — never inject `traceparent`.
+   * - Array of `string | RegExp`: allowlist — inject only when the URL matches
+   *   a pattern. Strings use `url.includes(pattern)`; RegExps use
+   *   `pattern.test(url)`.
+   *
+   * @default undefined (propagate to all)
+   */
   tracePropagationTargets?: (string | RegExp)[];
   ignoreUrls?: (string | RegExp)[];
 

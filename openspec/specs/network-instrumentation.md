@@ -19,8 +19,9 @@ as OpenTelemetry spans with W3C trace context propagation.
 - MAY accept a `urlSanitizer` callback for custom URL scrubbing
 
 ### Trace Context Propagation
-- MUST inject W3C `traceparent` header into requests matching `tracePropagationTargets`
-- MUST NOT inject headers into requests that do NOT match `tracePropagationTargets`
+- MUST inject W3C `traceparent` header on **all** outbound requests when `tracePropagationTargets` is `undefined` (omitted), excluding URLs filtered by `shouldIgnore` (`serverUrl` and `ignoreUrls`). This matches the iOS `apm-agent-ios` default.
+- MUST NOT inject `traceparent` on any request when `tracePropagationTargets` is an empty array (`[]`) — explicit opt-out
+- MUST inject `traceparent` only on requests matching at least one pattern when `tracePropagationTargets` is a non-empty array — allowlist
 - MUST support both string and RegExp patterns in `tracePropagationTargets`
 
 ### Deduplication
@@ -51,10 +52,20 @@ as OpenTelemetry spans with W3C trace context propagation.
 - **When** `fetch('https://api.example.com/health')` is called
 - **Then** no span is created for this request
 
-#### Scenario: Trace context propagation
+#### Scenario: Trace context propagation with allowlist
 - **Given** `tracePropagationTargets: [/api\.example\.com/]` is configured
 - **When** `fetch('https://api.example.com/users')` is called
 - **Then** the request includes a `traceparent` header in W3C format
+
+#### Scenario: Trace context propagation defaults to all URLs
+- **Given** `tracePropagationTargets` is not configured
+- **When** `fetch('https://any.example.com/data')` is called
+- **Then** the request includes a `traceparent` header in W3C format
+
+#### Scenario: Empty array disables propagation
+- **Given** `tracePropagationTargets: []` is configured
+- **When** `fetch('https://api.example.com/users')` is called
+- **Then** the request does NOT include a `traceparent` header
 
 ### Requirement: Network instrumentation wired into initialize
 The SDK SHALL automatically set up fetch and XHR instrumentation when `EdotReactNative.initialize()` is called with `instrumentNetworkRequests: true` (the default). Instrumentation SHALL be teardown-able via an internal cleanup mechanism.
