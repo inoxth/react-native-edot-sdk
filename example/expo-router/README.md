@@ -1,6 +1,6 @@
 # EDOT Expo Router Example
 
-Example app demonstrating the EDOT React Native SDK with Expo Router navigation.
+Example app demonstrating the React Native EDOT SDK with Expo Router navigation.
 
 ## Features
 

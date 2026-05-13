@@ -5,7 +5,7 @@ tools:
   - claude
 
 context:
-  project_name: "EDOT React Native SDK"
+  project_name: "React Native EDOT SDK"
   project_type: "React Native library (monorepo)"
 
   tech_stack:

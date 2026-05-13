@@ -1,7 +1,7 @@
 # Monorepo Scaffold Specification
 
 ## Purpose
-Define the monorepo structure, build tooling, and shared configuration for the EDOT React Native SDK project.
+Define the monorepo structure, build tooling, and shared configuration for the React Native EDOT SDK project.
 
 ## Requirements
 

@@ -1,6 +1,6 @@
 # @inox/react-native-edot-navigation
 
-Unified navigation tracking plugin for the EDOT React Native SDK. On every navigation it emits a **screen-load-latency** span (from screen-appear until the JS thread is idle, i.e. the screen is interactive) and enriches network/error spans created during that screen's lifetime with `screen.name` + `screen.id`.
+Unified navigation tracking plugin for the React Native EDOT SDK. On every navigation it emits a **screen-load-latency** span (from screen-appear until the JS thread is idle, i.e. the screen is interactive) and enriches network/error spans created during that screen's lifetime with `screen.name` + `screen.id`.
 
 A single package covers all three popular React Native navigators:
 

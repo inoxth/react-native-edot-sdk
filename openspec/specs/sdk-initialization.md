@@ -1,7 +1,7 @@
 # SDK Initialization Specification
 
 ## Purpose
-Define the configuration interface, validation rules, and initialization lifecycle for the EDOT React Native SDK.
+Define the configuration interface, validation rules, and initialization lifecycle for the React Native EDOT SDK.
 
 ## Requirements
 

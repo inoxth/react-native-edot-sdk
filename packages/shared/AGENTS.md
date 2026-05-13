@@ -2,7 +2,7 @@
 
 ## Overview
 
-Shared cross-package state for the EDOT React Native SDK. Pure JS/TS — no React Native dependency. All navigation plugins and the main SDK depend on this package.
+Shared cross-package state for the React Native EDOT SDK. Pure JS/TS — no React Native dependency. All navigation plugins and the main SDK depend on this package.
 
 ## Structure
 

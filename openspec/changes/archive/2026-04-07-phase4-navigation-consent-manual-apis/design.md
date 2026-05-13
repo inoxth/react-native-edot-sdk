@@ -1,6 +1,6 @@
 ## Context
 
-The EDOT React Native SDK has Phase 1 (foundation) and Phase 2 (auto-instrumentation) complete. The core package at `packages/react-native/` provides SDK initialization, fetch/XHR patching, JS error handling, lifecycle tracking, startup tracing, session management, tracking consent, and global attributes. All telemetry flows through `EdotNativeModule` which bridges to the native EDOT iOS/Android SDKs via TurboModule.
+The React Native EDOT SDK has Phase 1 (foundation) and Phase 2 (auto-instrumentation) complete. The core package at `packages/react-native/` provides SDK initialization, fetch/XHR patching, JS error handling, lifecycle tracking, startup tracing, session management, tracking consent, and global attributes. All telemetry flows through `EdotNativeModule` which bridges to the native EDOT iOS/Android SDKs via TurboModule.
 
 Phase 4 adds navigation tracking (3 library plugins), an ActiveViewContext for view-to-network correlation, a TracerProvider package for manual instrumentation, and user interaction helpers.
 

@@ -1,6 +1,6 @@
 # EDOT Wix Navigation Example
 
-Example React Native app using [Wix react-native-navigation](https://github.com/wix/react-native-navigation) with the EDOT React Native SDK.
+Example React Native app using [Wix react-native-navigation](https://github.com/wix/react-native-navigation) with the React Native EDOT SDK.
 
 ## Setup
 

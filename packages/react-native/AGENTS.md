@@ -2,7 +2,7 @@
 
 ## Overview
 
-Core EDOT React Native SDK. Config validation, native bridge (TurboModule + NativeModules + no-op fallback), auto-instrumentation (fetch, XHR, errors, startup, span cleanup), public API, and React components. Lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec — not by JS.
+Core React Native EDOT SDK. Config validation, native bridge (TurboModule + NativeModules + no-op fallback), auto-instrumentation (fetch, XHR, errors, startup, span cleanup), public API, and React components. Lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec — not by JS.
 
 ## Structure
 

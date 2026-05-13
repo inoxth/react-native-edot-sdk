@@ -1,6 +1,6 @@
 # @inox/react-native-edot-tracer-provider
 
-Manual instrumentation API for the EDOT React Native SDK. Provides an OpenTelemetry-compatible `TracerProvider` and `MeterProvider` for emitting custom spans and metrics from JavaScript that flow through the same native pipeline as auto-instrumentation.
+Manual instrumentation API for the React Native EDOT SDK. Provides an OpenTelemetry-compatible `TracerProvider` and `MeterProvider` for emitting custom spans and metrics from JavaScript that flow through the same native pipeline as auto-instrumentation.
 
 Use this when the auto-instrumentation in [`@inox/react-native-edot-sdk`](../react-native) doesn't cover the signal you need — e.g. business events, custom timings, domain-specific metrics.
 

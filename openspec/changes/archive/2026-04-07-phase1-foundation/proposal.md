@@ -1,6 +1,6 @@
 ## Why
 
-The EDOT React Native SDK needs its foundational layer before any auto-instrumentation or navigation plugins can be built. Phase 1 establishes the monorepo structure, core native modules (iOS + Android), SDK initialization with full config support, session management bridge, and dual-architecture (Bridge + TurboModule) support. This is the critical path — every subsequent phase depends on these primitives.
+The React Native EDOT SDK needs its foundational layer before any auto-instrumentation or navigation plugins can be built. Phase 1 establishes the monorepo structure, core native modules (iOS + Android), SDK initialization with full config support, session management bridge, and dual-architecture (Bridge + TurboModule) support. This is the critical path — every subsequent phase depends on these primitives.
 
 ## What Changes
 

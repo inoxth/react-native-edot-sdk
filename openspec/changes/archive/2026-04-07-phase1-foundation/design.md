@@ -1,6 +1,6 @@
 ## Context
 
-We are building the EDOT React Native SDK — a wrapper around the native EDOT iOS (v2.x) and Android (v1.x) SDKs that exposes a unified TypeScript API for OpenTelemetry-compliant observability. This is the foundational phase: monorepo setup, native modules, initialization, session management, and dual-architecture support. All subsequent phases (auto-instrumentation, navigation plugins, manual APIs) depend on this layer.
+We are building the React Native EDOT SDK — a wrapper around the native EDOT iOS (v2.x) and Android (v1.x) SDKs that exposes a unified TypeScript API for OpenTelemetry-compliant observability. This is the foundational phase: monorepo setup, native modules, initialization, session management, and dual-architecture support. All subsequent phases (auto-instrumentation, navigation plugins, manual APIs) depend on this layer.
 
 Key constraints:
 - Must support RN 0.72+ with both Bridge and New Architecture (TurboModules/JSI)

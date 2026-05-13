@@ -1,6 +1,6 @@
 # @inox/react-native-edot-cli
 
-Command-line tool for the EDOT React Native SDK. Currently provides a single command for uploading JS bundles and source maps to your APM server so server-side stack traces can be symbolicated.
+Command-line tool for the React Native EDOT SDK. Currently provides a single command for uploading JS bundles and source maps to your APM server so server-side stack traces can be symbolicated.
 
 ## Install
 

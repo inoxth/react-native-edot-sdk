@@ -1,6 +1,6 @@
 # Contributing
 
-Guide for working on the EDOT React Native SDK monorepo. For a product/architecture overview see [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md); for adopter-facing setup see [README.md](./README.md); for AI-agent context see [AGENTS.md](./AGENTS.md) and each `packages/*/AGENTS.md`.
+Guide for working on the React Native EDOT SDK monorepo. For a product/architecture overview see [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md); for adopter-facing setup see [README.md](./README.md); for AI-agent context see [AGENTS.md](./AGENTS.md) and each `packages/*/AGENTS.md`.
 
 ## Prerequisites
 

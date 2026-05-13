@@ -1,6 +1,6 @@
 # EDOT React Navigation Example
 
-Demonstrates the EDOT React Native SDK with React Navigation, including automatic navigation tracking, manual tracing, metrics, logs, and error handling.
+Demonstrates the React Native EDOT SDK with React Navigation, including automatic navigation tracking, manual tracing, metrics, logs, and error handling.
 
 ## Setup
 

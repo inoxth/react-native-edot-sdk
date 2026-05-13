@@ -1,6 +1,6 @@
 ## Context
 
-The EDOT React Native SDK currently emits navigation telemetry that diverges from both Elastic mobile agents on three independent axes:
+The React Native EDOT SDK currently emits navigation telemetry that diverges from both Elastic mobile agents on three independent axes:
 
 1. **Attribute names**: nav plugins emit `view.name` / `view.previous` / `view.transition_type`. apm-agent-android (via opentelemetry-android) emits `screen.name` / `last.screen.name`. apm-agent-ios encodes screen identity in the span name. Kibana mobile RUM views key off `screen.name`.
 2. **Span lifecycle**: nav plugins emit a screen-lifetime span (one span per screen visit), but it never ends on app background — so duration includes background time and `screen.id` correlation tags background-originated work to a stale screen.

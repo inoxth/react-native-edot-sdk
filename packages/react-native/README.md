@@ -205,7 +205,7 @@ Both are wrapped in a redacted-string container immediately on receipt — `JSON
 
 | Option                    | Type                      | Description                                                          |
 | ------------------------- | ------------------------- | -------------------------------------------------------------------- |
-| `tracePropagationTargets` | `(string \| RegExp)[]`    | URLs to inject `traceparent` into. Defaults to none.                 |
+| `tracePropagationTargets` | `(string \| RegExp)[]`    | Allowlist of URLs to inject `traceparent` into. **Default (omitted): inject on all outbound requests** (matching the iOS native agent), except `serverUrl` / `ignoreUrls`. Pass `[]` to opt out entirely. |
 | `ignoreUrls`              | `(string \| RegExp)[]`    | URLs to skip span creation for.                                      |
 | `graphqlUrls`             | `(string \| RegExp)[]`    | URLs treated as GraphQL endpoints (operation name parsed from body). |
 | `urlSanitizer`            | `(url: string) => string` | Strip secrets/PII from `http.url` before export.                     |

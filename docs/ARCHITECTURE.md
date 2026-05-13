@@ -1,6 +1,6 @@
 # Architecture
 
-High-level overview of the EDOT React Native SDK. For user-facing setup see [README.md](../README.md); for contributor workflow see [CONTRIBUTING.md](../CONTRIBUTING.md); for capability-level specs see [openspec/specs/](../openspec/specs/); for package-level detail see each `packages/*/AGENTS.md`.
+High-level overview of the React Native EDOT SDK. For user-facing setup see [README.md](../README.md); for contributor workflow see [CONTRIBUTING.md](../CONTRIBUTING.md); for capability-level specs see [openspec/specs/](../openspec/specs/); for package-level detail see each `packages/*/AGENTS.md`.
 
 ## Purpose
 

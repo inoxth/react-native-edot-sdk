@@ -1,7 +1,7 @@
 # Core SDK Specification
 
 ## Purpose
-The EDOT React Native SDK provides a unified JavaScript/TypeScript API that wraps
+The React Native EDOT SDK provides a unified JavaScript/TypeScript API that wraps
 the native EDOT iOS and EDOT Android SDKs to deliver OpenTelemetry-compliant
 observability (traces, metrics, logs) for React Native applications.
 

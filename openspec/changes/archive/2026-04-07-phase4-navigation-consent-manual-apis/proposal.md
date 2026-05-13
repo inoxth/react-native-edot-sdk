@@ -1,6 +1,6 @@
 ## Why
 
-Phase 4 of the EDOT React Native SDK delivers the remaining developer-facing capabilities: navigation tracking across the three major React Native navigation libraries, consent-aware telemetry buffering, and manual instrumentation APIs (TracerProvider, MeterProvider, custom spans/metrics). These are required for DataDog migration parity and enable developers to correlate screen views with network requests and add custom business telemetry.
+Phase 4 of the React Native EDOT SDK delivers the remaining developer-facing capabilities: navigation tracking across the three major React Native navigation libraries, consent-aware telemetry buffering, and manual instrumentation APIs (TracerProvider, MeterProvider, custom spans/metrics). These are required for DataDog migration parity and enable developers to correlate screen views with network requests and add custom business telemetry.
 
 ## What Changes
 
