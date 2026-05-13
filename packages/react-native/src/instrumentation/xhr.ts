@@ -11,7 +11,6 @@ import {
   extractScheme,
   extractTarget,
 } from './urlUtils';
-import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
 import { trackSpan, untrackSpan } from './spanCleanup';
 
@@ -100,9 +99,10 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
 
       originalSetRequestHeader.call(this, DEDUP_HEADER, '1');
       if (shouldPropagate(url, config.tracePropagationTargets)) {
-        const traceId = generateTraceId();
-        const spanId = generateSpanId();
-        originalSetRequestHeader.call(this, 'traceparent', formatTraceparent(traceId, spanId));
+        const traceparent = EdotNativeModule.getTraceparent(nativeSpanId);
+        if (traceparent) {
+          originalSetRequestHeader.call(this, 'traceparent', traceparent);
+        }
       }
 
       if (bodyStr) {

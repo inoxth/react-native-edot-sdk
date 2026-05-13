@@ -44,6 +44,8 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         instrumentationName: String?,
     ): String = impl.startClientSpan(name, attributes, parentSpanId, instrumentationName)
 
+    override fun getTraceparent(spanHandle: String): String = impl.getTraceparent(spanHandle)
+
     override fun endSpan(spanId: String, statusCode: Double) = impl.endSpan(spanId, statusCode)
 
     override fun setSpanAttribute(spanId: String, key: String, value: String) =

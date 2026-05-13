@@ -9,6 +9,7 @@ jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
     startSpan: jest.fn().mockReturnValue('span-1'),
     startClientSpan: jest.fn().mockReturnValue('span-1'),
+    getTraceparent: jest.fn().mockReturnValue(''),
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
     setSpanAttributeNumber: jest.fn(),

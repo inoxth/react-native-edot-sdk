@@ -13,7 +13,6 @@ import {
   extractScheme,
   extractTarget,
 } from './urlUtils';
-import { formatTraceparent, generateTraceId, generateSpanId } from './traceContext';
 import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
 import { trackSpan, untrackSpan } from './spanCleanup';
 
@@ -43,9 +42,6 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
           spanName = `GraphQL: ${opName}`;
         }
       }
-
-      const traceId = generateTraceId();
-      const spanId = generateSpanId();
 
       const activeView = ActiveViewContext.getActiveView();
 
@@ -79,7 +75,10 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       headers.set(DEDUP_HEADER, '1');
 
       if (shouldPropagate(url, config.tracePropagationTargets)) {
-        headers.set('traceparent', formatTraceparent(traceId, spanId));
+        const traceparent = EdotNativeModule.getTraceparent(nativeSpanId);
+        if (traceparent) {
+          headers.set('traceparent', traceparent);
+        }
       }
 
       const patchedInit: RequestInit = { ...init, headers };

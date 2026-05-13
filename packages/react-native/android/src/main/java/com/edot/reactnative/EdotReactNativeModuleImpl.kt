@@ -1,6 +1,7 @@
 package com.edot.reactnative
 
 import android.app.Application
+import android.util.Log
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
@@ -299,6 +300,19 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         val spanId = UUID.randomUUID().toString()
         activeSpans[spanId] = span
         return spanId
+    }
+
+    fun getTraceparent(spanHandle: String): String {
+        val span = activeSpans[spanHandle]
+        if (span == null) {
+            Log.i("EDOT", "[diag] getTraceparent: unknown span handle '$spanHandle'")
+            return ""
+        }
+        val ctx = span.spanContext
+        val flags = if (ctx.traceFlags.isSampled) "01" else "00"
+        val traceparent = "00-${ctx.traceId}-${ctx.spanId}-$flags"
+        Log.i("EDOT", "[diag] getTraceparent => $traceparent")
+        return traceparent
     }
 
     fun endSpan(spanId: String, statusCode: Double) {

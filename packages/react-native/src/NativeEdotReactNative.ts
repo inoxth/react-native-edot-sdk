@@ -23,6 +23,7 @@ export interface Spec extends TurboModule {
     parentSpanId?: string | null,
     instrumentationName?: string | null,
   ): string;
+  getTraceparent(spanHandle: string): string;
   endSpan(spanId: string, statusCode: number): void;
   setSpanAttribute(spanId: string, key: string, value: string): void;
   setSpanAttributeNumber(spanId: string, key: string, value: number): void;

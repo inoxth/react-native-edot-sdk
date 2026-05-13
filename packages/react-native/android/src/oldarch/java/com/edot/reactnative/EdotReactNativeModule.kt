@@ -53,6 +53,9 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
         instrumentationName: String?,
     ): String = impl.startClientSpan(name, attributes, parentSpanId, instrumentationName)
 
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    fun getTraceparent(spanHandle: String): String = impl.getTraceparent(spanHandle)
+
     @ReactMethod
     fun endSpan(spanId: String, statusCode: Double) = impl.endSpan(spanId, statusCode)
 

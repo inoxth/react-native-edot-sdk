@@ -23,6 +23,7 @@ function createNoOpModule(): Spec {
     reportJsException: () => undefined,
     startSpan: () => '',
     startClientSpan: () => '',
+    getTraceparent: () => '',
     endSpan: () => undefined,
     setSpanAttribute: () => undefined,
     setSpanAttributeNumber: () => undefined,

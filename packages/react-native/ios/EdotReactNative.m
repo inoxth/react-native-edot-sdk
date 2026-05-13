@@ -26,6 +26,8 @@ RCT_EXTERN__BLOCKING_SYNCHRONOUS_METHOD(startClientSpan:(NSString *)name
                                         parentSpanId:(NSString * _Nullable)parentSpanId
                                         instrumentationName:(NSString * _Nullable)instrumentationName)
 
+RCT_EXTERN__BLOCKING_SYNCHRONOUS_METHOD(getTraceparent:(NSString *)spanHandle)
+
 RCT_EXTERN_METHOD(endSpan:(NSString *)spanId statusCode:(NSInteger)statusCode)
 RCT_EXTERN_METHOD(setSpanAttribute:(NSString *)spanId key:(NSString *)key value:(NSString *)value)
 RCT_EXTERN_METHOD(setSpanAttributeNumber:(NSString *)spanId key:(NSString *)key value:(nonnull NSNumber *)value)
