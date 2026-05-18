@@ -1,5 +1,6 @@
 import { setupErrorHandler } from '../instrumentation/errors';
 import { EdotNativeModule } from '../nativeModule';
+import { ActiveViewContext } from '../activeViewContext';
 import type { EdotConfig } from '../types';
 
 jest.mock('../nativeModule', () => ({
@@ -7,6 +8,8 @@ jest.mock('../nativeModule', () => ({
     startSpan: jest.fn().mockReturnValue('span-1'),
     endSpan: jest.fn(),
     reportJsException: jest.fn(),
+    recordSpanException: jest.fn(),
+    emitLog: jest.fn(),
   },
 }));
 
@@ -29,10 +32,12 @@ describe('setupErrorHandler', () => {
       setGlobalHandler: jest.fn(),
     };
     jest.clearAllMocks();
+    ActiveViewContext._resetForTesting();
   });
 
   afterEach(() => {
     delete global.ErrorUtils;
+    ActiveViewContext._resetForTesting();
   });
 
   it('installs global error handler', () => {
@@ -47,36 +52,64 @@ describe('setupErrorHandler', () => {
     const error = new TypeError('test error');
     installedHandler(error, true);
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'JS Error',
-      expect.objectContaining({
-        'exception.type': 'TypeError',
-        'error.source': 'js_uncaught',
-      }),
-      null,
-      '@inox/react-native-edot-sdk/errors',
-    );
-    expect(EdotNativeModule.reportJsException).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'TypeError', isFatal: true }),
-    );
     expect(previousHandler).toHaveBeenCalledWith(error, true);
   });
 
-  it('does not stamp service identity on error spans (Resource carries it)', () => {
-    setupErrorHandler({
-      ...baseConfig,
-      serviceName: 'my-app',
-      serviceVersion: '2.0.0',
-      deploymentEnvironment: 'production',
-    });
+  it('routes fatal errors to reportJsException (crash event path)', () => {
+    setupErrorHandler(baseConfig);
 
     const installedHandler = (ErrorUtils.setGlobalHandler as jest.Mock).mock.calls[0][0];
-    installedHandler(new Error('boom'), false);
+    installedHandler(new TypeError('boom'), true);
 
-    const [, attrs] = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0];
-    expect(attrs).not.toHaveProperty('service.name');
-    expect(attrs).not.toHaveProperty('service.version');
-    expect(attrs).not.toHaveProperty('deployment.environment');
+    expect(EdotNativeModule.reportJsException).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'TypeError',
+        message: 'boom',
+        isFatal: true,
+      }),
+    );
+    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.recordSpanException).not.toHaveBeenCalled();
+    expect(EdotNativeModule.emitLog).not.toHaveBeenCalled();
+  });
+
+  it('routes non-fatal errors with an active view to recordSpanException on the view span', () => {
+    ActiveViewContext.setActiveView({ name: 'CheckoutScreen', spanId: 'view-span-9' });
+    setupErrorHandler(baseConfig);
+
+    const installedHandler = (ErrorUtils.setGlobalHandler as jest.Mock).mock.calls[0][0];
+    installedHandler(new TypeError('soft fail'), false);
+
+    expect(EdotNativeModule.recordSpanException).toHaveBeenCalledWith('view-span-9', {
+      name: 'TypeError',
+      message: 'soft fail',
+      stack: expect.any(String),
+    });
+    expect(EdotNativeModule.reportJsException).not.toHaveBeenCalled();
+    expect(EdotNativeModule.emitLog).not.toHaveBeenCalled();
+    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+  });
+
+  it('routes non-fatal errors without an active view to emitLog as an exception event', () => {
+    setupErrorHandler(baseConfig);
+
+    const installedHandler = (ErrorUtils.setGlobalHandler as jest.Mock).mock.calls[0][0];
+    const err = new TypeError('orphan fail');
+    installedHandler(err, false);
+
+    expect(EdotNativeModule.emitLog).toHaveBeenCalledWith(
+      'error',
+      'orphan fail',
+      expect.objectContaining({
+        'event.name': 'exception',
+        'exception.type': 'TypeError',
+        'exception.message': 'orphan fail',
+        'error.source': 'js_uncaught',
+      }),
+    );
+    expect(EdotNativeModule.recordSpanException).not.toHaveBeenCalled();
+    expect(EdotNativeModule.reportJsException).not.toHaveBeenCalled();
+    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
   });
 
   it('restores previous handler on teardown', () => {
@@ -124,10 +157,12 @@ describe('setupErrorHandler — promise rejection tracker', () => {
     // Ensure no Hermes tracker so we exercise the require() path
     delete (global as Record<string, unknown>).HermesInternal;
     jest.clearAllMocks();
+    ActiveViewContext._resetForTesting();
   });
 
   afterEach(() => {
     delete global.ErrorUtils;
+    ActiveViewContext._resetForTesting();
     jest.resetModules();
   });
 
@@ -191,6 +226,8 @@ describe('setupErrorHandler — promise rejection tracker', () => {
         startSpan: jest.fn().mockReturnValue('span-x'),
         endSpan: jest.fn(),
         reportJsException: jest.fn(),
+        recordSpanException: jest.fn(),
+        emitLog: jest.fn(),
       },
     }));
 
@@ -199,9 +236,13 @@ describe('setupErrorHandler — promise rejection tracker', () => {
     teardown();
 
     const { EdotNativeModule: mod } = require('../nativeModule');
-    (mod.startSpan as jest.Mock).mockClear();
+    (mod.emitLog as jest.Mock).mockClear();
+    (mod.reportJsException as jest.Mock).mockClear();
+    (mod.recordSpanException as jest.Mock).mockClear();
     callbacks[0]?.(1, new Error('stale'));
-    expect(mod.startSpan).not.toHaveBeenCalled();
+    expect(mod.emitLog).not.toHaveBeenCalled();
+    expect(mod.reportJsException).not.toHaveBeenCalled();
+    expect(mod.recordSpanException).not.toHaveBeenCalled();
 
     jest.dontMock('promise/setimmediate/rejection-tracking');
   });

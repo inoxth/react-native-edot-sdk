@@ -30,32 +30,29 @@ function hasErrorUtils(): boolean {
 }
 
 function reportError(error: Error, source: string, isFatal: boolean): void {
-  const activeView = ActiveViewContext.getActiveView();
+  const exceptionInfo = {
+    name: error.name,
+    message: error.message,
+    stack: error.stack ?? '',
+  };
 
-  const attributes: Record<string, string> = {
+  if (isFatal) {
+    EdotNativeModule.reportJsException({ ...exceptionInfo, isFatal: true });
+    return;
+  }
+
+  const activeView = ActiveViewContext.getActiveView();
+  if (activeView) {
+    EdotNativeModule.recordSpanException(activeView.spanId, exceptionInfo);
+    return;
+  }
+
+  EdotNativeModule.emitLog('error', error.message, {
+    'event.name': 'exception',
     'exception.type': error.name,
     'exception.message': error.message,
     'exception.stacktrace': error.stack ?? '',
     'error.source': source,
-  };
-  if (activeView) {
-    attributes['screen.name'] = activeView.name;
-    attributes['screen.id'] = activeView.spanId;
-  }
-
-  const spanId = EdotNativeModule.startSpan(
-    'JS Error',
-    attributes,
-    null,
-    '@inox/react-native-edot-sdk/errors',
-  );
-  EdotNativeModule.endSpan(spanId, 2);
-
-  EdotNativeModule.reportJsException({
-    name: error.name,
-    message: error.message,
-    stack: error.stack ?? '',
-    isFatal,
   });
 }
 

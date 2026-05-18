@@ -8,6 +8,8 @@ jest.mock('../nativeModule', () => ({
     startSpan: jest.fn().mockReturnValue('span-1'),
     endSpan: jest.fn(),
     reportJsException: jest.fn(),
+    recordSpanException: jest.fn(),
+    emitLog: jest.fn(),
   },
 }));
 
@@ -48,7 +50,7 @@ describe('EdotErrorBoundary', () => {
     expect(screen.getByText('Error occurred')).toBeTruthy();
   });
 
-  it('reports error to native module', () => {
+  it('reports the render error as an exception log event', () => {
     const { EdotNativeModule } = require('../nativeModule');
 
     render(
@@ -57,17 +59,20 @@ describe('EdotErrorBoundary', () => {
       </EdotErrorBoundary>,
     );
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'JS Error',
-      expect.objectContaining({ 'error.source': 'js_render_error' }),
-      null,
-      '@inox/react-native-edot-sdk/errors',
+    expect(EdotNativeModule.emitLog).toHaveBeenCalledWith(
+      'error',
+      'render crash',
+      expect.objectContaining({
+        'event.name': 'exception',
+        'exception.type': 'Error',
+        'error.source': 'js_render_error',
+      }),
     );
   });
 
   it('warns via console.warn when reportError itself throws', () => {
     const { EdotNativeModule } = require('../nativeModule');
-    (EdotNativeModule.startSpan as jest.Mock).mockImplementationOnce(() => {
+    (EdotNativeModule.emitLog as jest.Mock).mockImplementationOnce(() => {
       throw new Error('native boom');
     });
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();

@@ -8,6 +8,8 @@ jest.mock('../nativeModule', () => ({
     startSpan: jest.fn().mockReturnValue('err-span-1'),
     endSpan: jest.fn(),
     reportJsException: jest.fn(),
+    recordSpanException: jest.fn(),
+    emitLog: jest.fn(),
   },
 }));
 
@@ -28,29 +30,46 @@ describe('error handler view correlation', () => {
     ActiveViewContext._resetForTesting();
   });
 
-  it('includes screen.name and screen.id when active view exists', () => {
+  it('records the exception as an event on the active view span', () => {
     ActiveViewContext.setActiveView({ name: 'CheckoutScreen', spanId: 'vs1' });
 
-    reportError(new TypeError('test error'), 'js_uncaught', true);
+    reportError(new TypeError('test error'), 'js_uncaught', false);
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'JS Error',
-      expect.objectContaining({
-        'screen.name': 'CheckoutScreen',
-        'screen.id': 'vs1',
-      }),
-      null,
-      '@inox/react-native-edot-sdk/errors',
-    );
+    expect(EdotNativeModule.recordSpanException).toHaveBeenCalledWith('vs1', {
+      name: 'TypeError',
+      message: 'test error',
+      stack: expect.any(String),
+    });
+    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.emitLog).not.toHaveBeenCalled();
   });
 
-  it('omits screen attributes when no active view', () => {
-    reportError(new Error('test error'), 'js_uncaught', false);
+  it('emits an exception log event when there is no active view', () => {
+    reportError(new Error('orphan error'), 'js_uncaught', false);
 
-    const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
-    expect(attrs).not.toHaveProperty('screen.name');
-    expect(attrs).not.toHaveProperty('screen.id');
-    expect(attrs).not.toHaveProperty('view.name');
+    expect(EdotNativeModule.emitLog).toHaveBeenCalledWith(
+      'error',
+      'orphan error',
+      expect.objectContaining({
+        'event.name': 'exception',
+        'exception.type': 'Error',
+        'error.source': 'js_uncaught',
+      }),
+    );
+    expect(EdotNativeModule.recordSpanException).not.toHaveBeenCalled();
+    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+  });
+
+  it('routes fatal errors through reportJsException regardless of active view', () => {
+    ActiveViewContext.setActiveView({ name: 'CheckoutScreen', spanId: 'vs1' });
+
+    reportError(new Error('fatal'), 'js_uncaught', true);
+
+    expect(EdotNativeModule.reportJsException).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Error', message: 'fatal', isFatal: true }),
+    );
+    expect(EdotNativeModule.recordSpanException).not.toHaveBeenCalled();
+    expect(EdotNativeModule.emitLog).not.toHaveBeenCalled();
   });
 
   it('sets up global error handler', () => {
