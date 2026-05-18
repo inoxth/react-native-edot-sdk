@@ -11,7 +11,7 @@ import {
   extractScheme,
   extractTarget,
 } from './urlUtils';
-import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
+import { buildGraphqlSpanName, extractGraphqlOperation, isGraphqlUrl } from './graphql';
 import { trackSpan, untrackSpan } from './spanCleanup';
 
 const DEDUP_HEADER = 'X-Edot-RN-Traced';
@@ -61,10 +61,11 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
 
       let spanName = host ? `${method} ${host}` : `HTTP ${method}`;
       const bodyStr = typeof body === 'string' ? body : undefined;
+      let graphqlOp: ReturnType<typeof extractGraphqlOperation> = null;
       if (isGraphqlUrl(url, config.graphqlUrls) && bodyStr) {
-        const opName = extractGraphqlOperationName(bodyStr);
-        if (opName) {
-          spanName = `GraphQL: ${opName}`;
+        graphqlOp = extractGraphqlOperation(bodyStr);
+        if (graphqlOp) {
+          spanName = buildGraphqlSpanName(graphqlOp);
         }
       }
 
@@ -75,6 +76,12 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         'http.url': sanitizedUrl,
         'http.client': 'xhr',
       };
+      if (graphqlOp) {
+        spanAttributes['graphql.operation.type'] = graphqlOp.type;
+        if (graphqlOp.name) {
+          spanAttributes['graphql.operation.name'] = graphqlOp.name;
+        }
+      }
       const scheme = extractScheme(url);
       if (scheme) spanAttributes['http.scheme'] = scheme;
       const target = extractTarget(sanitizedUrl);

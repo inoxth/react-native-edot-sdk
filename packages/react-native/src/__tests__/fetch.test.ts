@@ -173,7 +173,7 @@ describe('setupFetchInstrumentation', () => {
     expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('span-1', 2);
   });
 
-  it('extracts GraphQL operation name', async () => {
+  it('names GraphQL spans per OTel semconv and sets graphql.operation.* attributes', async () => {
     teardown = setupFetchInstrumentation({
       ...baseConfig,
       graphqlUrls: [/\/graphql$/],
@@ -185,8 +185,11 @@ describe('setupFetchInstrumentation', () => {
     });
 
     expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
-      'GraphQL: GetUser',
-      expect.anything(),
+      'query GetUser',
+      expect.objectContaining({
+        'graphql.operation.type': 'query',
+        'graphql.operation.name': 'GetUser',
+      }),
       null,
       '@inox/react-native-edot-sdk/http',
     );

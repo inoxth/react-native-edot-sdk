@@ -207,7 +207,7 @@ Both are wrapped in a redacted-string container immediately on receipt — `JSON
 | ------------------------- | ------------------------- | -------------------------------------------------------------------- |
 | `tracePropagationTargets` | `(string \| RegExp)[]`    | Allowlist of URLs to inject `traceparent` into. **Default (omitted): inject on all outbound requests** (matching the iOS native agent), except `serverUrl` / `ignoreUrls`. Pass `[]` to opt out entirely. |
 | `ignoreUrls`              | `(string \| RegExp)[]`    | URLs to skip span creation for.                                      |
-| `graphqlUrls`             | `(string \| RegExp)[]`    | URLs treated as GraphQL endpoints (operation name parsed from body). |
+| `graphqlUrls`             | `(string \| RegExp)[]`    | URLs treated as GraphQL endpoints. Operation type + name are parsed from the body; spans are named `<type> <name>` (e.g. `query GetUser`) per OTel GraphQL semconv, and `graphql.operation.type` / `graphql.operation.name` attributes are set. |
 | `urlSanitizer`            | `(url: string) => string` | Strip secrets/PII from `http.url` before export.                     |
 
 ### Sampling & consent

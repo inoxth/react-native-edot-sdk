@@ -1,22 +1,52 @@
-export function extractGraphqlOperationName(body: string | undefined): string | null {
+export type GraphqlOperationType = 'query' | 'mutation' | 'subscription';
+
+export interface GraphqlOperation {
+  type: GraphqlOperationType;
+  name?: string;
+}
+
+const OPERATION_KEYWORD_RE = /\b(query|mutation|subscription)\b(?:\s+(\w+))?/;
+
+export function extractGraphqlOperation(body: string | undefined): GraphqlOperation | null {
   if (!body) {
     return null;
   }
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(body);
-    if (typeof parsed.operationName === 'string' && parsed.operationName.length > 0) {
-      return parsed.operationName;
-    }
-    if (typeof parsed.query === 'string') {
-      const match = parsed.query.match(/(?:query|mutation|subscription)\s+(\w+)/);
-      if (match) {
-        return match[1];
-      }
-    }
+    parsed = JSON.parse(body);
   } catch {
-    // Not valid JSON — skip
+    return null;
   }
-  return null;
+  if (typeof parsed !== 'object' || parsed === null) {
+    return null;
+  }
+  const record = parsed as Record<string, unknown>;
+  const query = typeof record.query === 'string' ? record.query : undefined;
+  const explicitName =
+    typeof record.operationName === 'string' && record.operationName.length > 0
+      ? record.operationName
+      : undefined;
+
+  let type: GraphqlOperationType = 'query';
+  let nameFromQuery: string | undefined;
+  if (query) {
+    const match = query.match(OPERATION_KEYWORD_RE);
+    if (match) {
+      type = match[1] as GraphqlOperationType;
+      nameFromQuery = match[2];
+    }
+  }
+
+  if (!query && !explicitName) {
+    return null;
+  }
+
+  const name = explicitName ?? nameFromQuery;
+  return name ? { type, name } : { type };
+}
+
+export function buildGraphqlSpanName(op: GraphqlOperation): string {
+  return op.name ? `${op.type} ${op.name}` : op.type;
 }
 
 export function isGraphqlUrl(url: string, graphqlUrls: (string | RegExp)[] | undefined): boolean {

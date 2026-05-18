@@ -13,7 +13,7 @@ import {
   extractScheme,
   extractTarget,
 } from './urlUtils';
-import { extractGraphqlOperationName, isGraphqlUrl } from './graphql';
+import { buildGraphqlSpanName, extractGraphqlOperation, isGraphqlUrl } from './graphql';
 import { trackSpan, untrackSpan } from './spanCleanup';
 
 const DEDUP_HEADER = 'X-Edot-RN-Traced';
@@ -36,10 +36,11 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       const host = extractHost(url);
 
       let spanName = host ? `${method} ${host}` : `HTTP ${method}`;
+      let graphqlOp: ReturnType<typeof extractGraphqlOperation> = null;
       if (isGraphqlUrl(url, config.graphqlUrls) && typeof init?.body === 'string') {
-        const opName = extractGraphqlOperationName(init.body);
-        if (opName) {
-          spanName = `GraphQL: ${opName}`;
+        graphqlOp = extractGraphqlOperation(init.body);
+        if (graphqlOp) {
+          spanName = buildGraphqlSpanName(graphqlOp);
         }
       }
 
@@ -50,6 +51,12 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
         'http.url': sanitizedUrl,
         'http.client': 'fetch',
       };
+      if (graphqlOp) {
+        spanAttributes['graphql.operation.type'] = graphqlOp.type;
+        if (graphqlOp.name) {
+          spanAttributes['graphql.operation.name'] = graphqlOp.name;
+        }
+      }
       const scheme = extractScheme(url);
       if (scheme) spanAttributes['http.scheme'] = scheme;
       const target = extractTarget(sanitizedUrl);

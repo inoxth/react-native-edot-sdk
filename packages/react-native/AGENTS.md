@@ -25,7 +25,7 @@ src/
 │   ├── startup.ts              # Cold/warm start tracing
 │   ├── spanCleanup.ts          # Span lifecycle management
 │   ├── traceContext.ts         # W3C traceparent generation
-│   ├── graphql.ts              # GraphQL operation name extraction
+│   ├── graphql.ts              # GraphQL operation type + name extraction (OTel-semconv span naming)
 │   └── urlUtils.ts             # URL parsing, sanitization, filtering
 ├── components/
 │   └── EdotErrorBoundary.tsx   # React error boundary
