@@ -21,7 +21,7 @@ src/
 │   ├── app-state.ts            # AppState listener — ends screen-lifetime span on background, re-emits on foreground
 │   ├── fetch.ts                # fetch() monkey-patch with span creation
 │   ├── xhr.ts                  # XMLHttpRequest monkey-patch
-│   ├── errors.ts               # Global error + promise rejection handlers
+│   ├── errors.ts               # Global error + promise rejection handlers (OTel exception events / Elastic mobile crash events)
 │   ├── startup.ts              # Cold/warm start tracing
 │   ├── spanCleanup.ts          # Span lifecycle management
 │   ├── traceContext.ts         # W3C traceparent generation
@@ -197,7 +197,17 @@ Pattern compilation: regex `flags` characters `i` / `m` / `s` map to `Pattern.CA
 
 ### Screen Correlation on Network/Error/Interaction Spans
 
-`fetch.ts`, `xhr.ts`, `errors.ts`, and the interactions HOC/hook read `ActiveViewContext.getActiveView()` at span-start time and stamp `screen.name` and (for fetch/xhr/errors) `screen.id` on the span. Mirrors opentelemetry-android's `ScreenAttributesSpanProcessor` behavior at the JS layer (iOS apm-agent has no equivalent processor). `screen.id` is an RN-specific value-add — Android upstream only emits `screen.name`.
+`fetch.ts`, `xhr.ts`, and the interactions HOC/hook read `ActiveViewContext.getActiveView()` at span-start time and stamp `screen.name` and (for fetch/xhr) `screen.id` on the span. Mirrors opentelemetry-android's `ScreenAttributesSpanProcessor` behavior at the JS layer (iOS apm-agent has no equivalent processor). `screen.id` is an RN-specific value-add — Android upstream only emits `screen.name`. Errors don't restamp screen attrs — they attach to the view span directly via `recordSpanException`, which the native side renders as an OTel `exception` event under that span (so screen correlation comes from the parent span automatically).
+
+### JS Error Dispatch
+
+`errors.ts:reportError` routes uncaught exceptions and promise rejections by `isFatal` flag and active-view presence:
+
+- **Fatal** (`ErrorUtils.setGlobalHandler` with `isFatal=true`) → `EdotNativeModule.reportJsException({ ..., isFatal: true })`. Native bridge (Swift `EdotReactNative.swift:reportJsException`, Kotlin `EdotReactNativeModuleImpl.kt:reportJsException`) emits an OTel log record with `event.name="crash"`, `event.domain="device"`, `exception.type`, `exception.message`, `exception.stacktrace` per [Elastic mobile crash event spec](https://github.com/elastic/apm/blob/main/specs/agents/mobile/events.md#crashes) — so fatal JS errors surface alongside native crashes in Kibana's Crashes panel.
+- **Non-fatal + active view** → `EdotNativeModule.recordSpanException(activeView.spanId, ...)`. Native side calls `span.addEvent("exception", ...)` (OTel-standard exception event) on the active view span. Status is **not** auto-flipped to ERROR — the view span is a load-latency span, the exception event itself is the signal.
+- **Non-fatal + no active view** → `EdotNativeModule.emitLog('error', message, { 'event.name': 'exception', ... })`. Stand-alone OTel log record with the exception event marker.
+
+The legacy `'JS Error'` (JS-side) and `'js_error: <name>'` (native-side) spans were removed. They were OTel-incorrect (exceptions are events, not spans) and they didn't match the Elastic mobile crash event shape, so JS crashes were invisible to native crash dashboards.
 
 ### HTTP Span Attribute Convention
 

@@ -230,19 +230,23 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         val stack = errorInfo.getStringSafe("stack") ?: ""
         val isFatal = errorInfo.getBooleanSafe("isFatal", false)
 
-        val tracer = EdotReactNativeAgent.openTelemetry?.getTracer("react-native-edot") ?: run {
+        val otel = EdotReactNativeAgent.openTelemetry ?: run {
             debugLog("OpenTelemetry not available; skipping reportJsException")
             return
         }
 
-        val span = tracer.spanBuilder("js_error: $name")
-            .setAttribute("exception.type", name)
-            .setAttribute("exception.message", message)
-            .setAttribute("exception.stacktrace", stack)
-            .setAttribute("error.is_fatal", isFatal)
-            .startSpan()
-        span.setStatus(StatusCode.ERROR, message)
-        span.end()
+        val logger = otel.logsBridge.loggerBuilder("react-native-edot").build()
+        val builder = logger.logRecordBuilder()
+            .setBody(message)
+            .setSeverity(Severity.ERROR)
+            .setAttribute(io.opentelemetry.api.common.AttributeKey.stringKey("event.name"), if (isFatal) "crash" else "exception")
+            .setAttribute(io.opentelemetry.api.common.AttributeKey.stringKey("exception.type"), name)
+            .setAttribute(io.opentelemetry.api.common.AttributeKey.stringKey("exception.message"), message)
+            .setAttribute(io.opentelemetry.api.common.AttributeKey.stringKey("exception.stacktrace"), stack)
+        if (isFatal) {
+            builder.setAttribute(io.opentelemetry.api.common.AttributeKey.stringKey("event.domain"), "device")
+        }
+        builder.emit()
     }
 
     fun startSpan(
@@ -364,7 +368,7 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
             val key = iterator.nextKey()
             when (attributes.getType(key)) {
                 ReadableType.String -> attrsBuilder.put(
-                    io.opentelemetry.api.common.AttributeKey.stringKey(key),
+                    io.opentelemetry.api.common.io.opentelemetry.api.common.AttributeKey.stringKey(key),
                     attributes.getString(key)!!
                 )
                 ReadableType.Number -> {
@@ -409,7 +413,7 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
             val key = iterator.nextKey()
             when (attributes.getType(key)) {
                 ReadableType.String -> builder.setAttribute(
-                    io.opentelemetry.api.common.AttributeKey.stringKey(key),
+                    io.opentelemetry.api.common.io.opentelemetry.api.common.AttributeKey.stringKey(key),
                     attributes.getString(key) ?: "",
                 )
                 ReadableType.Number -> {

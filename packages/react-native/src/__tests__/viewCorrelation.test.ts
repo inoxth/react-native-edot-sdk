@@ -16,6 +16,7 @@ jest.mock('../nativeModule', () => ({
     setSpanAttributeBoolean: jest.fn(),
     recordSpanException: jest.fn(),
     reportJsException: jest.fn(),
+    emitLog: jest.fn(),
   },
 }));
 
@@ -145,28 +146,31 @@ describe('view correlation on errors', () => {
     jest.clearAllMocks();
   });
 
-  it('attaches screen.name and screen.id when active view exists', () => {
+  it('records the exception as an event on the active view span', () => {
     ActiveViewContext.setActiveView({ name: 'CheckoutScreen', spanId: 'view-span-789' });
 
     reportError(new Error('test error'), 'js_uncaught', false);
 
-    expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
-      'JS Error',
-      expect.objectContaining({
-        'screen.name': 'CheckoutScreen',
-        'screen.id': 'view-span-789',
-      }),
-      null,
-      '@inox/react-native-edot-sdk/errors',
-    );
+    expect(EdotNativeModule.recordSpanException).toHaveBeenCalledWith('view-span-789', {
+      name: 'Error',
+      message: 'test error',
+      stack: expect.any(String),
+    });
+    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.emitLog).not.toHaveBeenCalled();
   });
 
-  it('omits screen attributes when no active view', () => {
+  it('emits an exception log without screen attributes when no active view', () => {
     reportError(new Error('test error'), 'js_uncaught', false);
 
-    const attrs = (EdotNativeModule.startSpan as jest.Mock).mock.calls[0][1];
+    expect(EdotNativeModule.emitLog).toHaveBeenCalledWith(
+      'error',
+      'test error',
+      expect.objectContaining({ 'event.name': 'exception', 'exception.type': 'Error' }),
+    );
+    const [, , attrs] = (EdotNativeModule.emitLog as jest.Mock).mock.calls[0];
     expect(attrs['screen.name']).toBeUndefined();
     expect(attrs['screen.id']).toBeUndefined();
-    expect(attrs['view.name']).toBeUndefined();
+    expect(EdotNativeModule.recordSpanException).not.toHaveBeenCalled();
   });
 });

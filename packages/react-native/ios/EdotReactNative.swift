@@ -464,13 +464,25 @@ class EdotReactNative: NSObject {
     let stack = errorInfo["stack"] as? String ?? ""
     let isFatal = errorInfo["isFatal"] as? Bool ?? false
 
-    let span = tracer(named: nil).spanBuilder(spanName: "js_error: \(name)").startSpan()
-    span.setAttribute(key: "exception.type", value: .string(name))
-    span.setAttribute(key: "exception.message", value: .string(message))
-    span.setAttribute(key: "exception.stacktrace", value: .string(stack))
-    span.setAttribute(key: "error.is_fatal", value: .bool(isFatal))
-    span.status = .error(description: message)
-    span.end()
+    let eventName = isFatal ? "crash" : "exception"
+    var attrs: [String: AttributeValue] = [
+      "event.name": .string(eventName),
+      "exception.type": .string(name),
+      "exception.message": .string(message),
+      "exception.stacktrace": .string(stack),
+    ]
+    if isFatal {
+      attrs["event.domain"] = .string("device")
+    }
+
+    let logger = OpenTelemetry.instance.loggerProvider
+      .loggerBuilder(instrumentationScopeName: "react-native-edot")
+      .build()
+    logger.logRecordBuilder()
+      .setSeverity(.error)
+      .setBody(.string(message))
+      .setAttributes(attrs)
+      .emit()
     #endif
   }
 

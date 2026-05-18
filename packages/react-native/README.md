@@ -197,7 +197,7 @@ Both are wrapped in a redacted-string container immediately on receipt — `JSON
 | Option                      | Type      | Default | Description                                 |
 | --------------------------- | --------- | ------- | ------------------------------------------- |
 | `instrumentNetworkRequests` | `boolean` | `true`  | `fetch` + XHR spans                         |
-| `instrumentJsErrors`        | `boolean` | `true`  | Uncaught exceptions + unhandled rejections  |
+| `instrumentJsErrors`        | `boolean` | `true`  | Uncaught exceptions + unhandled rejections. Non-fatal errors are recorded as OTel `exception` events on the active view span (when one exists) or as `event.name=exception` log records. Fatal errors are emitted as `event.name=crash`, `event.domain=device` log records per the Elastic mobile crash event spec, so JS crashes surface alongside native crashes in Kibana. |
 | `instrumentAppStartup`      | `boolean` | `true`  | Cold/warm start spans                       |
 | `appStateTracking`          | `boolean` | `true`  | Foreground/background screen-lifetime spans |
 
