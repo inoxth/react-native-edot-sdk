@@ -62,7 +62,7 @@ describe('registerEdotNavigationListener', () => {
     fireEvent({ componentName: 'HomeScreen', componentId: 'h1' });
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'HomeScreen',
+      'HomeScreen - view appearing',
       { 'screen.name': 'HomeScreen' },
       null,
       '@inox/react-native-edot-sdk/navigation',
@@ -85,7 +85,7 @@ describe('registerEdotNavigationListener', () => {
 
     expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'DemosScreen',
+      'DemosScreen - view appearing',
       { 'screen.name': 'DemosScreen', 'last.screen.name': 'HomeScreen' },
       null,
       '@inox/react-native-edot-sdk/navigation',
@@ -101,7 +101,7 @@ describe('registerEdotNavigationListener', () => {
     fireEvent({ componentName: 'HomeScreen', componentId: 'h1' });
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'Home',
+      'Home - view appearing',
       { 'screen.name': 'Home' },
       null,
       '@inox/react-native-edot-sdk/navigation',

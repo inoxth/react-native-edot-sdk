@@ -60,7 +60,7 @@ describe('createNavigationLifecycle', () => {
     lifecycle.onScreen('Home');
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'Home',
+      'Home - view appearing',
       { 'screen.name': 'Home' },
       null,
       'test',
@@ -104,7 +104,7 @@ describe('createNavigationLifecycle', () => {
 
     expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'Details',
+      'Details - view appearing',
       { 'screen.name': 'Details', 'last.screen.name': 'Home' },
       null,
       'test',
