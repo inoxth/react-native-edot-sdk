@@ -52,7 +52,7 @@ export function createNavigationLifecycle(
     }
 
     const newSpanId = getNativeModule().startSpan(
-      screenName,
+      `${screenName} - view appearing`,
       attributes,
       null,
       options.instrumentationName,

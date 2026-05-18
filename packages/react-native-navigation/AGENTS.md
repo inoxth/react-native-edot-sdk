@@ -74,7 +74,7 @@ For consumers building support for a navigator we don't ship out of the box. Ret
 
 These spans measure **screen load latency**, not screen view duration.
 
-- Span name: the route segment name (e.g. `'index'`, `'demos'`, `'network'`, `'(tabs)'`) after any `screenNameMapper` transformation
+- Span name: `'<route segment name> - view appearing'` (e.g. `'index - view appearing'`, `'network - view appearing'`) after any `screenNameMapper` transformation. The `" - view appearing"` suffix matches EDOT iOS/Android view-appearing span naming so screen views aggregate correctly in Elastic dashboards.
 - Span kind: `INTERNAL` (default)
 - Tracer scope (`instrumentationName`): `"@inox/react-native-edot-sdk/navigation"` for all three navigators (component-based + Wix listener share the same scope since they live in the same package)
 - Attributes: `screen.name`, plus `last.screen.name` only when a prior screen exists _and_ differs from the current. If the app backgrounds during the load window, the span ends with status `ERROR` and `screen.load.aborted=true`.

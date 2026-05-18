@@ -92,7 +92,7 @@ describe('EdotNavigationProvider', () => {
     );
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'index',
+      'index - view appearing',
       { 'screen.name': 'index' },
       null,
       '@inox/react-native-edot-sdk/navigation',
@@ -128,7 +128,7 @@ describe('EdotNavigationProvider', () => {
     handle.emitState();
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'index',
+      'index - view appearing',
       { 'screen.name': 'index' },
       null,
       '@inox/react-native-edot-sdk/navigation',
@@ -152,7 +152,7 @@ describe('EdotNavigationProvider', () => {
 
     expect(mockNativeModule.endSpan).toHaveBeenCalledWith('view-span-1', 1);
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'network',
+      'network - view appearing',
       { 'screen.name': 'network', 'last.screen.name': 'index' },
       null,
       '@inox/react-native-edot-sdk/navigation',
@@ -177,7 +177,7 @@ describe('EdotNavigationProvider', () => {
     );
 
     expect(mockNativeModule.startSpan).toHaveBeenCalledWith(
-      'UserProfile/:id',
+      'UserProfile/:id - view appearing',
       { 'screen.name': 'UserProfile/:id' },
       null,
       '@inox/react-native-edot-sdk/navigation',

@@ -186,9 +186,9 @@ screenNameMapper: (name, params) =>
 
 For every navigation, a screen-load-latency span is created with:
 
-- name = the (post-mapper) screen name
+- name = `<post-mapper screen name> - view appearing` (matches EDOT iOS/Android view-appearing span naming)
 - kind = `INTERNAL`
-- attribute `screen.name`
+- attribute `screen.name` (the bare post-mapper screen name)
 - attribute `last.screen.name` (only when a previous screen exists and differs)
 
 The span starts when the screen appears and **ends automatically when `InteractionManager.runAfterInteractions` fires** — i.e. when navigation/transition animations have finished and the JS thread is idle. Typical span durations are 100–500ms, suitable for a Latency SLO.
