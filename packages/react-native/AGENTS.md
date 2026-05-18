@@ -92,7 +92,9 @@ When iOS pre-init is in use, the `serviceName` passed to `EdotReactNativeAgent.p
 
 ### Instrumentation Pattern
 
-Each `setup*()` function in `instrumentation/` monkey-patches a global (fetch, XHR, ErrorUtils) and returns a `() => void` teardown that restores the original. `startup.ts` uses `requestIdleCallback` (not `InteractionManager`) to mark first-render. Startup emits a `cold` parent span with two child spans (`js_bundle_load` and `first_render`) and closes all three via `requestIdleCallback`.
+Each `setup*()` function in `instrumentation/` monkey-patches a global (fetch, XHR, ErrorUtils) and returns a `() => void` teardown that restores the original. `startup.ts` uses `requestIdleCallback` (not `InteractionManager`) to mark first-render. Startup emits a `AppStartup: cold` parent span with two child spans (`AppStartup: js_bundle_load` and `AppStartup: first_render`) and closes all three via `requestIdleCallback`.
+
+These JS-side startup span names are RN-specific. EDOT iOS reports app launch as a metric only (`application.launch.time` histogram via MetricKit — see `EdotAppMetrics.swift`) and EDOT Android does not auto-instrument app startup at all (`AppMetrics.kt` fills the gap with a matching histogram). OTel mobile semantic conventions do not yet define startup span names. The `AppStartup:` prefix is therefore not changed to match a non-existent upstream convention; the native `application.launch.time` metric remains the cross-platform comparable signal.
 
 ### Typed Span-Attribute Bridge
 
