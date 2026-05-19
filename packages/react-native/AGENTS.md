@@ -138,58 +138,13 @@ Resource attributes (`service.name`, `service.version`, `os.*`, `device.id`, `pr
 
 The iOS module replaces apm-agent-ios's global `MeterProvider` with a resource-aware one (`EdotMeterProviderFactory`). Pipeline: `PeriodicMetricReader (60s) → Logging? → Persistence (Caches/elastic/) → CentralConfigGate → HTTP|gRPC`. Default transport gRPC; `exportProtocol: "http"` overrides. `EdotAppMetrics` (MetricKit `application.launch.time`) and `EdotSystemMetrics` (CPU/memory observable gauges) replace apm-agent-ios's reimplementations because they emit through the resource-less global. The `CentralConfigGate` (`EdotCentralConfigMetricExporter`) is a deliberate divergence — upstream v2.0.0 doesn't gate metrics on the central-config `recording` flag. See `ios/AGENTS.md` for the full set of load-bearing rules.
 
-### Android Application Launch Metric
+### Android Native Metrics, OkHttp Anti-Pattern, and Filters
 
-`apm-agent-android` v1.5.0 does **not** auto-emit `application.launch.time` (the upstream release-note item referred to `opentelemetry-android`'s separate `androidx.app.startup` instrumentation, which the EDOT distribution does not pull in). `EdotAppMetrics.kt` fills this gap: at agent build time (`preInitialize` or `buildFromJsConfig`) it registers an `Application.ActivityLifecycleCallbacks` and a `Choreographer` frame callback. On the first frame after agent ready, it records one histogram sample with value `(SystemClock.uptimeMillis() - Process.getStartUptimeMillis()) / 1000.0` and unregisters itself. Single source of truth — `AtomicBoolean` ensures only the first frame counts, even if both the immediate post (for activities already resumed at install) and `onActivityResumed` race. Histogram unit: `s` (seconds), instrumentation scope `ApplicationMetrics` to match iOS.
-
-The histogram uses `setExplicitBucketBoundariesAdvice` with cold-start-appropriate boundaries `[0.1, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.5, 4.0, 5.0, 7.5, 10.0, 15.0, 30.0]` (in seconds). OTel's default histogram boundaries `[0, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500, 5000, 7500, 10000]` are tuned for ms-scale HTTP request durations — without explicit advice, a typical 1–4 s cold start collapses into the first bucket `[0, 5]` and APM Server reports the bucket midpoint (2.5 s) regardless of the true value. iOS doesn't hit this issue because `EdotAppMetrics.swift` already advises bucket boundaries derived from MetricKit's payload.
-
-### Android OkHttp Auto-Instrumentation — Don't Add It
-
-`apm-agent-android` v1.5.0 does **not** auto-instrument OkHttp by default — OkHttp instrumentation is gated behind a separate Gradle plugin (`co.elastic.otel.android.instrumentation.okhttp`). All four example apps in this repo apply only the base `co.elastic.otel.android.agent` plugin, which is correct.
-
-**Do not add the OkHttp instrumentation plugin to consumer apps.** RN's `fetch` / `XHR` are already instrumented by the JS-side `instrumentation/fetch.ts` and `instrumentation/xhr.ts` (which call `EdotNativeModule.startClientSpan(...)` against the agent's tracer). Adding the OkHttp plugin would emit a _second_ span for every JS-initiated HTTP call — once at the JS layer and once at the OkHttp layer — silently doubling APM ingest cost and inflating dashboard counts.
-
-The iOS analog of this concern is `apm-agent-ios`'s `URLSessionInstrumentation`, which IS auto-applied by default and would also double-span JS fetch — that's why iOS installs a custom `URLSessionInstrumentation` filter that skips requests carrying the `X-Edot-RN-Traced: 1` header (set by `fetch.ts` / `xhr.ts`). Android doesn't need an equivalent dedup filter because the upstream OkHttp instrumentation isn't active in the default configuration.
-
-If a consumer app _needs_ OkHttp instrumentation for non-RN code paths (a native screen with its own OkHttp client, etc.), they should add an OkHttp `Interceptor` that calls `chain.proceed(request)` without emitting a span when `request.header("X-Edot-RN-Traced") != null`. We may ship a `EdotReactNativeAgent.createOkHttpDedupInterceptor()` helper in a future release if this becomes a recurring need.
-
-### Android System Metrics
-
-Mirrors iOS's `EdotSystemMetrics.swift`. `EdotSystemMetrics.kt` registers two observable gauges via the agent's `Meter` and is installed alongside `EdotAppMetrics` from both pre-init and JS-init paths.
-
-- `system.cpu.usage` (double gauge, attribute `state=app`) — percent of wall-clock time the process spent on CPU since the previous metric collection. Computed at each callback as `(Δ Process.getElapsedCpuTime() / Δ SystemClock.elapsedRealtime()) * 100`, with previous-sample state stored in `AtomicLong` to keep the callback thread-safe (the SDK metric reader can invoke it from any thread). Multi-threaded saturation can exceed 100 % (e.g. 400 % on a 4-core device with all threads pinned), matching iOS's per-thread sum semantics.
-- `system.memory.usage` (long gauge, attribute `state=app`) — total PSS (proportional set size) of the process in bytes, sampled per callback via `Debug.getMemoryInfo(Debug.MemoryInfo())`. Maps to iOS's `phys_footprint`.
-
-Instrumentation scope names match iOS (`CPU Sampler`, `Memory Sampler`, version `1.0.0`) so cross-platform dashboards filter on the same `instrumentation.scope.name`. `apm-agent-android` v1.5.0 has no equivalent of upstream's `CPUSampler` / `MemorySampler` exposed publicly — without `EdotSystemMetrics.kt` the gauges never reach APM Server on Android.
-
-Both metric installs are conditional on the JS config flags `enableAppMetricInstrumentation` and `enableSystemMetrics` (default `true`). Set either to `false` to opt out — the constructor for the corresponding class never runs and no `Meter` instruments are registered.
+See [`android/AGENTS.md`](./android/AGENTS.md) for the full Android-specific rules: `application.launch.time` histogram bucket boundaries, `system.cpu.usage` / `system.memory.usage` observable gauges, the "don't add `co.elastic.otel.android.instrumentation.okhttp`" anti-pattern, attribute redactions, span/log exporter filters, and `disableAgent` plumbing.
 
 ### JS Bridge Forwarding for Native-Only Config Keys
 
 `mergeConfig` in `EdotReactNative.ts` is the single source of truth for what reaches the native bridge. Top-level config keys whose values only matter to native code (`disableAgent`, `managementUrl`, `remoteManagement`, `persistencePreset`, `attributeRedactions`, `ignoreSpanNames`, `ignoreLogPatterns`) must be explicitly spread into the returned `InternalConfig` — otherwise they're silently dropped at the JS layer and the native side reads `null`. Platform-specific keys (`config.ios.*` / `config.android.*`) flow automatically via `...platformExtras`. Regex-bearing fields (`ignoreSpanNames`, `ignoreLogPatterns.name`, `attributeRedactions.*Pattern`) use the `RegexSource` shape (`{ source, flags }`) because real `RegExp` objects don't survive the bridge.
-
-### Android Central Config
-
-`apm-agent-android` v1.5.0 wires `SampleRateManager` to listen for `CentralConfigurationManager` updates automatically — central-config sample-rate changes apply mid-session without any explicit observer. iOS needs `installCentralConfigSampleRateObserver()` to work around `apm-agent-ios`'s `SessionSampler` caching `shouldSample` until the next session refresh; Android has no equivalent caching quirk so no workaround is needed.
-
-`managementUrl` is wired on Android via `ElasticApmAgent.Builder.setManagementUrl(...)` (mirrors iOS's `withManagementUrl`). `remoteManagement: false` and `useOpAMP` are iOS-only — `apm-agent-android` v1.5.0 has no public Builder method to disable central-config polling or to switch transport (it uses HTTP polling by default), so those flags are documented as iOS-only in `EdotConfig`.
-
-### Android Attribute Redactions, Span / Log Filters, and `disableAgent`
-
-`EdotConfigCompilers.kt` ports iOS's `compileAttributeRedactor` / `compileSpanNamePredicates` / `compileLogPredicates` helpers from `EdotReactNative.swift`. The compiled callbacks are passed through `EdotReactNativeAgent.buildFromJsConfig` and registered on the underlying `ElasticApmAgent.builder` using the upstream interceptor APIs:
-
-| JS config                                                                     | Android upstream API                                                                                                                                                                              |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `attributeRedactions.spans` (`drop` / `dropPattern` / `mask` / `maskPattern`) | `addSpanAttributesInterceptor(Interceptor<Attributes>)`                                                                                                                                           |
-| `attributeRedactions.logs` (same shape)                                       | `addLogRecordAttributesInterceptor(Interceptor<Attributes>)`                                                                                                                                      |
-| `ignoreSpanNames` (string or `{source,flags}` regex per entry)                | `addSpanExporterInterceptor(...)` wrapping the exporter to filter `SpanData.name`                                                                                                                 |
-| `ignoreLogPatterns` (`{name?, minSeverity?}` per entry)                       | `addLogRecordExporterInterceptor(...)` wrapping the exporter to filter `LogRecordData.eventName` / `severity`                                                                                     |
-| `disableAgent: true`                                                          | `buildFromJsConfig` is skipped entirely; the agent never starts and `EdotAppMetrics` / `EdotSystemMetrics` are not installed. JS-side `setUser` / span APIs no-op via the existing emission gate. |
-
-Order is load-bearing: user-supplied span-attribute redactors are registered **after** the user/session/global injector so consumers can drop or mask attributes we just injected (`user.email`, etc.) — same ordering iOS uses. Filter exporters are wrapped via interceptors so dropped spans never reach the wire (early short-circuit if the entire batch is filtered).
-
-Pattern compilation: regex `flags` characters `i` / `m` / `s` map to `Pattern.CASE_INSENSITIVE` / `MULTILINE` / `DOTALL` to match iOS's `NSRegularExpression.Options` mapping.
 
 ### App-State Tracking
 
@@ -237,7 +192,7 @@ iOS still has a per-span inline merge in `makeSpan` (`:530-539`) for redundancy.
 
 ### Native UIKit View-Controller Instrumentation
 
-`enableViewControllerInstrumentation` defaults to **false** in the RN SDK (overrides apm-agent-ios's upstream default of `true`). The JS navigation plugins (`@inox/react-native-edot-navigation`, `-expo-router`, `-wix-navigation`) emit route-named view spans; the native `viewDidAppear:` swizzle would compete with them and — on `react-native-screens` — emits spans named `RNSScreen` (the wrapper VC class) because the VC `title` isn't populated when the swizzle fires. Opt-in via JS config (`enableViewControllerInstrumentation: true`) if you want raw UIVC spans.
+`enableViewControllerInstrumentation` defaults to **false** in the RN SDK (overrides apm-agent-ios's upstream default of `true`). The unified `@inox/react-native-edot-navigation` package (covering react-navigation, expo-router, and Wix) emits route-named view spans; the native `viewDidAppear:` swizzle would compete with them and — on `react-native-screens` — emits spans named `RNSScreen` (the wrapper VC class) because the VC `title` isn't populated when the swizzle fires. Opt-in via JS config (`enableViewControllerInstrumentation: true`) if you want raw UIVC spans.
 
 ### Initialization Ordering — Mount Navigation After `initialize()` Resolves
 
@@ -277,12 +232,7 @@ Each example app's `project.pbxproj` is now free of any `XCRemoteSwiftPackageRef
 
 ### Android — sourceSet split for New Arch / Old Arch
 
-`build.gradle.kts` reads the `newArchEnabled` Gradle property and adds either `src/newarch/java` or `src/oldarch/java` to the `main` sourceSet. Both directories define the same class name `com.edot.reactnative.EdotReactNativeModule` but extend different base classes:
-
-- Old Arch: `ReactContextBaseJavaModule` with `@ReactMethod` annotations.
-- New Arch: codegen-generated `NativeEdotReactNativeSpec` with `override fun`.
-
-All shared logic lives in `EdotReactNativeModuleImpl.kt` under `src/main/java/...` and both module variants delegate to it. `EdotReactNativePackage` extends `BaseReactPackage` (RN 0.74+) and exposes `getReactModuleInfoProvider()` so the same package class works on both architectures. `BuildConfig.IS_NEW_ARCHITECTURE_ENABLED` is generated from the same Gradle property to feed `ReactModuleInfo`.
+`build.gradle.kts` reads the `newArchEnabled` Gradle property and selects `src/newarch/java` or `src/oldarch/java` for the `main` sourceSet; both define the same `com.edot.reactnative.EdotReactNativeModule` class delegating to `EdotReactNativeModuleImpl.kt`. See [`android/AGENTS.md`](./android/AGENTS.md) for the full Android module layout and load-bearing rules.
 
 ## Dependencies
 

@@ -33,14 +33,15 @@ try {
   await chargeCustomer();
   span.setStatus(SpanStatusCode.OK);
 } catch (err) {
-  span.setStatus(SpanStatusCode.ERROR, err instanceof Error ? err.message : String(err));
+  if (err instanceof Error) span.recordException(err);
+  span.setStatus(SpanStatusCode.ERROR);
   throw err;
 } finally {
   span.end();
 }
 ```
 
-Spans created here automatically include `screen.name` and `screen.id` attributes when an active view is set by the navigation plugin.
+Manual spans created via `tracer-provider` are **not** auto-enriched with `screen.name` / `screen.id` — only auto-instrumentation (fetch, XHR, errors, interactions) reads the active view. If you need screen correlation on a custom span, stamp the attribute yourself.
 
 ### Running code inside a span context
 

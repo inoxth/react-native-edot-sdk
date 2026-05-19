@@ -7,7 +7,7 @@ OpenTelemetry-compliant observability SDK for React Native. Wraps the native [ED
 - **React init hook** — `useEdot(config)` for declarative initialization with reactive `{ ready, error }` state; the imperative `EdotReactNative.initialize(config)` is also available for non-React contexts
 - **Network instrumentation** — automatic span creation for `fetch` and `XMLHttpRequest` (including Axios) with W3C trace context propagation
 - **Error tracking** — captures uncaught JS exceptions, unhandled Promise rejections, and React render errors via `EdotErrorBoundary`
-- **Startup tracing** — cold and warm start performance with JS bundle load and first render phases
+- **Startup tracing** — cold start performance with `AppStartup: js_bundle_load` and `AppStartup: first_render` child spans under an `AppStartup: cold` parent
 - **App-state tracking** — foreground/background screen-lifetime spans with active-screen replay on resume
 - **Lifecycle events** — emitted natively by the EDOT iOS/Android agents per the Elastic mobile agents spec
 - **App + system metrics** — `application.launch.time` histogram plus `system.cpu.usage` and `system.memory.usage` observable gauges on both platforms (iOS via MetricKit + Mach task APIs; Android via Choreographer + `Process.getElapsedCpuTime` + `Debug.MemoryInfo`)
@@ -301,7 +301,7 @@ export function App() {
 }
 ```
 
-Render errors are emitted as spans with `exception.type`, `exception.message`, and `exception.stacktrace` attributes.
+Render errors are routed through the same path as uncaught JS exceptions: when an active view exists, they're recorded as an OTel `exception` event on the view span; otherwise they emit a stand-alone log record with `event.name=exception` and `exception.type` / `exception.message` / `exception.stacktrace` attributes.
 
 ## User interactions
 
