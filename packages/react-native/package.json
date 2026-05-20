@@ -10,7 +10,9 @@
     "ios",
     "android",
     "EdotReactNative.podspec",
-    "!**/__tests__"
+    "!**/__tests__",
+    "!android/build",
+    "!lib/tsconfig.tsbuildinfo"
   ],
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
