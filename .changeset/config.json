@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@inox/react-native-edot-shared",
+      "@inox/react-native-edot-sdk",
+      "@inox/react-native-edot-navigation",
+      "@inox/react-native-edot-tracer-provider"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@inox/react-native-edot-cli",
+    "edot-example",
+    "edot-example-expo-router",
+    "edot-example-react-navigation",
+    "edot-example-wix-navigation"
+  ]
+}

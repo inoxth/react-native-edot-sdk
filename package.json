@@ -16,6 +16,7 @@
     "clean": "yarn workspaces foreach -A --include '@inox/*' run clean"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "@react-native/babel-preset": "0.85.1",
     "@react-native/jest-preset": "0.85.1",
     "@testing-library/react-native": "^13.0.0",
