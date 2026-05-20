@@ -3,6 +3,27 @@
   "version": "0.1.0",
   "description": "EDOT shared core — cross-cutting state used by navigation and instrumentation packages",
   "license": "MIT",
+  "author": {
+    "name": "INOX",
+    "url": "https://github.com/inoxth"
+  },
+  "homepage": "https://github.com/inoxth/react-native-edot-sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inoxth/react-native-edot-sdk.git",
+    "directory": "packages/shared"
+  },
+  "bugs": {
+    "url": "https://github.com/inoxth/react-native-edot-sdk/issues"
+  },
+  "keywords": [
+    "opentelemetry",
+    "edot",
+    "react-native",
+    "apm",
+    "elastic",
+    "observability"
+  ],
   "source": "src/index.ts",
   "files": [
     "src",
@@ -38,5 +59,13 @@
         }
       ]
     ]
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true
   }
 }
