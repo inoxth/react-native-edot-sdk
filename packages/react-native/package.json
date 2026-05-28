@@ -32,6 +32,7 @@
     "android",
     "EdotReactNative.podspec",
     "!**/__tests__",
+    "!**/AGENTS.md",
     "!android/build",
     "!lib/tsconfig.tsbuildinfo"
   ],
