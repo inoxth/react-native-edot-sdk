@@ -1841,7 +1841,7 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
-  - "EdotReactNative (from `../node_modules/@inox/react-native-edot-sdk`)"
+  - "EdotReactNative (from `../node_modules/@inoxth/react-native-edot-sdk`)"
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -1920,7 +1920,7 @@ DEPENDENCIES:
 
 EXTERNAL SOURCES:
   EdotReactNative:
-    :path: "../node_modules/@inox/react-native-edot-sdk"
+    :path: "../node_modules/@inoxth/react-native-edot-sdk"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   hermes-engine:
