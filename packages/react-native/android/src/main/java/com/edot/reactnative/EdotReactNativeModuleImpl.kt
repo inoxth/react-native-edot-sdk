@@ -368,7 +368,7 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
             val key = iterator.nextKey()
             when (attributes.getType(key)) {
                 ReadableType.String -> attrsBuilder.put(
-                    io.opentelemetry.api.common.io.opentelemetry.api.common.AttributeKey.stringKey(key),
+                    io.opentelemetry.api.common.AttributeKey.stringKey(key),
                     attributes.getString(key)!!
                 )
                 ReadableType.Number -> {
@@ -413,7 +413,7 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
             val key = iterator.nextKey()
             when (attributes.getType(key)) {
                 ReadableType.String -> builder.setAttribute(
-                    io.opentelemetry.api.common.io.opentelemetry.api.common.AttributeKey.stringKey(key),
+                    io.opentelemetry.api.common.AttributeKey.stringKey(key),
                     attributes.getString(key) ?: "",
                 )
                 ReadableType.Number -> {
