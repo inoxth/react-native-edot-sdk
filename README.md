@@ -50,7 +50,12 @@ iOS pod install + Android Gradle plugin setup, the full configuration reference,
 
 ## Examples
 
-Working example apps live in [`example/`](./example) — one each for `basic` (no navigation), React Navigation, Expo Router, and Wix react-native-navigation. Copy `.env.example` to `.env` in any app and fill in your EDOT server details to run.
+Working example apps live in [`example/`](./example) — one per navigation library. Copy each app's `.env.example` to `.env` and fill in your EDOT server details, then run from the app directory.
+
+- [`example/basic`](./example/basic) — Bare React Native, no navigation library. SDK init plus manual tracing, metrics, and logs in a single screen.
+- [`example/react-navigation`](./example/react-navigation) — React Navigation (native stack + bottom tabs) with automatic screen tracking via `EdotNavigationProvider`.
+- [`example/expo-router`](./example/expo-router) — Expo Router (file-based routing) with the same `EdotNavigationProvider` integration.
+- [`example/wix-navigation`](./example/wix-navigation) — Wix `react-native-navigation` with the imperative `registerEdotNavigationListener` integration.
 
 ## Contributing
 
