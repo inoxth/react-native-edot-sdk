@@ -7,7 +7,7 @@ Lifecycle handling that ends the active screen-lifetime span on app background a
 ## Requirements
 
 ### Requirement: SDK-owned AppState listener
-The `@inox/react-native-edot-sdk` package SHALL install a single `AppState.addEventListener('change', ...)` listener during `EdotReactNative.initialize()`, gated by the new defaults flag `appStateTracking` (default `true`). The teardown returned by the setup function SHALL be stored in the SDK's `teardowns[]` and invoked by `_resetForTesting()`.
+The `@inoxth/react-native-edot-sdk` package SHALL install a single `AppState.addEventListener('change', ...)` listener during `EdotReactNative.initialize()`, gated by the new defaults flag `appStateTracking` (default `true`). The teardown returned by the setup function SHALL be stored in the SDK's `teardowns[]` and invoked by `_resetForTesting()`.
 
 #### Scenario: Single listener installed on initialize
 - **WHEN** `EdotReactNative.initialize(config)` is called and `config.instrumentation.appStateTracking !== false`

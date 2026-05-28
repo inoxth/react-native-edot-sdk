@@ -12,8 +12,8 @@
     "fmt": "oxfmt packages/",
     "typecheck": "tsc --build",
     "test": "jest",
-    "build": "yarn workspaces foreach -A --topological --include '@inox/*' run build",
-    "clean": "yarn workspaces foreach -A --include '@inox/*' run clean"
+    "build": "yarn workspaces foreach -A --topological --include '@inoxth/*' run build",
+    "clean": "yarn workspaces foreach -A --include '@inoxth/*' run clean"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",

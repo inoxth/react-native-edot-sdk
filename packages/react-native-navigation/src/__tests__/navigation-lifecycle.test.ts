@@ -2,7 +2,7 @@ import {
   createNavigationLifecycle,
   markCurrentScreenLoaded,
 } from '../navigation-lifecycle';
-import { ActiveViewContext } from '@inox/react-native-edot-shared';
+import { ActiveViewContext } from '@inoxth/react-native-edot-shared';
 
 const mockNativeModule = {
   startSpan: jest.fn().mockReturnValue('view-span-1'),
@@ -27,11 +27,11 @@ jest.mock('react-native', () => ({
   },
 }));
 
-jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
+jest.mock('@inoxth/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
 }));
 
-jest.mock('@inox/react-native-edot-shared', () => ({
+jest.mock('@inoxth/react-native-edot-shared', () => ({
   ActiveViewContext: {
     setActiveView: jest.fn(),
     clearActiveView: jest.fn(),

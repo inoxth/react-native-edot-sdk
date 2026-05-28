@@ -41,7 +41,7 @@ let cachedModule: EdotNativeModule | null = null;
 export function getNativeModule(): EdotNativeModule {
   if (cachedModule !== null) return cachedModule;
 
-  const mod: unknown = require('@inox/react-native-edot-sdk/nativeModule');
+  const mod: unknown = require('@inoxth/react-native-edot-sdk/nativeModule');
   const candidate =
     typeof mod === 'object' && mod !== null && 'EdotNativeModule' in mod
       ? (mod as Record<string, unknown>).EdotNativeModule

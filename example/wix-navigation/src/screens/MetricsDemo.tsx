@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getMeterProvider } from '@inox/react-native-edot-tracer-provider';
+import { getMeterProvider } from '@inoxth/react-native-edot-tracer-provider';
 
 export function MetricsDemo(): React.JSX.Element {
   const [log, setLog] = useState<string[]>([]);

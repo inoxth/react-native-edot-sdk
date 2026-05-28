@@ -41,8 +41,8 @@ SDK initialization is async. `<NavigationContainer>` must wait for it to finish 
 Both initialization and navigation tracking live in **[`src/App.tsx`](./src/App.tsx)** (`InitializedApp`). Two pieces, in order:
 
 ```tsx
-import { useEdot } from '@inox/react-native-edot-sdk';
-import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
+import { useEdot } from '@inoxth/react-native-edot-sdk';
+import { EdotNavigationProvider } from '@inoxth/react-native-edot-navigation';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 
 function screenNameMapper(routeName: string): string {
@@ -84,7 +84,7 @@ To customize:
 Once `useEdot(...)` resolves, uncaught JS errors and unhandled promise rejections are reported automatically. Wrap React subtrees with `EdotErrorBoundary` to also report render-time errors and show a fallback UI:
 
 ```tsx
-import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+import { EdotErrorBoundary } from '@inoxth/react-native-edot-sdk';
 
 <EdotErrorBoundary fallback={<Text>Something went wrong</Text>}>
   <YourComponent />
@@ -98,7 +98,7 @@ See [`src/screens/ErrorDemo.tsx`](./src/screens/ErrorDemo.tsx) for a working dem
 Use `EdotReactNative.log(severity, message, attributes?)` to send structured logs at any severity:
 
 ```ts
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
 
 EdotReactNative.log('info', 'User signed in', { 'user.id': '42' });
 EdotReactNative.log('warn', 'Slow network detected');

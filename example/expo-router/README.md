@@ -63,8 +63,8 @@ Initialization and navigation tracking both live in **[`app/_layout.tsx`](./app/
 
 ```tsx
 import { Stack, useNavigationContainerRef } from 'expo-router';
-import { useEdot } from '@inox/react-native-edot-sdk';
-import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
+import { useEdot } from '@inoxth/react-native-edot-sdk';
+import { EdotNavigationProvider } from '@inoxth/react-native-edot-navigation';
 
 function screenNameMapper(routeName: string): string {
   return routeName;
@@ -108,7 +108,7 @@ To customize:
 Once `useEdot(...)` resolves, uncaught JS errors and unhandled promise rejections are reported automatically. Wrap React subtrees with `EdotErrorBoundary` to also report render-time errors and show a fallback UI:
 
 ```tsx
-import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+import { EdotErrorBoundary } from '@inoxth/react-native-edot-sdk';
 
 <EdotErrorBoundary fallback={<Text>Something went wrong</Text>}>
   <YourComponent />
@@ -122,7 +122,7 @@ See [`app/demos/errors.tsx`](./app/demos/errors.tsx) for a working demo (JS erro
 Use `EdotReactNative.log(severity, message, attributes?)` to send structured logs at any severity:
 
 ```ts
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
 
 EdotReactNative.log('info', 'User signed in', { 'user.id': '42' });
 EdotReactNative.log('warn', 'Slow network detected');
@@ -133,6 +133,6 @@ Severities: `trace`, `debug`, `info`, `warn`, `error`, `fatal`. Attribute values
 
 ## SDK Packages Used
 
-- `@inox/react-native-edot-sdk` — Core SDK
-- `@inox/react-native-edot-navigation` — Navigation tracking (covers Expo Router)
-- `@inox/react-native-edot-tracer-provider` — Manual tracing and metrics
+- `@inoxth/react-native-edot-sdk` — Core SDK
+- `@inoxth/react-native-edot-navigation` — Navigation tracking (covers Expo Router)
+- `@inoxth/react-native-edot-tracer-provider` — Manual tracing and metrics

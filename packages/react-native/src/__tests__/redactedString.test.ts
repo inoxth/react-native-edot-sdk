@@ -1,4 +1,4 @@
-import { redactedString } from '@inox/react-native-edot-shared';
+import { redactedString } from '@inoxth/react-native-edot-shared';
 
 describe('redactedString', () => {
   const SECRET = 's3cr3t-t0k3n';

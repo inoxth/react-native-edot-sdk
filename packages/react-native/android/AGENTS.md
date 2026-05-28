@@ -2,7 +2,7 @@
 
 ## Overview
 
-Android half of `@inox/react-native-edot-sdk`. Kotlin module that bridges JS → `apm-agent-android` (EDOT Gradle plugin `co.elastic.otel.android.agent` v1.5.0, runtime `co.elastic.otel.android:agent-sdk:1.5.0`) and `io.opentelemetry:opentelemetry-api:1.60.1`. Supports Old Arch (`ReactContextBaseJavaModule` + `@ReactMethod`) and New Arch (codegen-generated `NativeEdotReactNativeSpec`) from a single codebase via arch-conditional source sets.
+Android half of `@inoxth/react-native-edot-sdk`. Kotlin module that bridges JS → `apm-agent-android` (EDOT Gradle plugin `co.elastic.otel.android.agent` v1.5.0, runtime `co.elastic.otel.android:agent-sdk:1.5.0`) and `io.opentelemetry:opentelemetry-api:1.60.1`. Supports Old Arch (`ReactContextBaseJavaModule` + `@ReactMethod`) and New Arch (codegen-generated `NativeEdotReactNativeSpec`) from a single codebase via arch-conditional source sets.
 
 `apm-agent-android` v1.5.0 does **not** auto-emit `application.launch.time`, `system.cpu.usage`, or `system.memory.usage` — all three are filled in by this module (`EdotAppMetrics.kt`, `EdotSystemMetrics.kt`). Without those classes the metrics never reach APM Server. `getCurrentSessionId()` always returns `""` — `ElasticApmAgent` 1.5.0 exposes `SessionManager` only as an internal `$agent_sdk` API.
 

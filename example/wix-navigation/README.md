@@ -39,8 +39,8 @@ Wix `react-native-navigation` owns the root view controller and there is no pers
 
 ```js
 import { Navigation } from 'react-native-navigation';
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
-import { registerEdotNavigationListener } from '@inox/react-native-edot-navigation';
+import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
+import { registerEdotNavigationListener } from '@inoxth/react-native-edot-navigation';
 
 const SCREEN_NAME_MAP = {
   HomeScreen: 'Home',
@@ -83,7 +83,7 @@ To customize:
 Once `EdotReactNative.initialize(...)` resolves, uncaught JS errors and unhandled promise rejections are reported automatically. Wrap React subtrees with `EdotErrorBoundary` to also report render-time errors and show a fallback UI:
 
 ```jsx
-import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+import { EdotErrorBoundary } from '@inoxth/react-native-edot-sdk';
 
 <EdotErrorBoundary fallback={<Text>Something went wrong</Text>}>
   <YourScreen />
@@ -97,7 +97,7 @@ See [`src/screens/ErrorDemo.tsx`](./src/screens/ErrorDemo.tsx) for a working dem
 Use `EdotReactNative.log(severity, message, attributes?)` to send structured logs at any severity:
 
 ```js
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
 
 EdotReactNative.log('info', 'User signed in', { 'user.id': '42' });
 EdotReactNative.log('warn', 'Slow network detected');

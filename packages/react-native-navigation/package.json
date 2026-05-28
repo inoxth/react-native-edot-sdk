@@ -1,5 +1,5 @@
 {
-  "name": "@inox/react-native-edot-navigation",
+  "name": "@inoxth/react-native-edot-navigation",
   "version": "0.1.0",
   "description": "EDOT navigation integration — unified screen-tracking for react-navigation, expo-router, and Wix react-native-navigation",
   "license": "MIT",
@@ -44,8 +44,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@inox/react-native-edot-sdk": "workspace:*",
-    "@inox/react-native-edot-shared": "workspace:*"
+    "@inoxth/react-native-edot-sdk": "workspace:*",
+    "@inoxth/react-native-edot-shared": "workspace:*"
   },
   "devDependencies": {
     "react": "^19.2.3",

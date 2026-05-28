@@ -9,7 +9,7 @@ The basic example app at `example/basic/` SHALL initialize the SDK using configu
 - **THEN** the SDK initializes successfully and displays the session ID
 
 ### Requirement: Manual tracing demo
-The basic example SHALL demonstrate custom span creation using `getTracerProvider()` from `@inox/react-native-edot-tracer-provider`.
+The basic example SHALL demonstrate custom span creation using `getTracerProvider()` from `@inoxth/react-native-edot-tracer-provider`.
 
 #### Scenario: User creates a custom span
 - **WHEN** the user taps a "Create Span" button

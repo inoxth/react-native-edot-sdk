@@ -1,4 +1,4 @@
-# @inox/react-native-edot-shared
+# @inoxth/react-native-edot-shared
 
 ## 0.1.0
 

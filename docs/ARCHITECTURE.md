@@ -4,7 +4,7 @@ High-level overview of the React Native EDOT SDK. For user-facing setup see [REA
 
 ## Purpose
 
-`@inox/react-native-edot-sdk` wraps the native EDOT iOS and Android agents (Elastic Distribution of OpenTelemetry) behind a unified JavaScript/TypeScript API. It provides auto-instrumentation (network, errors, startup, navigation, user actions) and manual OTel-style instrumentation (tracer, meter, logger), and emits OTLP-compliant telemetry to an Elastic APM Server or any OTLP-compatible backend. App lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec.
+`@inoxth/react-native-edot-sdk` wraps the native EDOT iOS and Android agents (Elastic Distribution of OpenTelemetry) behind a unified JavaScript/TypeScript API. It provides auto-instrumentation (network, errors, startup, navigation, user actions) and manual OTel-style instrumentation (tracer, meter, logger), and emits OTLP-compliant telemetry to an Elastic APM Server or any OTLP-compatible backend. App lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec.
 
 ## Goals
 
@@ -67,11 +67,11 @@ Yarn 4 workspace monorepo. Five library packages under `packages/` and four demo
 
 | Package | Purpose |
 |---|---|
-| `@inox/react-native-edot-sdk` | Core SDK — config, native bridge, auto-instrumentation, public API, React components. |
-| `@inox/react-native-edot-shared` | Shared cross-package state (`ActiveViewContext` singleton). Pure JS/TS — no React Native dependency. |
-| `@inox/react-native-edot-navigation` | Unified screen-span integration covering React Navigation, Expo Router, and Wix react-native-navigation. |
-| `@inox/react-native-edot-tracer-provider` | Manual OTel-style tracing and metrics API. |
-| `@inox/react-native-edot-cli` | Source-map upload CLI for server-side symbolication. |
+| `@inoxth/react-native-edot-sdk` | Core SDK — config, native bridge, auto-instrumentation, public API, React components. |
+| `@inoxth/react-native-edot-shared` | Shared cross-package state (`ActiveViewContext` singleton). Pure JS/TS — no React Native dependency. |
+| `@inoxth/react-native-edot-navigation` | Unified screen-span integration covering React Navigation, Expo Router, and Wix react-native-navigation. |
+| `@inoxth/react-native-edot-tracer-provider` | Manual OTel-style tracing and metrics API. |
+| `@inoxth/react-native-edot-cli` | Source-map upload CLI for server-side symbolication. |
 
 ## Dependency Graph
 
@@ -87,7 +87,7 @@ react-native (core SDK; depends on shared)
 cli (standalone Node.js; depends only on commander)
 ```
 
-The unified navigation package and the tracer-provider load the native module through the subpath export `@inox/react-native-edot-sdk/nativeModule` via a lazy `require(...)` to avoid circular imports at module-evaluation time. The three navigator libraries (`@react-navigation/native`, `expo-router`, `react-native-navigation`) are declared as **optional** peer dependencies via `peerDependenciesMeta` and duck-typed via local `…Like` interfaces — never imported at module top level.
+The unified navigation package and the tracer-provider load the native module through the subpath export `@inoxth/react-native-edot-sdk/nativeModule` via a lazy `require(...)` to avoid circular imports at module-evaluation time. The three navigator libraries (`@react-navigation/native`, `expo-router`, `react-native-navigation`) are declared as **optional** peer dependencies via `peerDependenciesMeta` and duck-typed via local `…Like` interfaces — never imported at module top level.
 
 ## Native Bridge Model
 
@@ -129,7 +129,7 @@ The EDOT Gradle plugin (`co.elastic.otel.android.agent` v1.5.0) must be applied 
 
 ## Active View Correlation
 
-`ActiveViewContext` is a pure-JS singleton in `@inox/react-native-edot-shared`. The unified navigation package writes to it on screen changes (`setActiveView({ name, spanId })`); auto-instrumentation modules read from it to correlate network and error spans to the current screen via `screen.name` / `screen.id` attributes (the `spanId` field of `ActiveView` is exported as the `screen.id` attribute). The main SDK re-exports the singleton at the subpath `@inox/react-native-edot-sdk/active-view-context` for backwards-compat; the navigation package imports from `@inox/react-native-edot-shared` directly to keep the shared state in one canonical location.
+`ActiveViewContext` is a pure-JS singleton in `@inoxth/react-native-edot-shared`. The unified navigation package writes to it on screen changes (`setActiveView({ name, spanId })`); auto-instrumentation modules read from it to correlate network and error spans to the current screen via `screen.name` / `screen.id` attributes (the `spanId` field of `ActiveView` is exported as the `screen.id` attribute). The main SDK re-exports the singleton at the subpath `@inoxth/react-native-edot-sdk/active-view-context` for backwards-compat; the navigation package imports from `@inoxth/react-native-edot-shared` directly to keep the shared state in one canonical location.
 
 ## Where Capability Detail Lives
 

@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Wix react-native-navigation integration example
-The example at `example/wix-navigation/` SHALL demonstrate `@inox/react-native-edot-navigation` integration (via the `registerEdotNavigationListener` Wix entry point) with `react-native-navigation` using both bottom tab layout and stack navigation. The listener SHALL be registered inside `Navigation.events().registerAppLaunchedListener` so it is wired before `Navigation.setRoot`.
+The example at `example/wix-navigation/` SHALL demonstrate `@inoxth/react-native-edot-navigation` integration (via the `registerEdotNavigationListener` Wix entry point) with `react-native-navigation` using both bottom tab layout and stack navigation. The listener SHALL be registered inside `Navigation.events().registerAppLaunchedListener` so it is wired before `Navigation.setRoot`.
 
 #### Scenario: Screen-lifetime spans created on tab switch
 - **WHEN** the user switches between bottom tabs (Home, Demos, Settings)
@@ -12,7 +12,7 @@ The example at `example/wix-navigation/` SHALL demonstrate `@inox/react-native-e
 #### Scenario: Screen-lifetime spans created on stack push
 - **WHEN** the user pushes a detail screen from a tab
 - **THEN** a screen-lifetime span is created with `screen.name` set to the detail component and `last.screen.name` set to the source tab
-- **AND** `instrumentation.scope.name` SHALL be `@inox/react-native-edot-navigation`
+- **AND** `instrumentation.scope.name` SHALL be `@inoxth/react-native-edot-navigation`
 
 #### Scenario: Screen name mapper applied
 - **WHEN** a `screenNameMapper` is configured

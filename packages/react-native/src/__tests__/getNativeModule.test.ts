@@ -1,4 +1,4 @@
-import { getNativeModule, resetNativeModuleCacheForTesting } from '@inox/react-native-edot-shared';
+import { getNativeModule, resetNativeModuleCacheForTesting } from '@inoxth/react-native-edot-shared';
 
 const mockNativeModule = {
   initialize: jest.fn(),
@@ -20,7 +20,7 @@ const mockNativeModule = {
   setTrackingConsent: jest.fn(),
 };
 
-jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
+jest.mock('@inoxth/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
 }));
 
@@ -48,14 +48,14 @@ describe('getNativeModule shape-mismatch', () => {
   });
 
   it('throws and warns when required methods are missing', () => {
-    jest.doMock('@inox/react-native-edot-sdk/nativeModule', () => ({
+    jest.doMock('@inoxth/react-native-edot-sdk/nativeModule', () => ({
       EdotNativeModule: { recordMetric: jest.fn() },
     }));
 
     const {
       getNativeModule: fresh,
       resetNativeModuleCacheForTesting: reset,
-    } = require('@inox/react-native-edot-shared');
+    } = require('@inoxth/react-native-edot-shared');
     reset();
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -66,16 +66,16 @@ describe('getNativeModule shape-mismatch', () => {
     );
 
     warnSpy.mockRestore();
-    jest.dontMock('@inox/react-native-edot-sdk/nativeModule');
+    jest.dontMock('@inoxth/react-native-edot-sdk/nativeModule');
   });
 
   it('throws when EdotNativeModule property is absent from export', () => {
-    jest.doMock('@inox/react-native-edot-sdk/nativeModule', () => ({}));
+    jest.doMock('@inoxth/react-native-edot-sdk/nativeModule', () => ({}));
 
     const {
       getNativeModule: fresh,
       resetNativeModuleCacheForTesting: reset,
-    } = require('@inox/react-native-edot-shared');
+    } = require('@inoxth/react-native-edot-shared');
     reset();
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -83,6 +83,6 @@ describe('getNativeModule shape-mismatch', () => {
     expect(() => fresh()).toThrow(/EdotNativeModule missing expected methods/);
 
     warnSpy.mockRestore();
-    jest.dontMock('@inox/react-native-edot-sdk/nativeModule');
+    jest.dontMock('@inoxth/react-native-edot-sdk/nativeModule');
   });
 });

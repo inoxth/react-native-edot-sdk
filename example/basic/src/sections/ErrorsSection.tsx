@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, Text, TouchableOpacity, View } from 'react-native';
-import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+import { EdotErrorBoundary } from '@inoxth/react-native-edot-sdk';
 import { Button } from '../components/Button';
 import { SectionHeader } from '../components/SectionHeader';
 import { styles } from '../styles';

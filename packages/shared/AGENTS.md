@@ -1,4 +1,4 @@
-# AGENTS.md — @inox/react-native-edot-shared
+# AGENTS.md — @inoxth/react-native-edot-shared
 
 ## Overview
 
@@ -27,7 +27,7 @@ src/
 
 ### `getNativeModule()` — shared native-module accessor
 
-Lazy-loads `@inox/react-native-edot-sdk/nativeModule` via `require(...)` on first call, validates that the resolved object exposes the required `EdotNativeModule` shape (`startSpan` + `endSpan` are checked), caches the result, and returns it. Sibling packages (e.g. `@inox/react-native-edot-tracer-provider`) call this instead of importing directly from the SDK to break the circular dependency that would form if the SDK package re-imported them. `resetNativeModuleCacheForTesting()` clears the cache between tests. The exported `EdotNativeModule` interface lives here too (single source of truth for the bridge shape consumed across packages).
+Lazy-loads `@inoxth/react-native-edot-sdk/nativeModule` via `require(...)` on first call, validates that the resolved object exposes the required `EdotNativeModule` shape (`startSpan` + `endSpan` are checked), caches the result, and returns it. Sibling packages (e.g. `@inoxth/react-native-edot-tracer-provider`) call this instead of importing directly from the SDK to break the circular dependency that would form if the SDK package re-imported them. `resetNativeModuleCacheForTesting()` clears the cache between tests. The exported `EdotNativeModule` interface lives here too (single source of truth for the bridge shape consumed across packages).
 
 ### `redactedString(value)` — credentials redaction
 
@@ -39,13 +39,13 @@ None (pure JS/TS).
 
 ## Consumers
 
-- `@inox/react-native-edot-sdk` — re-exports `ActiveViewContext` at `/active-view-context`; uses `redactedString` for `secretToken` / `apiKey`
-- `@inox/react-native-edot-tracer-provider` — calls `getNativeModule()` for span / metric bridge access
-- All 3 navigation surfaces (the unified `@inox/react-native-edot-navigation` package) — import `ActiveViewContext` directly to set/clear active view and register foreground re-emitters
+- `@inoxth/react-native-edot-sdk` — re-exports `ActiveViewContext` at `/active-view-context`; uses `redactedString` for `secretToken` / `apiKey`
+- `@inoxth/react-native-edot-tracer-provider` — calls `getNativeModule()` for span / metric bridge access
+- All 3 navigation surfaces (the unified `@inoxth/react-native-edot-navigation` package) — import `ActiveViewContext` directly to set/clear active view and register foreground re-emitters
 - Instrumentation modules (fetch, XHR, errors, interactions) — read `getActiveView()` to correlate spans (emit `screen.name` and `screen.id`)
 - `app-state.ts` instrumentation — calls `notifyForegroundReEmitters()` on `'background' → 'active'` transitions
 
 ## Anti-Patterns
 
 - **Don't add React Native dependencies** — this package must stay pure JS/TS so it can be imported by any package without pulling in native code.
-- **Don't import from `@inox/react-native-edot-sdk`** — dependency flows the other direction.
+- **Don't import from `@inoxth/react-native-edot-sdk`** — dependency flows the other direction.

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { EdotErrorBoundary, EdotReactNative, useEdot } from '@inox/react-native-edot-sdk';
+import { EdotErrorBoundary, EdotReactNative, useEdot } from '@inoxth/react-native-edot-sdk';
 import {
   EDOT_SERVER_URL,
   EDOT_SERVICE_NAME_IOS,

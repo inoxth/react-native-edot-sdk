@@ -1,5 +1,5 @@
 import { InteractionManager } from 'react-native';
-import { ActiveViewContext, getNativeModule } from '@inox/react-native-edot-shared';
+import { ActiveViewContext, getNativeModule } from '@inoxth/react-native-edot-shared';
 
 const STATUS_OK = 1;
 

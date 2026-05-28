@@ -1,10 +1,10 @@
-# @inox/react-native-edot-navigation
+# @inoxth/react-native-edot-navigation
 
 Unified navigation tracking plugin for the React Native EDOT SDK. On every navigation it emits a **screen-load-latency** span (from screen-appear until the JS thread is idle, i.e. the screen is interactive) and enriches network/error spans created during that screen's lifetime with `screen.name` + `screen.id`.
 
 A single package covers all three popular React Native navigators:
 
-- [@inox/react-native-edot-navigation](#inoxreact-native-edot-navigation)
+- [@inoxth/react-native-edot-navigation](#inoxreact-native-edot-navigation)
   - [Install](#install)
   - [React Navigation](#react-navigation)
   - [Expo Router](#expo-router)
@@ -19,13 +19,13 @@ Pick the section that matches your navigator — each is self-contained.
 ## Install
 
 ```bash
-yarn add @inox/react-native-edot-navigation
+yarn add @inoxth/react-native-edot-navigation
 ```
 
 You also need the core SDK initialized first:
 
 ```bash
-yarn add @inox/react-native-edot-sdk
+yarn add @inoxth/react-native-edot-sdk
 ```
 
 See the [SDK README](../react-native) for native setup and `EdotReactNative.initialize(...)`. The navigator libraries themselves are declared as **optional** peer dependencies — only install the one you actually use.
@@ -41,8 +41,8 @@ Initialize the SDK with `useEdot` at the app root, then wrap your `NavigationCon
 ```tsx
 import { ActivityIndicator, Text } from 'react-native';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
-import { useEdot } from '@inox/react-native-edot-sdk';
-import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
+import { useEdot } from '@inoxth/react-native-edot-sdk';
+import { EdotNavigationProvider } from '@inoxth/react-native-edot-navigation';
 
 export function App() {
   const navigationRef = useNavigationContainerRef();
@@ -76,8 +76,8 @@ Expo Router is built on top of React Navigation and exposes the same `useNavigat
 ```tsx
 import { ActivityIndicator, Text } from 'react-native';
 import { Slot, useNavigationContainerRef } from 'expo-router';
-import { useEdot } from '@inox/react-native-edot-sdk';
-import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
+import { useEdot } from '@inoxth/react-native-edot-sdk';
+import { EdotNavigationProvider } from '@inoxth/react-native-edot-navigation';
 
 export default function RootLayout() {
   const navigationRef = useNavigationContainerRef();
@@ -118,8 +118,8 @@ Wix has no continuously-mounted React root, so registration is imperative and th
 
 ```typescript
 import { Navigation } from 'react-native-navigation';
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
-import { registerEdotNavigationListener } from '@inox/react-native-edot-navigation';
+import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
+import { registerEdotNavigationListener } from '@inoxth/react-native-edot-navigation';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { DemosScreen } from './src/screens/DemosScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
@@ -202,7 +202,7 @@ If the app is sent to background while the load span is still running (rare, onl
 For screens that need to wait for async data (e.g. an initial fetch) before they're truly "interactive", use `useScreenLoaded(ready)` to override the default `runAfterInteractions` end-trigger:
 
 ```tsx
-import { useScreenLoaded } from '@inox/react-native-edot-navigation';
+import { useScreenLoaded } from '@inoxth/react-native-edot-navigation';
 
 function ProductScreen() {
   const { data } = useQuery('/product');
@@ -221,7 +221,7 @@ Whichever fires first — your `useScreenLoaded` flip or the automatic `runAfter
   - `@react-navigation/native` >= 6.0.0
   - `expo-router` >= 3.0.0
   - `react-native-navigation` >= 7.0.0
-- [`@inox/react-native-edot-sdk`](../react-native) initialized at app startup
+- [`@inoxth/react-native-edot-sdk`](../react-native) initialized at app startup
 
 ## License
 

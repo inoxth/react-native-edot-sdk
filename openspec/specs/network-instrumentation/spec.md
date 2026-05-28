@@ -30,12 +30,12 @@ The attribute keys `view.name` and `view.id` SHALL NOT be present on any network
 - **AND** the network span SHALL retain `screen.id = "home-1"`
 
 ### Requirement: Per-instrumentation tracer scope on network spans
-Network spans SHALL be started with `instrumentationName = "@inox/react-native-edot-sdk/fetch"` (for `fetch`) or `"@inox/react-native-edot-sdk/xhr"` (for `XHR`).
+Network spans SHALL be started with `instrumentationName = "@inoxth/react-native-edot-sdk/fetch"` (for `fetch`) or `"@inoxth/react-native-edot-sdk/xhr"` (for `XHR`).
 
 #### Scenario: Fetch scope
 - **WHEN** any `fetch(...)` call is made
-- **THEN** the resulting network span SHALL be started with `instrumentationName = "@inox/react-native-edot-sdk/fetch"`
+- **THEN** the resulting network span SHALL be started with `instrumentationName = "@inoxth/react-native-edot-sdk/fetch"`
 
 #### Scenario: XHR scope
 - **WHEN** any `XMLHttpRequest` is sent
-- **THEN** the resulting network span SHALL be started with `instrumentationName = "@inox/react-native-edot-sdk/xhr"`
+- **THEN** the resulting network span SHALL be started with `instrumentationName = "@inoxth/react-native-edot-sdk/xhr"`

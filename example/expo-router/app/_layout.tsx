@@ -1,6 +1,6 @@
 import { Stack, useNavigationContainerRef } from 'expo-router';
-import { useEdot } from '@inox/react-native-edot-sdk';
-import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
+import { useEdot } from '@inoxth/react-native-edot-sdk';
+import { EdotNavigationProvider } from '@inoxth/react-native-edot-navigation';
 import {
   EDOT_SERVER_URL,
   EDOT_SERVICE_NAME_IOS,

@@ -1,5 +1,5 @@
 {
-  "name": "@inox/react-native-edot-tracer-provider",
+  "name": "@inoxth/react-native-edot-tracer-provider",
   "version": "0.1.0",
   "description": "EDOT TracerProvider — OTel-compatible manual instrumentation for React Native",
   "license": "MIT",
@@ -43,8 +43,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@inox/react-native-edot-sdk": "workspace:*",
-    "@inox/react-native-edot-shared": "workspace:*"
+    "@inoxth/react-native-edot-sdk": "workspace:*",
+    "@inoxth/react-native-edot-shared": "workspace:*"
   },
   "devDependencies": {
     "react": "^19.2.3",

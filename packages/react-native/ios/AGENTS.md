@@ -2,7 +2,7 @@
 
 ## Overview
 
-iOS half of `@inox/react-native-edot-sdk`. Swift module that bridges JS → `apm-agent-ios` v2.0.0 (via SPM `ElasticApm` product), `opentelemetry-swift-core` v2.3.0 (`OpenTelemetryApi` + `OpenTelemetrySdk`), and `opentelemetry-swift` v2.2.1 (`URLSessionInstrumentation` / `OpenTelemetryProtocolExporter` / `OpenTelemetryProtocolExporterHTTP` / `PersistenceExporter`). All code is gated on `#if ELASTIC_APM_AVAILABLE` — set by the podspec when `spm_dependency` resolves.
+iOS half of `@inoxth/react-native-edot-sdk`. Swift module that bridges JS → `apm-agent-ios` v2.0.0 (via SPM `ElasticApm` product), `opentelemetry-swift-core` v2.3.0 (`OpenTelemetryApi` + `OpenTelemetrySdk`), and `opentelemetry-swift` v2.2.1 (`URLSessionInstrumentation` / `OpenTelemetryProtocolExporter` / `OpenTelemetryProtocolExporterHTTP` / `PersistenceExporter`). All code is gated on `#if ELASTIC_APM_AVAILABLE` — set by the podspec when `spm_dependency` resolves.
 
 ## Files
 
@@ -92,7 +92,7 @@ Registering the interceptor at both call sites is load-bearing: when the host ap
 
 ## Per-Instrumentation Tracer Scope
 
-`startSpan` and `startClientSpan` accept an optional `instrumentationName: NSString?` (4th arg) so each callsite can pass its own tracer scope. The Swift impl resolves it via `tracer(named:)` which falls back to `"react-native-edot"` when nil/empty. Per-callsite scopes (`@inox/react-native-edot-sdk/navigation`, `@inox/react-native-edot-sdk/http`, `@inox/react-native-edot-sdk/startup`, `@inox/react-native-edot-sdk/errors`) appear as `instrumentation.scope.name` on the wire so Kibana can filter by signal type. Native `URLSessionInstrumentation` is configured with a custom `tracer:` parameter so non-JS native HTTP traffic also lands under `@inox/react-native-edot-sdk/http` rather than the upstream library's default `NSURLSession` scope — enabling a single SLO filter to catch both JS-initiated and native HTTP requests. Empty-string `parentSpanId` is treated as no-parent (lookup miss in `activeSpans`). The legacy bridge `.m` declares both methods with `instrumentationName:(NSString * _Nullable)`.
+`startSpan` and `startClientSpan` accept an optional `instrumentationName: NSString?` (4th arg) so each callsite can pass its own tracer scope. The Swift impl resolves it via `tracer(named:)` which falls back to `"react-native-edot"` when nil/empty. Per-callsite scopes (`@inoxth/react-native-edot-sdk/navigation`, `@inoxth/react-native-edot-sdk/http`, `@inoxth/react-native-edot-sdk/startup`, `@inoxth/react-native-edot-sdk/errors`) appear as `instrumentation.scope.name` on the wire so Kibana can filter by signal type. Native `URLSessionInstrumentation` is configured with a custom `tracer:` parameter so non-JS native HTTP traffic also lands under `@inoxth/react-native-edot-sdk/http` rather than the upstream library's default `NSURLSession` scope — enabling a single SLO filter to catch both JS-initiated and native HTTP requests. Empty-string `parentSpanId` is treated as no-parent (lookup miss in `activeSpans`). The legacy bridge `.m` declares both methods with `instrumentationName:(NSString * _Nullable)`.
 
 ## Native-Only Span Screen Correlation Gap (Deliberate)
 

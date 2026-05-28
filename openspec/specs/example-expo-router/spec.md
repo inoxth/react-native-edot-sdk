@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Expo Router integration example
-The example at `example/expo-router/` SHALL demonstrate `@inox/react-native-edot-navigation` integration (via the `<EdotNavigationProvider>` component) with `expo-router` using both bottom tab layout and stack navigation, with the provider receiving the ref returned by `useNavigationContainerRef()` from `expo-router`.
+The example at `example/expo-router/` SHALL demonstrate `@inoxth/react-native-edot-navigation` integration (via the `<EdotNavigationProvider>` component) with `expo-router` using both bottom tab layout and stack navigation, with the provider receiving the ref returned by `useNavigationContainerRef()` from `expo-router`.
 
 #### Scenario: Screen-lifetime spans created on tab switch
 - **WHEN** the user switches between bottom tabs (Home, Demos, Settings)
@@ -12,7 +12,7 @@ The example at `example/expo-router/` SHALL demonstrate `@inox/react-native-edot
 #### Scenario: Screen-lifetime spans created on stack push
 - **WHEN** the user navigates to a detail route from a tab
 - **THEN** a screen-lifetime span is created with `screen.name` set to the detail route segment and `last.screen.name` set to the source tab
-- **AND** `instrumentation.scope.name` SHALL be `@inox/react-native-edot-navigation`
+- **AND** `instrumentation.scope.name` SHALL be `@inoxth/react-native-edot-navigation`
 
 #### Scenario: Screen name mapper applied
 - **WHEN** a `screenNameMapper` is configured on `<EdotNavigationProvider>`

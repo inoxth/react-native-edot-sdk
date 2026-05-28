@@ -2,15 +2,15 @@
 
 ## Purpose
 
-Provides a CLI tool (`@inox/react-native-edot-cli`) for uploading source maps to the EDOT server, enabling server-side symbolication of JavaScript stack traces.
+Provides a CLI tool (`@inoxth/react-native-edot-cli`) for uploading source maps to the EDOT server, enabling server-side symbolication of JavaScript stack traces.
 
 ## Requirements
 
-### Requirement: `@inox/react-native-edot-cli` package scaffold
-The monorepo SHALL include a `packages/cli` package named `@inox/react-native-edot-cli` with a `bin` entry pointing to the compiled CLI entry point. It SHALL be a plain Node.js package with no React Native runtime dependency.
+### Requirement: `@inoxth/react-native-edot-cli` package scaffold
+The monorepo SHALL include a `packages/cli` package named `@inoxth/react-native-edot-cli` with a `bin` entry pointing to the compiled CLI entry point. It SHALL be a plain Node.js package with no React Native runtime dependency.
 
 #### Scenario: CLI binary is executable after install
-- **WHEN** `@inox/react-native-edot-cli` is installed in a project
+- **WHEN** `@inoxth/react-native-edot-cli` is installed in a project
 - **THEN** `npx edot --help` prints available commands without error
 
 ### Requirement: `upload-sourcemap` command

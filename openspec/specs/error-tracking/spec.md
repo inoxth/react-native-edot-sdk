@@ -22,8 +22,8 @@ The JS error handler SHALL attach `screen.name` and `screen.id` from `ActiveView
 - **THEN** the error span SHALL NOT include `screen.name` or `screen.id`
 
 ### Requirement: Per-instrumentation tracer scope on error spans
-Error spans SHALL be started with `instrumentationName = "@inox/react-native-edot-sdk/errors"`.
+Error spans SHALL be started with `instrumentationName = "@inoxth/react-native-edot-sdk/errors"`.
 
 #### Scenario: Error span scope
 - **WHEN** an uncaught JS exception is reported
-- **THEN** the error span SHALL be started with `instrumentationName = "@inox/react-native-edot-sdk/errors"`
+- **THEN** the error span SHALL be started with `instrumentationName = "@inoxth/react-native-edot-sdk/errors"`

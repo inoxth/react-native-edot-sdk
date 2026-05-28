@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getTracerProvider, withSpanContext, SpanStatusCode } from '@inox/react-native-edot-tracer-provider';
+import { getTracerProvider, withSpanContext, SpanStatusCode } from '@inoxth/react-native-edot-tracer-provider';
 
 export function TracingDemo(): React.JSX.Element {
   const [log, setLog] = useState<string[]>([]);

@@ -2280,9 +2280,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@inox/react-native-edot-cli@workspace:packages/cli":
+"@inoxth/react-native-edot-cli@workspace:packages/cli":
   version: 0.0.0-use.local
-  resolution: "@inox/react-native-edot-cli@workspace:packages/cli"
+  resolution: "@inoxth/react-native-edot-cli@workspace:packages/cli"
   dependencies:
     "@types/node": "npm:^20.0.0"
     commander: "npm:^12.0.0"
@@ -2293,12 +2293,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@inox/react-native-edot-navigation@workspace:*, @inox/react-native-edot-navigation@workspace:packages/react-native-navigation":
+"@inoxth/react-native-edot-navigation@workspace:*, @inoxth/react-native-edot-navigation@workspace:packages/react-native-navigation":
   version: 0.0.0-use.local
-  resolution: "@inox/react-native-edot-navigation@workspace:packages/react-native-navigation"
+  resolution: "@inoxth/react-native-edot-navigation@workspace:packages/react-native-navigation"
   dependencies:
-    "@inox/react-native-edot-sdk": "workspace:*"
-    "@inox/react-native-edot-shared": "workspace:*"
+    "@inoxth/react-native-edot-sdk": "workspace:*"
+    "@inoxth/react-native-edot-shared": "workspace:*"
     react: "npm:^19.2.3"
     react-native: "npm:^0.85.1"
     rimraf: "npm:^6.1.3"
@@ -2319,11 +2319,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@inox/react-native-edot-sdk@workspace:*, @inox/react-native-edot-sdk@workspace:packages/react-native":
+"@inoxth/react-native-edot-sdk@workspace:*, @inoxth/react-native-edot-sdk@workspace:packages/react-native":
   version: 0.0.0-use.local
-  resolution: "@inox/react-native-edot-sdk@workspace:packages/react-native"
+  resolution: "@inoxth/react-native-edot-sdk@workspace:packages/react-native"
   dependencies:
-    "@inox/react-native-edot-shared": "workspace:*"
+    "@inoxth/react-native-edot-shared": "workspace:*"
     react: "npm:^19.2.3"
     react-native: "npm:^0.85.1"
     rimraf: "npm:^6.1.3"
@@ -2334,21 +2334,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@inox/react-native-edot-shared@workspace:*, @inox/react-native-edot-shared@workspace:packages/shared":
+"@inoxth/react-native-edot-shared@workspace:*, @inoxth/react-native-edot-shared@workspace:packages/shared":
   version: 0.0.0-use.local
-  resolution: "@inox/react-native-edot-shared@workspace:packages/shared"
+  resolution: "@inoxth/react-native-edot-shared@workspace:packages/shared"
   dependencies:
     rimraf: "npm:^6.1.3"
     typescript: "npm:~5.8.3"
   languageName: unknown
   linkType: soft
 
-"@inox/react-native-edot-tracer-provider@workspace:*, @inox/react-native-edot-tracer-provider@workspace:packages/react-native-tracer-provider":
+"@inoxth/react-native-edot-tracer-provider@workspace:*, @inoxth/react-native-edot-tracer-provider@workspace:packages/react-native-tracer-provider":
   version: 0.0.0-use.local
-  resolution: "@inox/react-native-edot-tracer-provider@workspace:packages/react-native-tracer-provider"
+  resolution: "@inoxth/react-native-edot-tracer-provider@workspace:packages/react-native-tracer-provider"
   dependencies:
-    "@inox/react-native-edot-sdk": "workspace:*"
-    "@inox/react-native-edot-shared": "workspace:*"
+    "@inoxth/react-native-edot-sdk": "workspace:*"
+    "@inoxth/react-native-edot-shared": "workspace:*"
     react: "npm:^19.2.3"
     react-native: "npm:^0.85.1"
     rimraf: "npm:^6.1.3"
@@ -5922,9 +5922,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "edot-example-expo-router@workspace:example/expo-router"
   dependencies:
-    "@inox/react-native-edot-navigation": "workspace:*"
-    "@inox/react-native-edot-sdk": "workspace:*"
-    "@inox/react-native-edot-tracer-provider": "workspace:*"
+    "@inoxth/react-native-edot-navigation": "workspace:*"
+    "@inoxth/react-native-edot-sdk": "workspace:*"
+    "@inoxth/react-native-edot-tracer-provider": "workspace:*"
     "@types/react": "npm:^19.2.0"
     babel-preset-expo: "npm:~55.0.0"
     expo: "npm:~55.0.15"
@@ -5947,9 +5947,9 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.25.2"
     "@babel/runtime": "npm:^7.25.0"
-    "@inox/react-native-edot-navigation": "workspace:*"
-    "@inox/react-native-edot-sdk": "workspace:*"
-    "@inox/react-native-edot-tracer-provider": "workspace:*"
+    "@inoxth/react-native-edot-navigation": "workspace:*"
+    "@inoxth/react-native-edot-sdk": "workspace:*"
+    "@inoxth/react-native-edot-tracer-provider": "workspace:*"
     "@react-native-community/cli": "npm:20.1.0"
     "@react-native-community/cli-platform-android": "npm:20.1.0"
     "@react-native-community/cli-platform-ios": "npm:20.1.0"
@@ -5974,9 +5974,9 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.25.2"
     "@babel/runtime": "npm:^7.25.0"
-    "@inox/react-native-edot-navigation": "workspace:*"
-    "@inox/react-native-edot-sdk": "workspace:*"
-    "@inox/react-native-edot-tracer-provider": "workspace:*"
+    "@inoxth/react-native-edot-navigation": "workspace:*"
+    "@inoxth/react-native-edot-sdk": "workspace:*"
+    "@inoxth/react-native-edot-tracer-provider": "workspace:*"
     "@react-native-community/cli": "npm:20.0.0"
     "@react-native-community/cli-platform-android": "npm:20.0.0"
     "@react-native-community/cli-platform-ios": "npm:20.0.0"
@@ -5998,8 +5998,8 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.25.2"
     "@babel/runtime": "npm:^7.25.0"
-    "@inox/react-native-edot-sdk": "workspace:*"
-    "@inox/react-native-edot-tracer-provider": "workspace:*"
+    "@inoxth/react-native-edot-sdk": "workspace:*"
+    "@inoxth/react-native-edot-tracer-provider": "workspace:*"
     "@react-native-community/cli": "npm:20.1.0"
     "@react-native-community/cli-platform-android": "npm:20.1.0"
     "@react-native-community/cli-platform-ios": "npm:20.1.0"

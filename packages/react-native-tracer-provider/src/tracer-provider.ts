@@ -1,4 +1,4 @@
-import { getNativeModule } from '@inox/react-native-edot-shared';
+import { getNativeModule } from '@inoxth/react-native-edot-shared';
 import type { TracerProvider, Tracer, Span, SpanOptions, SpanStatusCodeValue } from './types';
 
 const contextStack: Span[] = [];

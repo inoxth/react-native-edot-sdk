@@ -73,7 +73,7 @@ describe('XHR view correlation', () => {
         'screen.id': 'hs1',
       }),
       null,
-      '@inox/react-native-edot-sdk/http',
+      '@inoxth/react-native-edot-sdk/http',
     );
   });
 
@@ -108,7 +108,7 @@ describe('XHR view correlation', () => {
         'screen.id': 'vs-b',
       }),
       null,
-      '@inox/react-native-edot-sdk/http',
+      '@inoxth/react-native-edot-sdk/http',
     );
   });
 });
