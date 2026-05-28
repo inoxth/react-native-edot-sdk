@@ -1,6 +1,6 @@
 {
   "name": "@inox/react-native-edot-navigation",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "EDOT navigation integration — unified screen-tracking for react-navigation, expo-router, and Wix react-native-navigation",
   "license": "MIT",
   "author": {
