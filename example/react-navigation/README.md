@@ -79,6 +79,34 @@ To customize:
 - **Screen names** — edit `screenNameMapper`. The example collapses numeric IDs so dynamic routes group correctly in the APM service map: `/users/123/posts/45` becomes `/users/:id/posts/:id`.
 - The `navigationRef` from `useNavigationContainerRef()` must be passed to **both** `EdotNavigationProvider` and `NavigationContainer`.
 
+## Capturing errors
+
+Once `useEdot(...)` resolves, uncaught JS errors and unhandled promise rejections are reported automatically. Wrap React subtrees with `EdotErrorBoundary` to also report render-time errors and show a fallback UI:
+
+```tsx
+import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+
+<EdotErrorBoundary fallback={<Text>Something went wrong</Text>}>
+  <YourComponent />
+</EdotErrorBoundary>
+```
+
+See [`src/screens/ErrorDemo.tsx`](./src/screens/ErrorDemo.tsx) for a working demo (JS error, rejected promise, and an `EdotErrorBoundary` render crash).
+
+## Capturing logs
+
+Use `EdotReactNative.log(severity, message, attributes?)` to send structured logs at any severity:
+
+```ts
+import { EdotReactNative } from '@inox/react-native-edot-sdk';
+
+EdotReactNative.log('info', 'User signed in', { 'user.id': '42' });
+EdotReactNative.log('warn', 'Slow network detected');
+EdotReactNative.log('error', 'Payment failed', { 'error.code': '402' });
+```
+
+Severities: `trace`, `debug`, `info`, `warn`, `error`, `fatal`. Attribute values must be `string | number | boolean`. See [`src/screens/LogsDemo.tsx`](./src/screens/LogsDemo.tsx) for a working demo.
+
 ## Screens
 
 - **Home** - SDK status, session info, user/attribute management

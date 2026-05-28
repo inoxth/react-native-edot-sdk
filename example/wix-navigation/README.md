@@ -77,3 +77,31 @@ To customize:
 - **SDK config** — edit the `EdotReactNative.initialize({...})` call.
 - **Screen names** — edit `SCREEN_NAME_MAP` to translate registered component names into human-readable screen names. Wix `screenNameMapper` receives the component name passed to `Navigation.registerComponent(...)`, not a route path — so the mapping is a static lookup table rather than a regex.
 - **Order matters**: `await initialize(...)` must finish before `Navigation.setRoot(...)`, otherwise the first screen's view span is dropped while the native tracer is still the OpenTelemetry no-op default.
+
+## Capturing errors
+
+Once `EdotReactNative.initialize(...)` resolves, uncaught JS errors and unhandled promise rejections are reported automatically. Wrap React subtrees with `EdotErrorBoundary` to also report render-time errors and show a fallback UI:
+
+```jsx
+import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+
+<EdotErrorBoundary fallback={<Text>Something went wrong</Text>}>
+  <YourScreen />
+</EdotErrorBoundary>
+```
+
+See [`src/screens/ErrorDemo.tsx`](./src/screens/ErrorDemo.tsx) for a working demo (JS error, rejected promise, and an `EdotErrorBoundary` render crash).
+
+## Capturing logs
+
+Use `EdotReactNative.log(severity, message, attributes?)` to send structured logs at any severity:
+
+```js
+import { EdotReactNative } from '@inox/react-native-edot-sdk';
+
+EdotReactNative.log('info', 'User signed in', { 'user.id': '42' });
+EdotReactNative.log('warn', 'Slow network detected');
+EdotReactNative.log('error', 'Payment failed', { 'error.code': '402' });
+```
+
+Severities: `trace`, `debug`, `info`, `warn`, `error`, `fatal`. Attribute values must be `string | number | boolean`. See [`src/screens/LogsDemo.tsx`](./src/screens/LogsDemo.tsx) for a working demo.

@@ -62,6 +62,34 @@ function InitializedApp() {
 
 Because there is no navigation library, `EdotNavigationProvider` is **not** used here. View-level spans must be emitted manually if you want them.
 
+## Capturing errors
+
+Once `useEdot(...)` resolves, uncaught JS errors and unhandled promise rejections are reported automatically. Wrap React subtrees with `EdotErrorBoundary` to also report render-time errors and show a fallback UI:
+
+```tsx
+import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+
+<EdotErrorBoundary fallback={<Text>Something went wrong</Text>}>
+  <YourComponent />
+</EdotErrorBoundary>
+```
+
+A live demo lives in [`src/sections/ErrorsSection.tsx`](./src/sections/ErrorsSection.tsx) — it triggers a JS error, a rejected promise, and a render crash inside an `EdotErrorBoundary`.
+
+## Capturing logs
+
+Use `EdotReactNative.log(severity, message, attributes?)` to send structured logs at any severity:
+
+```ts
+import { EdotReactNative } from '@inox/react-native-edot-sdk';
+
+EdotReactNative.log('info', 'User signed in', { 'user.id': '42' });
+EdotReactNative.log('warn', 'Slow network detected');
+EdotReactNative.log('error', 'Payment failed', { 'error.code': '402' });
+```
+
+Severities: `trace`, `debug`, `info`, `warn`, `error`, `fatal`. Attribute values must be `string | number | boolean`. See [`src/sections/LogsSection.tsx`](./src/sections/LogsSection.tsx) for a working demo.
+
 ## What it demonstrates
 
 Each section under [`src/sections/`](./src/sections/) is a self-contained example of one SDK surface:

@@ -48,6 +48,45 @@ iOS pod install + Android Gradle plugin setup, the full configuration reference,
 | [`@inox/react-native-edot-cli`](./packages/cli) | Source map upload CLI |
 | [`@inox/react-native-edot-shared`](./packages/shared) | Internal shared state — do not depend on directly |
 
+## Features
+
+Each row links to the package that provides the API. Features marked **Auto** are wired up by `initialize` / `useEdot` with no extra code; **Manual** features require calling an API.
+
+| Feature | Mode | Package |
+|---|---|---|
+| `fetch` and `XMLHttpRequest` tracing (HTTP client spans with `traceparent` propagation) | Auto | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| GraphQL operation naming on network spans (`graphql.operation.{type,name}`) | Auto | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Uncaught JS errors and unhandled promise rejections | Auto | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| App startup spans (`app.startup.{duration,js_bundle_load,first_render}_ms`) | Auto | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| App background/foreground tracking (aborts in-flight screen spans) | Auto | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Native crash reporting, system CPU/memory, app launch time | Auto | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Screen / view spans for React Navigation and Expo Router (`screen.name`, `last.screen.name`) | Auto | [`@inox/react-native-edot-navigation`](./packages/react-native-navigation/README.md) |
+| Screen / view spans for Wix `react-native-navigation` | Auto | [`@inox/react-native-edot-navigation`](./packages/react-native-navigation/README.md) |
+| React render errors via `EdotErrorBoundary` | Manual | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| User identity — `setUser` / `clearUser` | Manual | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Session ID + session attributes — `getCurrentSessionId`, `setSessionAttribute` | Manual | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Global attributes — `setGlobalAttribute`, `removeGlobalAttribute` | Manual | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Structured logs — `EdotReactNative.log(severity, message, attributes?)` | Manual | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| User actions — `addAction`, `useEdotAction`, `withEdotTracking` | Manual | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Manual screen-load signalling — `useScreenLoaded`, `markCurrentScreenLoaded` | Manual | [`@inox/react-native-edot-navigation`](./packages/react-native-navigation/README.md) |
+| Manual tracing — `getTracerProvider`, `startSpan`, `withSpanContext`, `recordException` | Manual | [`@inox/react-native-edot-tracer-provider`](./packages/react-native-tracer-provider/README.md) |
+| Manual metrics — `Counter`, `Histogram`, `UpDownCounter` via `getMeterProvider` | Manual | [`@inox/react-native-edot-tracer-provider`](./packages/react-native-tracer-provider/README.md) |
+
+### Trackable attributes
+
+| Scope | API | Value types | Package |
+|---|---|---|---|
+| User | `setUser({ id, email?, name? })`, `clearUser()` | `string` | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Session | `setSessionAttribute(key, value)` | `string` | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Global (runtime) | `setGlobalAttribute(key, value)`, `removeGlobalAttribute(key)` | `string \| number \| boolean` | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Global (init-time) | `EdotConfig.globalAttributes` | `string \| number \| boolean` | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Log | 3rd arg of `EdotReactNative.log(severity, message, attributes?)` | `string \| number \| boolean` | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| User action | 3rd arg of `addAction(type, name, attributes?)` / `trackAction(...)` | `string \| number \| boolean` | [`@inox/react-native-edot-sdk`](./packages/react-native/README.md) |
+| Span (manual) | `span.setAttribute(key, value)`, `startSpan(name, { attributes })` | `string \| number \| boolean` | [`@inox/react-native-edot-tracer-provider`](./packages/react-native-tracer-provider/README.md) |
+| Metric | 2nd arg of `counter.add(value, attributes?)`, `histogram.record(...)`, `upDown.add(...)` | `string \| number \| boolean` | [`@inox/react-native-edot-tracer-provider`](./packages/react-native-tracer-provider/README.md) |
+
+User attribute propagation onto spans is controlled by `EdotConfig.userAttributes.includeInSpans` (`'all' \| 'id-only' \| 'none'`, default `'id-only'`).
+
 ## Examples
 
 Working example apps live in [`example/`](./example) — one per navigation library. Copy each app's `.env.example` to `.env` and fill in your EDOT server details, then run from the app directory.
