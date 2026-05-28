@@ -24,6 +24,16 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org/
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Enable Corepack
         run: corepack enable
 
@@ -41,6 +51,10 @@ jobs:
 
       - name: Lint
         run: yarn lint
+
+      - name: Compile Android SDK module
+        working-directory: example/basic/android
+        run: ./gradlew :inox_react-native-edot-sdk:assembleDebug --no-daemon
 
       - name: Create release PR or publish
         uses: changesets/action@v1
