@@ -72,6 +72,7 @@ function screenNameMapper(routeName: string): string {
 
 function InitializedLayout() {
   const navigationRef = useNavigationContainerRef();
+  
   const { ready, error } = useEdot({
     serverUrl: EDOT_SERVER_URL,
     ios: { serviceName: EDOT_SERVICE_NAME_IOS },

@@ -34,7 +34,7 @@ yarn android
 
 ## Initialization Pattern
 
-`EdotReactNative.initialize(...)` is async. `<NavigationContainer>` must wait for it to resolve before mounting — otherwise its `onReady` fires while the iOS native module's tracer is still the OpenTelemetry default no-op provider, and the **initial** screen span (e.g. `Home` on cold start) is silently dropped. See `src/App.tsx`: an `sdkReady` state flips after `initialize(...)` resolves and gates the `<NavigationContainer>` render.
+SDK initialization is async. `<NavigationContainer>` must wait for it to finish before mounting — otherwise its `onReady` fires while the iOS native module's tracer is still the OpenTelemetry default no-op provider, and the **initial** screen span (e.g. `Home` on cold start) is silently dropped. See `src/App.tsx`: the `useEdot(...)` hook exposes `{ ready, error }`, and `InitializedApp` gates the `<NavigationContainer>` render on `ready === true`.
 
 ## How the SDK is wired up
 
@@ -51,6 +51,7 @@ function screenNameMapper(routeName: string): string {
 
 function InitializedApp() {
   const navigationRef = useNavigationContainerRef();
+  
   const { ready, error } = useEdot({
     serverUrl: EDOT_SERVER_URL,
     ios: { serviceName: EDOT_SERVICE_NAME_IOS },
