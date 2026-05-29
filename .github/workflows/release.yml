@@ -54,12 +54,12 @@ jobs:
 
       - name: Compile Android SDK module
         working-directory: example/basic/android
-        run: ./gradlew :inox_react-native-edot-sdk:assembleDebug --no-daemon
+        run: ./gradlew :inoxth_react-native-edot-sdk:assembleDebug --no-daemon
 
       - name: Create release PR or publish
         uses: changesets/action@v1
         with:
-          publish: yarn changeset publish
+          publish: bash scripts/publish.sh
           version: yarn changeset version
           commit: "chore: version packages"
           title: "chore: version packages"
@@ -67,3 +67,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
