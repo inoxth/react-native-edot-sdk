@@ -15,7 +15,7 @@ Guide for working on the React Native EDOT SDK monorepo. For a product/architect
 
 ```
 .
-├── packages/              # Library packages (published under @inox/*)
+├── packages/              # Library packages (published under @inoxth/*)
 │   ├── react-native/                 # Core SDK — public API, native bridge, auto-instrumentation
 │   ├── shared/                       # ActiveViewContext singleton (pure JS/TS)
 │   ├── react-native-navigation/      # Unified navigation integration (react-navigation, expo-router, Wix)
@@ -39,7 +39,7 @@ yarn typecheck          # tsc --build (composite project references)
 yarn test               # Jest across every package
 yarn lint               # oxlint on ./packages
 yarn fmt                # oxfmt on packages/
-yarn build              # bob build for every @inox/* package (plus tsc for CLI)
+yarn build              # bob build for every @inoxth/* package (plus tsc for CLI)
 ```
 
 Run a single test file:
@@ -79,11 +79,11 @@ Follow `instrumentation/fetch.ts` as the canonical reference. Use OTel v1.23 sem
 
 ## Adding a New Navigation Plugin
 
-The unified `@inox/react-native-edot-navigation` package handles all three popular RN navigators by building on a shared `createNavigationLifecycle` helper. To add a fourth navigator:
+The unified `@inoxth/react-native-edot-navigation` package handles all three popular RN navigators by building on a shared `createNavigationLifecycle` helper. To add a fourth navigator:
 
 1. Add a new entry surface in `packages/react-native-navigation/src/` (a React component for ref-based navigators, or an imperative `register…Listener` for navigators without a continuously-mounted React root).
 2. Build it on top of `createNavigationLifecycle({ instrumentationName, getCurrentScreenName })` — the helper handles span start/end, `ActiveViewContext` updates, and foreground re-emit for you.
-3. Pick a unique `instrumentationName` (e.g. `@inox/react-native-edot-<framework>-navigation`) so spans carry a distinguishable `instrumentation.scope.name`.
+3. Pick a unique `instrumentationName` (e.g. `@inoxth/react-native-edot-<framework>-navigation`) so spans carry a distinguishable `instrumentation.scope.name`.
 4. Add the navigator package as an **optional** peer dependency in `packages/react-native-navigation/package.json` via `peerDependenciesMeta`. Do not import the navigator library at module top-level — duck-type its API via a local `…Like` interface in `types.ts`.
 5. Re-export the new surface from `packages/react-native-navigation/src/index.ts`.
 
@@ -120,7 +120,7 @@ TurboModule spec types: the RN codegen (0.83+ and 0.85+) requires capital `Objec
 
 ## Example Apps
 
-Four demo apps under `example/` are yarn workspace members. Each has `installConfig.hoistingLimits: "workspaces"` so native deps resolve in-package. Metro config adds the monorepo root as a watch folder plus `extraNodeModules` for `@inox/*` packages.
+Four demo apps under `example/` are yarn workspace members. Each has `installConfig.hoistingLimits: "workspaces"` so native deps resolve in-package. Metro config adds the monorepo root as a watch folder plus `extraNodeModules` for `@inoxth/*` packages.
 
 | App | Navigation | Notes |
 |---|---|---|
@@ -174,9 +174,9 @@ Conventional Commits style — `feat(sdk): ...`, `fix(android): ...`, `refactor(
 
 ## What Not to Do
 
-- Don't add React Native dependencies to `@inox/react-native-edot-shared` — it must stay pure JS/TS so any package can import it without pulling in native code.
-- Don't eagerly import `@inox/react-native-edot-sdk/nativeModule` at module top-level from navigation plugins — use lazy `require()` inside a function to break the circular dependency.
-- Don't import `ActiveViewContext` from `@inox/react-native-edot-sdk` in navigation plugins — import from `@inox/react-native-edot-shared` directly.
+- Don't add React Native dependencies to `@inoxth/react-native-edot-shared` — it must stay pure JS/TS so any package can import it without pulling in native code.
+- Don't eagerly import `@inoxth/react-native-edot-sdk/nativeModule` at module top-level from navigation plugins — use lazy `require()` inside a function to break the circular dependency.
+- Don't import `ActiveViewContext` from `@inoxth/react-native-edot-sdk` in navigation plugins — import from `@inoxth/react-native-edot-shared` directly.
 - Don't manually construct `node_modules` paths in Metro config — rely on workspace resolution and `extraNodeModules`.
 - Don't commit `lib/` or `src/**/*.js` build artifacts — they're gitignored.
 - Don't use lowercase `object` in TurboModule specs — use capital `Object`. The RN codegen rejects `TSObjectKeyword`; capital `Object` maps to `GenericObjectTypeAnnotation`.

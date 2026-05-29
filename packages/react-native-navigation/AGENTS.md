@@ -1,4 +1,4 @@
-# AGENTS.md — @inox/react-native-edot-navigation
+# AGENTS.md — @inoxth/react-native-edot-navigation
 
 ## Overview
 
@@ -31,7 +31,7 @@ src/
 
 ```tsx
 import { useNavigationContainerRef } from '@react-navigation/native'; // or 'expo-router'
-import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
+import { EdotNavigationProvider } from '@inoxth/react-native-edot-navigation';
 
 const navigationRef = useNavigationContainerRef();
 return (
@@ -49,7 +49,7 @@ Optional `screenNameMapper(routeName, params?)` transforms route names.
 
 ```js
 import { Navigation } from 'react-native-navigation';
-import { registerEdotNavigationListener } from '@inox/react-native-edot-navigation';
+import { registerEdotNavigationListener } from '@inoxth/react-native-edot-navigation';
 
 Navigation.events().registerAppLaunchedListener(async () => {
   await EdotReactNative.initialize({
@@ -76,7 +76,7 @@ These spans measure **screen load latency**, not screen view duration.
 
 - Span name: `'<route segment name> - view appearing'` (e.g. `'index - view appearing'`, `'network - view appearing'`) after any `screenNameMapper` transformation. The `" - view appearing"` suffix matches EDOT iOS/Android view-appearing span naming so screen views aggregate correctly in Elastic dashboards.
 - Span kind: `INTERNAL` (default)
-- Tracer scope (`instrumentationName`): `"@inox/react-native-edot-sdk/navigation"` for all three navigators (component-based + Wix listener share the same scope since they live in the same package)
+- Tracer scope (`instrumentationName`): `"@inoxth/react-native-edot-sdk/navigation"` for all three navigators (component-based + Wix listener share the same scope since they live in the same package)
 - Attributes: `screen.name`, plus `last.screen.name` only when a prior screen exists _and_ differs from the current. If the app backgrounds during the load window, the span ends with status `ERROR` and `screen.load.aborted=true`.
 
 ### Lifecycle
@@ -113,5 +113,5 @@ The package never imports any of the three navigator libraries — it only duck-
 
 ## Dependencies
 
-- `@inox/react-native-edot-sdk` (workspace)
-- `@inox/react-native-edot-shared` (workspace)
+- `@inoxth/react-native-edot-sdk` (workspace)
+- `@inoxth/react-native-edot-shared` (workspace)

@@ -1,6 +1,6 @@
 {
-  "name": "@inox/react-native-edot-sdk",
-  "version": "0.1.0",
+  "name": "@inoxth/react-native-edot-sdk",
+  "version": "0.1.1",
   "description": "EDOT React Native SDK — OpenTelemetry-compliant observability wrapping native EDOT SDKs",
   "license": "MIT",
   "author": {
@@ -78,7 +78,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@inox/react-native-edot-shared": "workspace:*"
+    "@inoxth/react-native-edot-shared": "workspace:*"
   },
   "devDependencies": {
     "react": "^19.2.3",

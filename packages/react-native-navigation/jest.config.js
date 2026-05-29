@@ -8,7 +8,7 @@ module.exports = {
   moduleNameMapper: {
     '^react$': '<rootDir>/../../node_modules/react',
     '^react-test-renderer$': '<rootDir>/../../node_modules/react-test-renderer',
-    '^@inox/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts',
-    '^@inox/react-native-edot-sdk/nativeModule$': '<rootDir>/../react-native/src/nativeModule',
+    '^@inoxth/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts',
+    '^@inoxth/react-native-edot-sdk/nativeModule$': '<rootDir>/../react-native/src/nativeModule',
   },
 };

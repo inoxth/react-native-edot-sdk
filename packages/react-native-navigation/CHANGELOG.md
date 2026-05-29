@@ -1,4 +1,13 @@
-# @inox/react-native-edot-navigation
+# @inoxth/react-native-edot-navigation
+
+## 0.1.1
+
+### Patch Changes
+
+- chore: republish under @inoxth scope after 0.1.0 unpublish
+- Updated dependencies
+  - @inoxth/react-native-edot-sdk@0.1.1
+  - @inoxth/react-native-edot-shared@0.1.1
 
 ## 0.1.0
 
@@ -9,5 +18,5 @@
 ### Patch Changes
 
 - Updated dependencies [60ae271]
-  - @inox/react-native-edot-shared@0.1.0
-  - @inox/react-native-edot-sdk@0.1.0
+  - @inoxth/react-native-edot-shared@0.1.0
+  - @inoxth/react-native-edot-sdk@0.1.0

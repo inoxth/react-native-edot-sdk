@@ -16,7 +16,7 @@ const mockNativeModule = {
   recordSpanException: jest.fn(),
 };
 
-jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
+jest.mock('@inoxth/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
 }));
 

@@ -4,7 +4,7 @@ import {
   getTracerProvider,
   withSpanContext,
   SpanStatusCode,
-} from '@inox/react-native-edot-tracer-provider';
+} from '@inoxth/react-native-edot-tracer-provider';
 import { Button } from '../components/Button';
 import { SectionHeader } from '../components/SectionHeader';
 import { styles } from '../styles';

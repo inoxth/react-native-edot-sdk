@@ -264,9 +264,9 @@ describe('nativeModule', () => {
       NativeModules.EdotReactNative = makeFullModule(mockStartSpan);
 
       const { EdotNativeModule } = require('../nativeModule');
-      const result = EdotNativeModule.startSpan('scoped', {}, null, '@inox/scope');
+      const result = EdotNativeModule.startSpan('scoped', {}, null, '@inoxth/scope');
 
-      expect(mockStartSpan).toHaveBeenCalledWith('scoped', {}, '', '@inox/scope');
+      expect(mockStartSpan).toHaveBeenCalledWith('scoped', {}, '', '@inoxth/scope');
       expect(result).toBe('span-4');
     });
   });

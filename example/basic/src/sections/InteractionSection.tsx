@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { View } from 'react-native';
-import { useEdotAction, withEdotTracking } from '@inox/react-native-edot-sdk';
+import { useEdotAction, withEdotTracking } from '@inoxth/react-native-edot-sdk';
 import { Button } from '../components/Button';
 import { SectionHeader } from '../components/SectionHeader';
 import { styles } from '../styles';

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
 
 export function HomeScreen(): React.JSX.Element {
   const [sessionId, setSessionId] = useState('');

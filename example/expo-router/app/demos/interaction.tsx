@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Stack } from 'expo-router';
-import { useEdotAction, withEdotTracking } from '@inox/react-native-edot-sdk';
+import { useEdotAction, withEdotTracking } from '@inoxth/react-native-edot-sdk';
 
 function Button({
   title,

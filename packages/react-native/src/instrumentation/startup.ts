@@ -24,7 +24,7 @@ export function setupStartupTracing(_config: EdotConfig): () => void {
   const jsBundleLoadedAt = Date.now();
 
   try {
-    const startupScope = '@inox/react-native-edot-sdk/startup';
+    const startupScope = '@inoxth/react-native-edot-sdk/startup';
     const parentSpanId = EdotNativeModule.startSpan(
       'AppStartup: cold',
       { 'app.startup.type': 'cold' },

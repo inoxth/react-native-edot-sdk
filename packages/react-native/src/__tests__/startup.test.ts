@@ -48,7 +48,7 @@ describe('setupStartupTracing', () => {
       'AppStartup: cold',
       expect.objectContaining({ 'app.startup.type': 'cold' }),
       null,
-      '@inox/react-native-edot-sdk/startup',
+      '@inoxth/react-native-edot-sdk/startup',
     );
     teardown();
   });
@@ -61,13 +61,13 @@ describe('setupStartupTracing', () => {
       'AppStartup: js_bundle_load',
       {},
       'span-1',
-      '@inox/react-native-edot-sdk/startup',
+      '@inoxth/react-native-edot-sdk/startup',
     );
     expect(EdotNativeModule.startSpan).toHaveBeenCalledWith(
       'AppStartup: first_render',
       {},
       'span-1',
-      '@inox/react-native-edot-sdk/startup',
+      '@inoxth/react-native-edot-sdk/startup',
     );
     teardown();
   });

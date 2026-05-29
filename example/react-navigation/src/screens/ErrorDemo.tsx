@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+import { EdotErrorBoundary } from '@inoxth/react-native-edot-sdk';
 
 function CrashComponent(): React.JSX.Element {
   throw new Error('ErrorBoundary test: component render crash');

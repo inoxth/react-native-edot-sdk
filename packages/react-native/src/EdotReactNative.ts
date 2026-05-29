@@ -10,8 +10,8 @@ import type {
 import { DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE, EDOT_DEFAULTS } from './defaults';
 import { resolveResourceField, validateConfig } from './config';
 import { EdotNativeModule } from './nativeModule';
-import { redactedString } from '@inox/react-native-edot-shared';
-import type { RedactedString } from '@inox/react-native-edot-shared';
+import { redactedString } from '@inoxth/react-native-edot-shared';
+import type { RedactedString } from '@inoxth/react-native-edot-shared';
 import { setupFetchInstrumentation } from './instrumentation/fetch';
 import { setupXhrInstrumentation } from './instrumentation/xhr';
 import { setupErrorHandler } from './instrumentation/errors';

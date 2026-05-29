@@ -801,10 +801,10 @@ class EdotReactNative: NSObject {
 
     // Brand native URLSession spans under the same scope as the JS HTTP client
     // instrumentation so a single SLO filter (`service.framework.name :
-    // "@inox/react-native-edot-sdk/http"`) catches every HTTP request the app
+    // "@inoxth/react-native-edot-sdk/http"`) catches every HTTP request the app
     // makes -- JS-initiated, native third-party SDKs, and WebViews alike.
     let httpTracer = OpenTelemetry.instance.tracerProvider.get(
-      instrumentationName: "@inox/react-native-edot-sdk/http",
+      instrumentationName: "@inoxth/react-native-edot-sdk/http",
       instrumentationVersion: "1.0.0"
     )
 

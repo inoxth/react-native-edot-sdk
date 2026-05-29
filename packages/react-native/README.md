@@ -1,4 +1,4 @@
-# @inox/react-native-edot-sdk
+# @inoxth/react-native-edot-sdk
 
 OpenTelemetry-compliant observability SDK for React Native. Wraps the native [EDOT iOS](https://github.com/elastic/apm-agent-ios) and [EDOT Android](https://github.com/elastic/elastic-otel-android) agents to provide automatic and manual instrumentation with zero-config setup. Supports both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric) from a single codebase.
 
@@ -12,14 +12,14 @@ OpenTelemetry-compliant observability SDK for React Native. Wraps the native [ED
 - **Lifecycle events** — emitted natively by the EDOT iOS/Android agents per the Elastic mobile agents spec
 - **App + system metrics** — `application.launch.time` histogram plus `system.cpu.usage` and `system.memory.usage` observable gauges on both platforms (iOS via MetricKit + Mach task APIs; Android via Choreographer + `Process.getElapsedCpuTime` + `Debug.MemoryInfo`)
 - **User interactions** — `withEdotTracking` HOC and `useEdotAction` hook for tap/action tracking
-- **Manual instrumentation** — see [`@inox/react-native-edot-tracer-provider`](../react-native-tracer-provider) for custom spans and metrics
-- **Navigation tracking** — see [`@inox/react-native-edot-navigation`](../react-native-navigation) for screen spans
+- **Manual instrumentation** — see [`@inoxth/react-native-edot-tracer-provider`](../react-native-tracer-provider) for custom spans and metrics
+- **Navigation tracking** — see [`@inoxth/react-native-edot-navigation`](../react-native-navigation) for screen spans
 - **Attribute redaction + ignore filters** — `attributeRedactions`, `ignoreSpanNames`, `ignoreLogPatterns` for PII handling and noise control on both platforms
 
 ## Install
 
 ```bash
-yarn add @inox/react-native-edot-sdk
+yarn add @inoxth/react-native-edot-sdk
 ```
 
 ### iOS
@@ -68,7 +68,7 @@ No extra command needed — RN Gradle autolinking wires the SDK on the next `yar
 ## Initialize
 
 ```typescript
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
 
 await EdotReactNative.initialize({
   serverUrl: 'https://your-apm-server:8200',
@@ -100,7 +100,7 @@ The platform-specific `serviceName` overrides the top-level value when both are 
 For React apps, `useEdot(config)` is the idiomatic entry point — it calls `initialize` once on mount and exposes reactive `{ ready, error }` state:
 
 ```tsx
-import { useEdot, EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+import { useEdot, EdotErrorBoundary } from '@inoxth/react-native-edot-sdk';
 import { ActivityIndicator, Text } from 'react-native';
 
 export function App() {
@@ -133,7 +133,7 @@ Behavior:
 - **Passive errors.** Init failures are stored in `error` and warned once to the console — never thrown. Observability degrades silently rather than crashing the app.
 - **StrictMode-safe.** The underlying singleton guard in `EdotReactNative.initialize` short-circuits duplicate calls, so React 18+ double-mount in dev costs nothing.
 
-For navigation-aware apps, mount the navigation root only once `ready` flips to `true` so the initial screen span is captured by the active tracer provider — see [`@inox/react-native-edot-navigation`](../react-native-navigation).
+For navigation-aware apps, mount the navigation root only once `ready` flips to `true` so the initial screen span is captured by the active tracer provider — see [`@inoxth/react-native-edot-navigation`](../react-native-navigation).
 
 ### Host-app pre-initialization (advanced)
 
@@ -289,7 +289,7 @@ Pass these under `android: { … }` in the config:
 Wrap your app to capture render errors as spans:
 
 ```tsx
-import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+import { EdotErrorBoundary } from '@inoxth/react-native-edot-sdk';
 import { Text } from 'react-native';
 
 export function App() {
@@ -308,7 +308,7 @@ Render errors are routed through the same path as uncaught JS exceptions: when a
 ### `withEdotTracking` HOC
 
 ```tsx
-import { withEdotTracking } from '@inox/react-native-edot-sdk';
+import { withEdotTracking } from '@inoxth/react-native-edot-sdk';
 import { TouchableOpacity } from 'react-native';
 
 const TrackedButton = withEdotTracking(TouchableOpacity, 'CheckoutButton');
@@ -320,7 +320,7 @@ const TrackedButton = withEdotTracking(TouchableOpacity, 'CheckoutButton');
 ### `useEdotAction` hook
 
 ```typescript
-import { useEdotAction } from '@inox/react-native-edot-sdk';
+import { useEdotAction } from '@inoxth/react-native-edot-sdk';
 
 function CheckoutScreen() {
   const { trackAction } = useEdotAction();
@@ -334,7 +334,7 @@ function CheckoutScreen() {
 ## User & session APIs
 
 ```typescript
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
 
 EdotReactNative.setUser({
   id: 'user-123',

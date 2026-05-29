@@ -4,10 +4,10 @@
   "commit": false,
   "fixed": [
     [
-      "@inox/react-native-edot-shared",
-      "@inox/react-native-edot-sdk",
-      "@inox/react-native-edot-navigation",
-      "@inox/react-native-edot-tracer-provider"
+      "@inoxth/react-native-edot-shared",
+      "@inoxth/react-native-edot-sdk",
+      "@inoxth/react-native-edot-navigation",
+      "@inoxth/react-native-edot-tracer-provider"
     ]
   ],
   "linked": [],
@@ -15,7 +15,7 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@inox/react-native-edot-cli",
+    "@inoxth/react-native-edot-cli",
     "edot-example",
     "edot-example-expo-router",
     "edot-example-react-navigation",

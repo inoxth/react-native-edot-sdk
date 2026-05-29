@@ -76,9 +76,9 @@ Config values come from `.env` via `react-native-dotenv` (`@env` import).
 
 All apps share this monorepo Metro config pattern:
 
-- `watchFolders`: monorepo root (for `@inox/*` packages)
-- `extraNodeModules`: maps `@inox/*` package names to their `packages/*/` dirs
-- Subpath exports resolved manually: `@inox/react-native-edot-sdk/nativeModule` and `/active-view-context`
+- `watchFolders`: monorepo root (for `@inoxth/*` packages)
+- `extraNodeModules`: maps `@inoxth/*` package names to their `packages/*/` dirs
+- Subpath exports resolved manually: `@inoxth/react-native-edot-sdk/nativeModule` and `/active-view-context`
 - React singleton fix: `resolver.resolveRequest` ensures a single React instance
 - expo-router uses `expo/metro-config` (mutates config); others use `@react-native/metro-config` (`mergeConfig`)
 
@@ -95,6 +95,6 @@ EDOT Gradle plugin (`co.elastic.otel.android.agent`) v1.5.0 applied in all apps.
 | App | Key Difference |
 |---|---|
 | `basic/` | No navigation plugin — only SDK init + manual instrumentation. Single scrollable screen. |
-| `react-navigation/` | Uses `useNavigationContainerRef()` from `@react-navigation/native` + `<EdotNavigationProvider navigationRef={…}>` from `@inox/react-native-edot-navigation`. Provider wraps `<NavigationContainer ref={ref}>`. |
+| `react-navigation/` | Uses `useNavigationContainerRef()` from `@react-navigation/native` + `<EdotNavigationProvider navigationRef={…}>` from `@inoxth/react-native-edot-navigation`. Provider wraps `<NavigationContainer ref={ref}>`. |
 | `expo-router/` | Uses `useNavigationContainerRef()` from `expo-router` + `<EdotNavigationProvider navigationRef={…}>` (same component as react-navigation). Requires `app.json` with `"scheme"` for deep linking. Podfile needs `use_expo_modules!`. AppDelegate adds `RCTLinkingManager` for URL handling. Uses `babel-preset-expo` (not `@react-native/babel-preset`). |
-| `wix-navigation/` | Uses imperative `registerEdotNavigationListener(Navigation, …)` from `@inox/react-native-edot-navigation` (no React tree wrapper — Wix has no persistent React root). AppDelegate extends `RNNAppDelegate` (not `RCTAppDelegate`) — RNN controls the root view controller. SDK init + listener registration happen inside `registerAppLaunchedListener` callback, before `Navigation.setRoot(...)`. |
+| `wix-navigation/` | Uses imperative `registerEdotNavigationListener(Navigation, …)` from `@inoxth/react-native-edot-navigation` (no React tree wrapper — Wix has no persistent React root). AppDelegate extends `RNNAppDelegate` (not `RCTAppDelegate`) — RNN controls the root view controller. SDK init + listener registration happen inside `registerAppLaunchedListener` callback, before `Navigation.setRoot(...)`. |

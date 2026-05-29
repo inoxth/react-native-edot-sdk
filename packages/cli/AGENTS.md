@@ -1,4 +1,4 @@
-# AGENTS.md — @inox/react-native-edot-cli
+# AGENTS.md — @inoxth/react-native-edot-cli
 
 ## Overview
 
@@ -17,7 +17,7 @@ src/
 ## Key API
 
 ```bash
-npx @inox/react-native-edot-cli upload-sourcemap \
+npx @inoxth/react-native-edot-cli upload-sourcemap \
   --server-url <url> \
   --service-name <name> \
   --service-version <version> \

@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
 
 export function LogsDemo(): React.JSX.Element {
   const [log, setLog] = useState<string[]>([]);

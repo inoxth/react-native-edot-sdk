@@ -1,6 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { View } from 'react-native';
-import { getMeterProvider } from '@inox/react-native-edot-tracer-provider';
+import { getMeterProvider } from '@inoxth/react-native-edot-tracer-provider';
 import { Button } from '../components/Button';
 import { SectionHeader } from '../components/SectionHeader';
 import { styles } from '../styles';

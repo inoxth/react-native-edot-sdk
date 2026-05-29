@@ -69,18 +69,18 @@ When `ActiveViewContext._resetForTesting()` is called (in `__DEV__` only, per ex
 - **AND** subsequent `notifyForegroundReEmitters()` calls SHALL NOT invoke `fnA`
 
 ### Requirement: Exported via subpath from core package
-The module SHALL be the canonical export of `@inox/react-native-edot-shared`. Navigation plugins SHALL import `ActiveViewContext` from `@inox/react-native-edot-shared`. The `@inox/react-native-edot-sdk/active-view-context` subpath SHALL continue to work as a re-export of `@inox/react-native-edot-shared` for backwards compatibility.
+The module SHALL be the canonical export of `@inoxth/react-native-edot-shared`. Navigation plugins SHALL import `ActiveViewContext` from `@inoxth/react-native-edot-shared`. The `@inoxth/react-native-edot-sdk/active-view-context` subpath SHALL continue to work as a re-export of `@inoxth/react-native-edot-shared` for backwards compatibility.
 
 #### Scenario: Import from subpath
-- **WHEN** a navigation plugin imports `{ ActiveViewContext } from '@inox/react-native-edot-sdk/active-view-context'`
+- **WHEN** a navigation plugin imports `{ ActiveViewContext } from '@inoxth/react-native-edot-sdk/active-view-context'`
 - **THEN** it resolves to the ActiveViewContext module
 
 #### Scenario: Import from core package
-- **WHEN** a navigation plugin imports `{ ActiveViewContext } from '@inox/react-native-edot-shared'`
+- **WHEN** a navigation plugin imports `{ ActiveViewContext } from '@inoxth/react-native-edot-shared'`
 - **THEN** it resolves to the ActiveViewContext singleton
 - **THEN** it is the same singleton instance used by the main SDK package
 
 #### Scenario: Legacy subpath import still works
-- **WHEN** code imports `{ ActiveViewContext } from '@inox/react-native-edot-sdk/active-view-context'`
-- **THEN** it resolves to the same ActiveViewContext from `@inox/react-native-edot-shared`
+- **WHEN** code imports `{ ActiveViewContext } from '@inoxth/react-native-edot-sdk/active-view-context'`
+- **THEN** it resolves to the same ActiveViewContext from `@inoxth/react-native-edot-shared`
 - **THEN** no duplicate singleton is created

@@ -1,17 +1,17 @@
-# @inox/react-native-edot-cli
+# @inoxth/react-native-edot-cli
 
 Command-line tool for the React Native EDOT SDK. Currently provides a single command for uploading JS bundles and source maps to your APM server so server-side stack traces can be symbolicated.
 
 ## Install
 
 ```bash
-yarn add --dev @inox/react-native-edot-cli
+yarn add --dev @inoxth/react-native-edot-cli
 ```
 
 You can also invoke it once-off with `yarn dlx`:
 
 ```bash
-yarn dlx @inox/react-native-edot-cli upload-sourcemap …
+yarn dlx @inoxth/react-native-edot-cli upload-sourcemap …
 ```
 
 ## upload-sourcemap
@@ -19,7 +19,7 @@ yarn dlx @inox/react-native-edot-cli upload-sourcemap …
 Uploads the JS bundle and its source map for a given service name + version. The service identity must match what your app passes to `EdotReactNative.initialize(...)` so the server can correlate uploaded sources with received error events.
 
 ```bash
-npx @inox/react-native-edot-cli upload-sourcemap \
+npx @inoxth/react-native-edot-cli upload-sourcemap \
   --server-url https://your-apm-server:8200 \
   --service-name my-app \
   --service-version 1.0.0 \
@@ -54,7 +54,7 @@ react-native bundle \
   --bundle-output ios/main.jsbundle \
   --sourcemap-output ios/main.jsbundle.map
 
-npx @inox/react-native-edot-cli upload-sourcemap \
+npx @inoxth/react-native-edot-cli upload-sourcemap \
   --server-url "$EDOT_SERVER_URL" \
   --service-name my-app \
   --service-version "$APP_VERSION" \

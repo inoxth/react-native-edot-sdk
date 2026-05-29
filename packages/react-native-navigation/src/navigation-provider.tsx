@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { createNavigationLifecycle } from './navigation-lifecycle';
 import type { NavigationContainerRefLike, RefScreenNameMapper } from './types';
 
-const INSTRUMENTATION_NAME = '@inox/react-native-edot-sdk/navigation';
+const INSTRUMENTATION_NAME = '@inoxth/react-native-edot-sdk/navigation';
 
 export interface EdotNavigationProviderProps {
   navigationRef: NavigationContainerRefLike;

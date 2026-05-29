@@ -37,7 +37,7 @@ Bare React Native app demonstrating the EDOT SDK with **no navigation library** 
 Initialization lives in **[`src/App.tsx`](./src/App.tsx)**. To change the SDK config in your own app, edit the `useEdot({...})` call inside `InitializedApp`:
 
 ```tsx
-import { EdotErrorBoundary, useEdot } from '@inox/react-native-edot-sdk';
+import { EdotErrorBoundary, useEdot } from '@inoxth/react-native-edot-sdk';
 
 function InitializedApp() {
   const { ready, error } = useEdot({
@@ -67,7 +67,7 @@ Because there is no navigation library, `EdotNavigationProvider` is **not** used
 Once `useEdot(...)` resolves, uncaught JS errors and unhandled promise rejections are reported automatically. Wrap React subtrees with `EdotErrorBoundary` to also report render-time errors and show a fallback UI:
 
 ```tsx
-import { EdotErrorBoundary } from '@inox/react-native-edot-sdk';
+import { EdotErrorBoundary } from '@inoxth/react-native-edot-sdk';
 
 <EdotErrorBoundary fallback={<Text>Something went wrong</Text>}>
   <YourComponent />
@@ -81,7 +81,7 @@ A live demo lives in [`src/sections/ErrorsSection.tsx`](./src/sections/ErrorsSec
 Use `EdotReactNative.log(severity, message, attributes?)` to send structured logs at any severity:
 
 ```ts
-import { EdotReactNative } from '@inox/react-native-edot-sdk';
+import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
 
 EdotReactNative.log('info', 'User signed in', { 'user.id': '42' });
 EdotReactNative.log('warn', 'Slow network detected');

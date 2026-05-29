@@ -2,7 +2,7 @@
 
 ## Overview
 
-React Native EDOT SDK — an OpenTelemetry-compliant observability SDK wrapping native EDOT iOS/Android agents. Auto-instruments network requests (fetch + XHR), JS errors, startup, and navigation. App lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec. Published under `@inox/*` scope.
+React Native EDOT SDK — an OpenTelemetry-compliant observability SDK wrapping native EDOT iOS/Android agents. Auto-instruments network requests (fetch + XHR), JS errors, startup, and navigation. App lifecycle events are emitted natively by the EDOT iOS / Android agents per the Elastic mobile agents spec. Published under `@inoxth/*` scope.
 
 React Native 0.75+ (required for the `spm_dependency` Cocoapods helper), supports both Old Architecture (Bridge) and New Architecture (TurboModules/Fabric) from a single codebase via legacy interop.
 
@@ -13,7 +13,7 @@ yarn typecheck                    # TypeScript check (tsc --build, composite)
 yarn test                         # Jest across all packages
 yarn lint                         # oxlint (NOT eslint)
 yarn fmt                          # oxfmt (NOT prettier)
-yarn build                        # bob build for all @inox/* packages
+yarn build                        # bob build for all @inoxth/* packages
 
 # Single test file
 yarn jest packages/react-native/src/__tests__/errors.test.ts
@@ -23,11 +23,11 @@ yarn jest packages/react-native/src/__tests__/errors.test.ts
 
 ```
 packages/
-├── shared/                        # @inox/react-native-edot-shared
-├── react-native/                  # @inox/react-native-edot-sdk
-├── react-native-navigation/       # @inox/react-native-edot-navigation (unified — covers react-navigation, expo-router, wix)
-├── react-native-tracer-provider/  # @inox/react-native-edot-tracer-provider
-└── cli/                           # @inox/react-native-edot-cli
+├── shared/                        # @inoxth/react-native-edot-shared
+├── react-native/                  # @inoxth/react-native-edot-sdk
+├── react-native-navigation/       # @inoxth/react-native-edot-navigation (unified — covers react-navigation, expo-router, wix)
+├── react-native-tracer-provider/  # @inoxth/react-native-edot-tracer-provider
+└── cli/                           # @inoxth/react-native-edot-cli
 example/                           # 4 demo apps (see example/AGENTS.md)
 openspec/                          # OpenSpec specs and change tracking
 ```
@@ -38,11 +38,11 @@ Each package has its own `CLAUDE.md` and `AGENTS.md` with detailed documentation
 
 | Package | Description | Docs |
 |---|---|---|
-| `@inox/react-native-edot-shared` | Shared cross-package state (`ActiveViewContext` singleton). Pure JS/TS. | [AGENTS.md](./packages/shared/AGENTS.md) |
-| `@inox/react-native-edot-sdk` | Main SDK. Config, native bridge, auto-instrumentation, public API, React components. | [AGENTS.md](./packages/react-native/AGENTS.md) |
-| `@inox/react-native-edot-navigation` | Unified navigation integration. `<EdotNavigationProvider>` for `@react-navigation/native` + `expo-router` (both use `useNavigationContainerRef`); imperative `registerEdotNavigationListener` for Wix `react-native-navigation`. | [AGENTS.md](./packages/react-native-navigation/AGENTS.md) |
-| `@inox/react-native-edot-tracer-provider` | Manual instrumentation API. Custom spans and metrics. | [AGENTS.md](./packages/react-native-tracer-provider/AGENTS.md) |
-| `@inox/react-native-edot-cli` | CLI tool for source map upload. | [AGENTS.md](./packages/cli/AGENTS.md) |
+| `@inoxth/react-native-edot-shared` | Shared cross-package state (`ActiveViewContext` singleton). Pure JS/TS. | [AGENTS.md](./packages/shared/AGENTS.md) |
+| `@inoxth/react-native-edot-sdk` | Main SDK. Config, native bridge, auto-instrumentation, public API, React components. | [AGENTS.md](./packages/react-native/AGENTS.md) |
+| `@inoxth/react-native-edot-navigation` | Unified navigation integration. `<EdotNavigationProvider>` for `@react-navigation/native` + `expo-router` (both use `useNavigationContainerRef`); imperative `registerEdotNavigationListener` for Wix `react-native-navigation`. | [AGENTS.md](./packages/react-native-navigation/AGENTS.md) |
+| `@inoxth/react-native-edot-tracer-provider` | Manual instrumentation API. Custom spans and metrics. | [AGENTS.md](./packages/react-native-tracer-provider/AGENTS.md) |
+| `@inoxth/react-native-edot-cli` | CLI tool for source map upload. | [AGENTS.md](./packages/cli/AGENTS.md) |
 
 ## Architecture
 
@@ -67,21 +67,21 @@ Each package has its own `CLAUDE.md` and `AGENTS.md` with detailed documentation
 
 ### ActiveViewContext
 
-Singleton in `@inox/react-native-edot-shared` — navigation plugins write to it (`setActiveView`), instrumentation modules read from it (`getActiveView`). The main package re-exports at `@inox/react-native-edot-sdk/active-view-context` for backwards compat. Navigation plugins import from `@inox/react-native-edot-shared` directly.
+Singleton in `@inoxth/react-native-edot-shared` — navigation plugins write to it (`setActiveView`), instrumentation modules read from it (`getActiveView`). The main package re-exports at `@inoxth/react-native-edot-sdk/active-view-context` for backwards compat. Navigation plugins import from `@inoxth/react-native-edot-shared` directly.
 
 ### Navigation Plugin Pattern (unified)
 
-A single package `@inox/react-native-edot-navigation` covers all three navigators. Internally everything is built on the shared `createNavigationLifecycle` helper which handles span start/end, `ActiveViewContext` updates, and foreground re-emit:
+A single package `@inoxth/react-native-edot-navigation` covers all three navigators. Internally everything is built on the shared `createNavigationLifecycle` helper which handles span start/end, `ActiveViewContext` updates, and foreground re-emit:
 
-1. **Ref-based navigators (`@react-navigation/native` + `expo-router`)** — same component `<EdotNavigationProvider navigationRef={…}>`. The provider subscribes to `addListener('state', …)` on the ref and reads `getCurrentRoute().name`. expo-router and react-navigation collapse cleanly because expo-router is built on top of react-navigation and re-exports `useNavigationContainerRef()`. Tracer scope: `@inox/react-native-edot-sdk/navigation`.
-2. **Wix `react-native-navigation`** — imperative `registerEdotNavigationListener(Navigation, options)`. Hooks `Navigation.events().registerComponentDidAppearListener(...)`. Returned cleanup function unsubscribes + tears down the lifecycle. Wix is imperative because Wix apps have no continuously-mounted React root. Tracer scope: `@inox/react-native-edot-sdk/navigation` (shared with the ref-based surface — the package owns one OTel scope).
+1. **Ref-based navigators (`@react-navigation/native` + `expo-router`)** — same component `<EdotNavigationProvider navigationRef={…}>`. The provider subscribes to `addListener('state', …)` on the ref and reads `getCurrentRoute().name`. expo-router and react-navigation collapse cleanly because expo-router is built on top of react-navigation and re-exports `useNavigationContainerRef()`. Tracer scope: `@inoxth/react-native-edot-sdk/navigation`.
+2. **Wix `react-native-navigation`** — imperative `registerEdotNavigationListener(Navigation, options)`. Hooks `Navigation.events().registerComponentDidAppearListener(...)`. Returned cleanup function unsubscribes + tears down the lifecycle. Wix is imperative because Wix apps have no continuously-mounted React root. Tracer scope: `@inoxth/react-native-edot-sdk/navigation` (shared with the ref-based surface — the package owns one OTel scope).
 3. Both surfaces emit the same span shape: name = `"<route name> - view appearing"` (post-mapper; suffix matches EDOT iOS/Android view-appearing span naming so screen views aggregate correctly in Elastic dashboards), kind = INTERNAL, attribute `screen.name` (and `last.screen.name` when the prior screen exists and differs).
 4. Both surfaces register a foreground re-emitter via `ActiveViewContext.registerForegroundReEmitter(...)` so the SDK's `AppState` listener can replay the current screen on foreground (treated as fresh visit; `last.screen.name` omitted).
 5. The package never imports any of the three navigator libraries — props/arguments are duck-typed via local `NavigationContainerRefLike` and `WixNavigationLike` interfaces. All three are declared as **optional** peer dependencies via `peerDependenciesMeta`.
 
 ### Network Instrumentation
 
-Fetch and XHR are monkey-patched to create OTel spans using legacy Elastic mobile spec HTTP attribute names: `http.method`, `http.url` (sanitized via `config.urlSanitizer`), `http.request_body.size`, `http.status_code`, `http.response_body.size`. They inject a W3C `traceparent` header on **all** outbound requests when `tracePropagationTargets` is omitted (matching the iOS `apm-agent-ios` default; `serverUrl` and `ignoreUrls` matches are still excluded via `shouldIgnore`). Pass `tracePropagationTargets: []` to opt out entirely, or a non-empty array to restrict propagation to an allowlist. Every traced request also carries an `X-Edot-RN-Traced: 1` dedup header. When an active view exists, spans include `screen.name` and `screen.id` attributes (RN-specific value-add over apm-agent-android's `ScreenAttributesSpanProcessor`, which only emits `screen.name`). Both fetch and XHR pass `instrumentationName = "@inox/react-native-edot-sdk/http"` so HTTP spans carry a unified `instrumentation.scope.name` (matched by iOS's native `URLSessionInstrumentation` which is configured with the same scope). Body/response sizes and status code are written via the typed `setSpanAttributeNumber` bridge method to preserve numeric type end-to-end.
+Fetch and XHR are monkey-patched to create OTel spans using legacy Elastic mobile spec HTTP attribute names: `http.method`, `http.url` (sanitized via `config.urlSanitizer`), `http.request_body.size`, `http.status_code`, `http.response_body.size`. They inject a W3C `traceparent` header on **all** outbound requests when `tracePropagationTargets` is omitted (matching the iOS `apm-agent-ios` default; `serverUrl` and `ignoreUrls` matches are still excluded via `shouldIgnore`). Pass `tracePropagationTargets: []` to opt out entirely, or a non-empty array to restrict propagation to an allowlist. Every traced request also carries an `X-Edot-RN-Traced: 1` dedup header. When an active view exists, spans include `screen.name` and `screen.id` attributes (RN-specific value-add over apm-agent-android's `ScreenAttributesSpanProcessor`, which only emits `screen.name`). Both fetch and XHR pass `instrumentationName = "@inoxth/react-native-edot-sdk/http"` so HTTP spans carry a unified `instrumentation.scope.name` (matched by iOS's native `URLSessionInstrumentation` which is configured with the same scope). Body/response sizes and status code are written via the typed `setSpanAttributeNumber` bridge method to preserve numeric type end-to-end.
 
 ### iOS Metrics Pipeline (Custom MeterProvider)
 
@@ -89,7 +89,7 @@ apm-agent-ios v2.0.0 builds the global `MeterProvider` without `.setResource(...
 
 ### Credentials Redaction
 
-`secretToken` and `apiKey` are wrapped in `redactedString(value)` from `@inox/react-native-edot-shared` immediately on `mergeConfig` (commit `e5f612f`). The wrapper's `toString()` / `toJSON()` return `"[REDACTED]"`, preventing accidental logging. `revealCredentials()` unwraps them just before the `EdotNativeModule.initialize(...)` call.
+`secretToken` and `apiKey` are wrapped in `redactedString(value)` from `@inoxth/react-native-edot-shared` immediately on `mergeConfig` (commit `e5f612f`). The wrapper's `toString()` / `toJSON()` return `"[REDACTED]"`, preventing accidental logging. `revealCredentials()` unwraps them just before the `EdotNativeModule.initialize(...)` call.
 
 ### App-State Tracking
 
@@ -103,7 +103,7 @@ apm-agent-ios v2.0.0 builds the global `MeterProvider` without `.setResource(...
 - **Non-fatal + active view** → `EdotNativeModule.recordSpanException(activeView.spanId, ...)`. Native side calls `span.addEvent("exception", ...)` on the active view span. Status is **not** auto-flipped to ERROR (the view span is a load-latency span; the exception event itself is the signal). Screen correlation flows from the parent view span automatically.
 - **Non-fatal + no active view** → `EdotNativeModule.emitLog('error', message, { 'event.name': 'exception', 'exception.type', 'exception.message', 'exception.stacktrace', 'error.source' })`. Stand-alone OTel log record with the exception event marker.
 
-React render errors are captured separately by the opt-in `EdotErrorBoundary` component exported from `@inox/react-native-edot-sdk`. Service identity (`service.name`, `service.version`, `deployment.environment`) is carried on the OTel Resource (set by the native agent at start), not on each span.
+React render errors are captured separately by the opt-in `EdotErrorBoundary` component exported from `@inoxth/react-native-edot-sdk`. Service identity (`service.name`, `service.version`, `deployment.environment`) is carried on the OTel Resource (set by the native agent at start), not on each span.
 
 ## Where to Look
 
@@ -145,7 +145,7 @@ cli (standalone Node.js, depends: commander only)
 ### Testing
 - Jest with `react-native` preset for RN packages, `node` environment + `babel-jest` for the CLI package.
 - Each package has its own `jest.config.js`.
-- Cross-package imports resolved via `moduleNameMapper` pointing to sibling `src/` dirs (e.g., `'^@inox/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts'`).
+- Cross-package imports resolved via `moduleNameMapper` pointing to sibling `src/` dirs (e.g., `'^@inoxth/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts'`).
 - Mocking pattern: `jest.mock()` for native module, `jest.clearAllMocks()` in `beforeEach()`. All trackers/providers export `resetForTesting()` functions for test isolation.
 
 ### Example Apps
@@ -156,7 +156,7 @@ Four example apps under `example/`, each a yarn workspace member:
 - `example/wix-navigation/` — Wix react-native-navigation with bottomTabs + push
 - All use `.env` for config (server URL, service name, secret token). Copy `.env.example` to `.env`.
 - Each has `installConfig.hoistingLimits: "workspaces"` so native deps resolve correctly.
-- Metro configs add monorepo root as watch folder + extraNodeModules for `@inox/*` packages.
+- Metro configs add monorepo root as watch folder + extraNodeModules for `@inoxth/*` packages.
 - RN versions vary by navigation library compatibility: basic + react-navigation use RN 0.85.1, expo-router + wix-navigation use RN 0.83.4. Min iOS 16.0, min Android SDK 24, compile/target SDK 36.
 - Each app exposes both `ios`/`android` (New Arch, default) and `ios:old-arch`/`android:old-arch` scripts so contributors validate both architectures from the same workspace before shipping changes that touch the native modules.
 
@@ -168,9 +168,9 @@ Changes tracked in `openspec/changes/` with proposal -> design -> specs -> tasks
 
 ## Anti-Patterns
 
-- **Don't import `ActiveViewContext` from `@inox/react-native-edot-sdk`** in navigation plugins — import from `@inox/react-native-edot-shared` to avoid circular dependency.
-- **Don't eagerly import `@inox/react-native-edot-sdk/nativeModule`** at top level in nav plugins — use lazy `require()` inside a function to break the dependency cycle.
-- **Don't add React Native dependencies to `@inox/react-native-edot-shared`** — it must stay pure JS/TS.
+- **Don't import `ActiveViewContext` from `@inoxth/react-native-edot-sdk`** in navigation plugins — import from `@inoxth/react-native-edot-shared` to avoid circular dependency.
+- **Don't eagerly import `@inoxth/react-native-edot-sdk/nativeModule`** at top level in nav plugins — use lazy `require()` inside a function to break the dependency cycle.
+- **Don't add React Native dependencies to `@inoxth/react-native-edot-shared`** — it must stay pure JS/TS.
 - **Don't use lowercase `object`** in TurboModule specs — use capital `Object`. RN codegen rejects `TSObjectKeyword`; capital `Object` maps to `GenericObjectTypeAnnotation`. The spec file has an oxlint file-level disable of `no-wrapper-object-types` with the rationale inline.
 - **Don't manually construct `node_modules` paths** — use yarn workspace resolution and `moduleNameMapper` in jest configs.
 - **Don't commit `lib/` or `src/**/*.js`** build artifacts — they're gitignored.

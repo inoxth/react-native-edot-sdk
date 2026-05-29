@@ -1,5 +1,5 @@
 import { registerEdotNavigationListener } from '../wix-listener';
-import { ActiveViewContext } from '@inox/react-native-edot-shared';
+import { ActiveViewContext } from '@inoxth/react-native-edot-shared';
 import type { WixComponentDidAppearEvent, WixNavigationLike } from '../types';
 
 const mockNativeModule = {
@@ -13,11 +13,11 @@ jest.mock('react-native', () => ({
   },
 }));
 
-jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
+jest.mock('@inoxth/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
 }));
 
-jest.mock('@inox/react-native-edot-shared', () => ({
+jest.mock('@inoxth/react-native-edot-shared', () => ({
   ActiveViewContext: {
     setActiveView: jest.fn(),
     clearActiveView: jest.fn(),
@@ -65,7 +65,7 @@ describe('registerEdotNavigationListener', () => {
       'HomeScreen - view appearing',
       { 'screen.name': 'HomeScreen' },
       null,
-      '@inox/react-native-edot-sdk/navigation',
+      '@inoxth/react-native-edot-sdk/navigation',
     );
     expect(ActiveViewContext.setActiveView).toHaveBeenCalledWith({
       name: 'HomeScreen',
@@ -88,7 +88,7 @@ describe('registerEdotNavigationListener', () => {
       'DemosScreen - view appearing',
       { 'screen.name': 'DemosScreen', 'last.screen.name': 'HomeScreen' },
       null,
-      '@inox/react-native-edot-sdk/navigation',
+      '@inoxth/react-native-edot-sdk/navigation',
     );
   });
 
@@ -104,7 +104,7 @@ describe('registerEdotNavigationListener', () => {
       'Home - view appearing',
       { 'screen.name': 'Home' },
       null,
-      '@inox/react-native-edot-sdk/navigation',
+      '@inoxth/react-native-edot-sdk/navigation',
     );
   });
 

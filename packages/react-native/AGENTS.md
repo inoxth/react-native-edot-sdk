@@ -1,4 +1,4 @@
-# AGENTS.md — @inox/react-native-edot-sdk
+# AGENTS.md — @inoxth/react-native-edot-sdk
 
 ## Overview
 
@@ -15,7 +15,7 @@ src/
 ├── config.ts                   # Config validation (throws on invalid)
 ├── types.ts                    # EdotConfig, EdotUser, platform config types
 ├── defaults.ts                 # EDOT_DEFAULTS for instrumentation toggles
-├── activeViewContext.ts        # Re-export from @inox/react-native-edot-shared
+├── activeViewContext.ts        # Re-export from @inoxth/react-native-edot-shared
 ├── globals.d.ts                # Ambient typings for global / ErrorUtils / requestIdleCallback
 ├── instrumentation/
 │   ├── app-state.ts            # AppState listener — ends screen-lifetime span on background, re-emits on foreground
@@ -49,8 +49,8 @@ react-native.config.js          # Pod / Gradle autolinking hints
 
 This package exposes subpath imports used by sibling packages:
 
-- `@inox/react-native-edot-sdk/nativeModule` — `EdotNativeModule` bridge
-- `@inox/react-native-edot-sdk/active-view-context` — `ActiveViewContext` re-export
+- `@inoxth/react-native-edot-sdk/nativeModule` — `EdotNativeModule` bridge
+- `@inoxth/react-native-edot-sdk/active-view-context` — `ActiveViewContext` re-export
 
 ## Key Patterns
 
@@ -116,15 +116,15 @@ Both `startSpan` and `startClientSpan` accept an optional `instrumentationName: 
 
 | Callsite                                                                 | Scope                                    |
 | ------------------------------------------------------------------------ | ---------------------------------------- |
-| `<EdotNavigationProvider>` (react-navigation + expo-router; unified pkg) | `@inox/react-native-edot-sdk/navigation` |
-| `registerEdotNavigationListener` (Wix; unified pkg)                      | `@inox/react-native-edot-sdk/navigation` |
-| `instrumentation/fetch.ts`                                               | `@inox/react-native-edot-sdk/http`       |
-| `instrumentation/xhr.ts`                                                 | `@inox/react-native-edot-sdk/http`       |
-| iOS `URLSessionInstrumentation` (3rd-party native HTTP, WebViews)        | `@inox/react-native-edot-sdk/http`       |
-| `instrumentation/errors.ts`                                              | `@inox/react-native-edot-sdk/errors`     |
-| `instrumentation/startup.ts`                                             | `@inox/react-native-edot-sdk/startup`    |
+| `<EdotNavigationProvider>` (react-navigation + expo-router; unified pkg) | `@inoxth/react-native-edot-sdk/navigation` |
+| `registerEdotNavigationListener` (Wix; unified pkg)                      | `@inoxth/react-native-edot-sdk/navigation` |
+| `instrumentation/fetch.ts`                                               | `@inoxth/react-native-edot-sdk/http`       |
+| `instrumentation/xhr.ts`                                                 | `@inoxth/react-native-edot-sdk/http`       |
+| iOS `URLSessionInstrumentation` (3rd-party native HTTP, WebViews)        | `@inoxth/react-native-edot-sdk/http`       |
+| `instrumentation/errors.ts`                                              | `@inoxth/react-native-edot-sdk/errors`     |
+| `instrumentation/startup.ts`                                             | `@inoxth/react-native-edot-sdk/startup`    |
 
-All four scopes share the `@inox/react-native-edot-sdk/<class>` shape so a single `service.framework.name : "@inox/react-native-edot-sdk/<class>"` KQL filter cleanly classifies every emitted span — enabling per-class SLO definitions in Elastic APM (HTTP, navigation, startup, errors) without `transaction.name` regex hacks. Native `URLSession` traffic is rebranded under `.../http` via a custom `tracer` passed to `URLSessionInstrumentationConfiguration` (see `installURLSessionInstrumentation` in `EdotReactNative.swift`).
+All four scopes share the `@inoxth/react-native-edot-sdk/<class>` shape so a single `service.framework.name : "@inoxth/react-native-edot-sdk/<class>"` KQL filter cleanly classifies every emitted span — enabling per-class SLO definitions in Elastic APM (HTTP, navigation, startup, errors) without `transaction.name` regex hacks. Native `URLSession` traffic is rebranded under `.../http` via a custom `tracer` passed to `URLSessionInstrumentationConfiguration` (see `installURLSessionInstrumentation` in `EdotReactNative.swift`).
 
 `startSpan` creates `kind=INTERNAL` spans (used by errors, startup, view, action, custom JS-driven spans). `startClientSpan` creates `kind=CLIENT` spans and is used by `fetch.ts` / `xhr.ts` so HTTP spans match what apm-agent-ios's native `URLSessionInstrumentation` emits.
 
@@ -192,7 +192,7 @@ iOS still has a per-span inline merge in `makeSpan` (`:530-539`) for redundancy.
 
 ### Native UIKit View-Controller Instrumentation
 
-`enableViewControllerInstrumentation` defaults to **false** in the RN SDK (overrides apm-agent-ios's upstream default of `true`). The unified `@inox/react-native-edot-navigation` package (covering react-navigation, expo-router, and Wix) emits route-named view spans; the native `viewDidAppear:` swizzle would compete with them and — on `react-native-screens` — emits spans named `RNSScreen` (the wrapper VC class) because the VC `title` isn't populated when the swizzle fires. Opt-in via JS config (`enableViewControllerInstrumentation: true`) if you want raw UIVC spans.
+`enableViewControllerInstrumentation` defaults to **false** in the RN SDK (overrides apm-agent-ios's upstream default of `true`). The unified `@inoxth/react-native-edot-navigation` package (covering react-navigation, expo-router, and Wix) emits route-named view spans; the native `viewDidAppear:` swizzle would compete with them and — on `react-native-screens` — emits spans named `RNSScreen` (the wrapper VC class) because the VC `title` isn't populated when the swizzle fires. Opt-in via JS config (`enableViewControllerInstrumentation: true`) if you want raw UIVC spans.
 
 ### Initialization Ordering — Mount Navigation After `initialize()` Resolves
 
@@ -236,9 +236,9 @@ Each example app's `project.pbxproj` is now free of any `XCRemoteSwiftPackageRef
 
 ## Dependencies
 
-- `@inox/react-native-edot-shared` (workspace)
+- `@inoxth/react-native-edot-shared` (workspace)
 - Peer: `react >=18.0.0`, `react-native >=0.75.0` (required for `spm_dependency`)
 
 ## Testing
 
-Jest with `react-native` preset. `moduleNameMapper` resolves `@inox/react-native-edot-shared` to `../shared/src/`.
+Jest with `react-native` preset. `moduleNameMapper` resolves `@inoxth/react-native-edot-shared` to `../shared/src/`.

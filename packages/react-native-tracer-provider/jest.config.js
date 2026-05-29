@@ -6,9 +6,9 @@ module.exports = {
     'node_modules/(?!(react-native|@react-native|@react-native-community|@inox)/)',
   ],
   moduleNameMapper: {
-    '^@inox/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts',
-    '^@inox/react-native-edot-sdk/active-view-context$':
+    '^@inoxth/react-native-edot-shared$': '<rootDir>/../shared/src/index.ts',
+    '^@inoxth/react-native-edot-sdk/active-view-context$':
       '<rootDir>/../react-native/src/activeViewContext',
-    '^@inox/react-native-edot-sdk/nativeModule$': '<rootDir>/../react-native/src/nativeModule',
+    '^@inoxth/react-native-edot-sdk/nativeModule$': '<rootDir>/../react-native/src/nativeModule',
   },
 };

@@ -1,19 +1,19 @@
-# @inox/react-native-edot-tracer-provider
+# @inoxth/react-native-edot-tracer-provider
 
 Manual instrumentation API for the React Native EDOT SDK. Provides an OpenTelemetry-compatible `TracerProvider` and `MeterProvider` for emitting custom spans and metrics from JavaScript that flow through the same native pipeline as auto-instrumentation.
 
-Use this when the auto-instrumentation in [`@inox/react-native-edot-sdk`](../react-native) doesn't cover the signal you need — e.g. business events, custom timings, domain-specific metrics.
+Use this when the auto-instrumentation in [`@inoxth/react-native-edot-sdk`](../react-native) doesn't cover the signal you need — e.g. business events, custom timings, domain-specific metrics.
 
 ## Install
 
 ```bash
-yarn add @inox/react-native-edot-tracer-provider
+yarn add @inoxth/react-native-edot-tracer-provider
 ```
 
 You also need the core SDK initialized first:
 
 ```bash
-yarn add @inox/react-native-edot-sdk
+yarn add @inoxth/react-native-edot-sdk
 ```
 
 See the [SDK README](../react-native) for native setup (iOS pod install, Android Gradle plugin) and `EdotReactNative.initialize(...)`.
@@ -21,7 +21,7 @@ See the [SDK README](../react-native) for native setup (iOS pod install, Android
 ## Custom spans
 
 ```typescript
-import { getTracerProvider, SpanStatusCode } from '@inox/react-native-edot-tracer-provider';
+import { getTracerProvider, SpanStatusCode } from '@inoxth/react-native-edot-tracer-provider';
 
 const tracer = getTracerProvider().getTracer('checkout');
 
@@ -48,7 +48,7 @@ Manual spans created via `tracer-provider` are **not** auto-enriched with `scree
 `withSpanContext` propagates the span as the active context for downstream OTel-aware code:
 
 ```typescript
-import { withSpanContext } from '@inox/react-native-edot-tracer-provider';
+import { withSpanContext } from '@inoxth/react-native-edot-tracer-provider';
 
 await withSpanContext(span, async () => {
   await fetchAccount();
@@ -58,7 +58,7 @@ await withSpanContext(span, async () => {
 ## Custom metrics
 
 ```typescript
-import { getMeterProvider } from '@inox/react-native-edot-tracer-provider';
+import { getMeterProvider } from '@inoxth/react-native-edot-tracer-provider';
 
 const meter = getMeterProvider().getMeter('business');
 
@@ -79,7 +79,7 @@ The MeterProvider exports metrics on a periodic schedule (60s) using the same tr
 
 - React Native >= 0.72.0
 - React >= 18.0.0
-- [`@inox/react-native-edot-sdk`](../react-native) initialized at app startup
+- [`@inoxth/react-native-edot-sdk`](../react-native) initialized at app startup
 
 ## License
 

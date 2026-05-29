@@ -2,7 +2,7 @@ import React from 'react';
 import { InteractionManager, View } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { EdotNavigationProvider } from '../navigation-provider';
-import { ActiveViewContext } from '@inox/react-native-edot-shared';
+import { ActiveViewContext } from '@inoxth/react-native-edot-shared';
 import type { NavigationContainerRefLike, NavigationRoute } from '../types';
 
 const mockNativeModule = {
@@ -10,11 +10,11 @@ const mockNativeModule = {
   endSpan: jest.fn(),
 };
 
-jest.mock('@inox/react-native-edot-sdk/nativeModule', () => ({
+jest.mock('@inoxth/react-native-edot-sdk/nativeModule', () => ({
   EdotNativeModule: mockNativeModule,
 }));
 
-jest.mock('@inox/react-native-edot-shared', () => ({
+jest.mock('@inoxth/react-native-edot-shared', () => ({
   ActiveViewContext: {
     setActiveView: jest.fn(),
     clearActiveView: jest.fn(),
@@ -95,7 +95,7 @@ describe('EdotNavigationProvider', () => {
       'index - view appearing',
       { 'screen.name': 'index' },
       null,
-      '@inox/react-native-edot-sdk/navigation',
+      '@inoxth/react-native-edot-sdk/navigation',
     );
     expect(ActiveViewContext.setActiveView).toHaveBeenCalledWith({
       name: 'index',
@@ -131,7 +131,7 @@ describe('EdotNavigationProvider', () => {
       'index - view appearing',
       { 'screen.name': 'index' },
       null,
-      '@inox/react-native-edot-sdk/navigation',
+      '@inoxth/react-native-edot-sdk/navigation',
     );
   });
 
@@ -155,7 +155,7 @@ describe('EdotNavigationProvider', () => {
       'network - view appearing',
       { 'screen.name': 'network', 'last.screen.name': 'index' },
       null,
-      '@inox/react-native-edot-sdk/navigation',
+      '@inoxth/react-native-edot-sdk/navigation',
     );
   });
 
@@ -180,7 +180,7 @@ describe('EdotNavigationProvider', () => {
       'UserProfile/:id - view appearing',
       { 'screen.name': 'UserProfile/:id' },
       null,
-      '@inox/react-native-edot-sdk/navigation',
+      '@inoxth/react-native-edot-sdk/navigation',
     );
   });
 

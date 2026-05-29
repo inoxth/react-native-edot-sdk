@@ -4,8 +4,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Alert, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useEdot } from '@inox/react-native-edot-sdk';
-import { EdotNavigationProvider } from '@inox/react-native-edot-navigation';
+import { useEdot } from '@inoxth/react-native-edot-sdk';
+import { EdotNavigationProvider } from '@inoxth/react-native-edot-navigation';
 import {
   EDOT_SERVER_URL,
   EDOT_SERVICE_NAME_IOS,

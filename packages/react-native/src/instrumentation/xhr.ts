@@ -99,7 +99,7 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         spanName,
         spanAttributes,
         null,
-        '@inox/react-native-edot-sdk/http',
+        '@inoxth/react-native-edot-sdk/http',
       );
       state.spanId = nativeSpanId;
       trackSpan(nativeSpanId);

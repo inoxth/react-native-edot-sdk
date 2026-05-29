@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Track screen transitions as OpenTelemetry spans for each supported navigation library, with attribute names aligned to the Elastic mobile spec / opentelemetry-android upstream conventions. All supported navigators ship in a single unified package `@inox/react-native-edot-navigation`.
+Track screen transitions as OpenTelemetry spans for each supported navigation library, with attribute names aligned to the Elastic mobile spec / opentelemetry-android upstream conventions. All supported navigators ship in a single unified package `@inoxth/react-native-edot-navigation`.
 
 ## Requirements
 
@@ -20,15 +20,15 @@ The SDK SHALL create one screen-lifetime span per screen visit. The span SHALL b
 - **AND** SHALL include `screen.name = "Details"` and `last.screen.name = "Home"`
 
 ### Requirement: Tracer scope
-The SDK SHALL pass `instrumentationName = "@inox/react-native-edot-navigation"` to `EdotNativeModule.startSpan(...)` for every navigation span so all navigation spans carry the same `instrumentation.scope.name` regardless of which navigator emitted them. The unified package owns one OpenTelemetry scope.
+The SDK SHALL pass `instrumentationName = "@inoxth/react-native-edot-navigation"` to `EdotNativeModule.startSpan(...)` for every navigation span so all navigation spans carry the same `instrumentation.scope.name` regardless of which navigator emitted them. The unified package owns one OpenTelemetry scope.
 
 #### Scenario: Component span scope
 - **WHEN** `<EdotNavigationProvider>` emits a screen-lifetime span
-- **THEN** the span SHALL carry `instrumentation.scope.name = "@inox/react-native-edot-navigation"`
+- **THEN** the span SHALL carry `instrumentation.scope.name = "@inoxth/react-native-edot-navigation"`
 
 #### Scenario: Wix listener span scope
 - **WHEN** `registerEdotNavigationListener` emits a screen-lifetime span
-- **THEN** the span SHALL carry `instrumentation.scope.name = "@inox/react-native-edot-navigation"`
+- **THEN** the span SHALL carry `instrumentation.scope.name = "@inoxth/react-native-edot-navigation"`
 
 ### Requirement: Foreground re-emit
 The SDK SHALL register a foreground re-emitter via `ActiveViewContext.registerForegroundReEmitter(...)` so the SDK's app-state listener can re-emit the current screen on foreground. The re-emit SHALL be treated as a fresh visit, with `last.screen.name` omitted.
