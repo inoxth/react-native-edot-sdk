@@ -1,5 +1,11 @@
 # @inoxth/react-native-edot-shared
 
+## 0.1.1
+
+### Patch Changes
+
+- chore: republish under @inoxth scope after 0.1.0 unpublish
+
 ## 0.1.0
 
 ### Minor Changes

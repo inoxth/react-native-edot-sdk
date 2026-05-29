@@ -1,5 +1,13 @@
 # @inoxth/react-native-edot-sdk
 
+## 0.1.1
+
+### Patch Changes
+
+- chore: republish under @inoxth scope after 0.1.0 unpublish
+- Updated dependencies
+  - @inoxth/react-native-edot-shared@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
