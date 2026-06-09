@@ -23,3 +23,17 @@ yarn build              # bob build for all @inoxth/* packages
 ## Repo-Enforced Rules
 
 `.claude/hooks/` blocks `eslint`/`prettier`, `rm -rf`/`rm -r` (use `trash`), `git push`, `git -C`, and chained `git add && git commit`. Additional TS rules in `.claude/rules/typescript.md` (Zod imports from `zod/v4`, explicit return types on exports, `unknown` only at system boundaries with immediate `.parse()`).
+
+## Agent skills
+
+### Issue tracker
+
+Issues/PRDs are tracked in **Linear** — project "React Native EDOT SDK" (team DELI Dev Tasks), via the connected Linear MCP tools. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five triage roles → Linear labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`) + the **Canceled** state for `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
