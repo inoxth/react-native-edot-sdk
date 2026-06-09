@@ -22,9 +22,6 @@ Guide for working on the React Native EDOT SDK monorepo. For a product/architect
 │   ├── react-native-tracer-provider/ # Manual OTel tracing/metrics API
 │   └── cli/                          # Source-map upload CLI
 ├── example/               # Four demo apps (basic, react-navigation, expo-router, wix-navigation)
-├── openspec/              # Living capability specs + change tracking
-│   ├── specs/                        # Main spec surface
-│   └── changes/                      # In-flight and archived change proposals
 ├── docs/                  # High-level docs (ARCHITECTURE.md, ...)
 └── .claude/               # Claude Code rules, skills, and settings
 ```
@@ -145,16 +142,9 @@ yarn start               # Metro dev server
 yarn ios                 # or: yarn android
 ```
 
-## OpenSpec Change Workflow
+## Change Workflow
 
-Capability specs live in `openspec/specs/`. Non-trivial changes go through the OpenSpec proposal → design → tasks → implementation → archive cycle under `openspec/changes/`. Use the Claude Code skills:
-
-- `/opsx:propose` — create a new change with all artifacts.
-- `/opsx:apply` — implement tasks from an open change.
-- `/opsx:verify` — verify implementation matches artifacts before archiving.
-- `/opsx:archive` — move a completed change to `openspec/changes/archive/`.
-
-For trivial fixes (typos, single-line bug fixes) skip OpenSpec and commit directly.
+Open a PR with a clear description of the change and its motivation. Add a changeset (`yarn changeset`) for any user-facing change so versioning and release notes stay accurate. Trivial fixes (typos, one-line bug fixes) don't need a changeset.
 
 ## Pre-commit Verification
 

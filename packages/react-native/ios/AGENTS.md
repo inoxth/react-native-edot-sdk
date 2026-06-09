@@ -98,7 +98,7 @@ Registering the interceptor at both call sites is load-bearing: when the host ap
 
 JS-controlled spans (fetch/XHR, errors, interactions, manual tracer-provider) carry `screen.name` and `screen.id` via the JS-side `ActiveViewContext` enrichment. Spans started purely from native iOS code — apm-agent-ios's `ApplicationLifecycleInstrumentation` events, `AppMetrics` (responsiveness/hangtime/exits), `CrashReporting`, and any third-party iOS SDK that calls `URLSession` directly — bypass this and **do not** carry `screen.name`.
 
-This is a deliberate gap (design D7 in `openspec/changes/archive/.../align-navigation-with-elastic-mobile-spec/design.md`). opentelemetry-android achieves universal `screen.name` enrichment via `ScreenAttributesSpanProcessor.onStart()` registered globally. The iOS equivalent would require:
+This is a deliberate design gap. opentelemetry-android achieves universal `screen.name` enrichment via `ScreenAttributesSpanProcessor.onStart()` registered globally. The iOS equivalent would require:
 
 1. A new native method `setNativeActiveView({ name, spanId })` plumbed from JS `ActiveViewContext.setActiveView`.
 2. A new `EdotScreenAttributesSpanProcessor` registered alongside `ElasticSpanProcessor` on the global tracer provider.
