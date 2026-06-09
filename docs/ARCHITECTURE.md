@@ -1,6 +1,6 @@
 # Architecture
 
-High-level overview of the React Native EDOT SDK. For user-facing setup see [README.md](../README.md); for contributor workflow see [CONTRIBUTING.md](../CONTRIBUTING.md); for capability-level specs see [openspec/specs/](../openspec/specs/); for package-level detail see each `packages/*/AGENTS.md`.
+High-level overview of the React Native EDOT SDK. For user-facing setup see [README.md](../README.md); for contributor workflow see [CONTRIBUTING.md](../CONTRIBUTING.md); for package-level detail see each `packages/*/AGENTS.md`.
 
 ## Purpose
 
@@ -138,7 +138,6 @@ The EDOT Gradle plugin (`co.elastic.otel.android.agent` v1.5.0) must be applied 
 | Public API exports | [`packages/react-native/src/index.ts`](../packages/react-native/src/index.ts) |
 | Config shape | [`packages/react-native/src/types.ts`](../packages/react-native/src/types.ts), `defaults.ts`, `config.ts` |
 | Native method signatures | [`packages/react-native/src/NativeEdotReactNative.ts`](../packages/react-native/src/NativeEdotReactNative.ts) |
-| Per-capability specs | [`openspec/specs/`](../openspec/specs/) (fetch instrumentation, error tracking, startup tracing, etc.) |
 | Per-package architecture | `packages/*/AGENTS.md` |
 | iOS load-bearing rules and upstream divergences | [`packages/react-native/ios/AGENTS.md`](../packages/react-native/ios/AGENTS.md) |
 | Per-example integration notes | [`example/AGENTS.md`](../example/AGENTS.md) |

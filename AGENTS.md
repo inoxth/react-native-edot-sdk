@@ -29,7 +29,6 @@ packages/
 ├── react-native-tracer-provider/  # @inoxth/react-native-edot-tracer-provider
 └── cli/                           # @inoxth/react-native-edot-cli
 example/                           # 4 demo apps (see example/AGENTS.md)
-openspec/                          # OpenSpec specs and change tracking
 ```
 
 ### Packages
@@ -119,7 +118,6 @@ React render errors are captured separately by the opt-in `EdotErrorBoundary` co
 | Add new instrumentation | `packages/react-native/src/instrumentation/` — follow fetch.ts pattern |
 | Add support for a new navigator | Build on `createNavigationLifecycle` in `packages/react-native-navigation/src/navigation-lifecycle.ts` — same surface as the existing component / wix listener |
 | Shared cross-package types | `packages/shared/src/` |
-| Specs / requirements | `openspec/specs/` |
 
 ## Dependency Graph
 
@@ -159,9 +157,6 @@ Four example apps under `example/`, each a yarn workspace member:
 - Metro configs add monorepo root as watch folder + extraNodeModules for `@inoxth/*` packages.
 - RN versions vary by navigation library compatibility: basic + react-navigation use RN 0.85.1, expo-router + wix-navigation use RN 0.83.4. Min iOS 16.0, min Android SDK 24, compile/target SDK 36.
 - Each app exposes both `ios`/`android` (New Arch, default) and `ios:old-arch`/`android:old-arch` scripts so contributors validate both architectures from the same workspace before shipping changes that touch the native modules.
-
-### OpenSpec Workflow
-Changes tracked in `openspec/changes/` with proposal -> design -> specs -> tasks artifacts. Archived after implementation to `openspec/changes/archive/`. Main specs live in `openspec/specs/`. Use `/opsx:propose`, `/opsx:apply`, `/opsx:archive` skills.
 
 ### Repo-Enforced Hooks
 `.claude/hooks/` blocks: `eslint`/`prettier` invocations (oxlint/oxfmt only), `rm -rf`/`rm -r` (use `trash`), `git push` (developer pushes), `git -C`, and chained `git add && git commit`. `.claude/rules/typescript.md` adds: explicit return types on exports, `unknown` only at system boundaries with immediate Zod `.parse()`, Zod imports must be `from "zod/v4"`.
