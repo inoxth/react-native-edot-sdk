@@ -222,7 +222,6 @@ Both are wrapped in a redacted-string container immediately on receipt — `JSON
 | Option           | Type               | Description                                                                                                                                                                                                              |
 | ---------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `exportProtocol` | `'http' \| 'grpc'` | Defaults to `'http'` on both platforms. The SDK overrides upstream defaults (apm-agent-ios → gRPC, apm-agent-android → HTTP) so the same omitted-config produces the same transport everywhere. Set explicitly for gRPC. |
-| `managementUrl`  | `string`           | Override the central-config polling endpoint without affecting OTLP exports. Falls back to `serverUrl`. Wired on both platforms.                                                                                         |
 
 ### Native metrics (cross-platform)
 
@@ -257,9 +256,7 @@ Pass these under `ios: { … }` in the config:
 | `ios.enableURLSessionInstrumentation`     | `boolean`                                 | Enable native `URLSession` HTTP spans. Off by default — JS-side fetch/XHR instrumentation is the canonical path.        |
 | `ios.enableViewControllerInstrumentation` | `boolean`                                 | Enable `UIViewController` lifecycle spans. Off by default — JS navigation plugin is the canonical path.                 |
 | `ios.enableLifecycleEvents`               | `boolean`                                 | Enable foreground/background/inactive/terminate lifecycle events.                                                       |
-| `ios.useOpAMP`                            | `boolean`                                 | Use OpAMP transport for central config. `apm-agent-android` v1.5.0 has no Builder toggle, so this is iOS-only.          |
 | `ios.persistencePreset`                   | `'default' \| 'lowUsage' \| 'highVolume'` | iOS on-disk persistence buffer tuning. Android uses `android.diskBufferingEnabled` instead.                             |
-| `ios.remoteManagement`                    | `boolean`                                 | Disable central-config polling entirely. `apm-agent-android` has no public API to disable polling, so this is iOS-only. |
 
 ### Android-only
 

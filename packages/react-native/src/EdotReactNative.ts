@@ -57,7 +57,6 @@ function mergeConfig(config: EdotConfig): InternalConfig {
     ...(config.apiKey ? { apiKey: redactedString(config.apiKey) } : {}),
     exportProtocol: config.exportProtocol ?? 'http',
     ...(config.disableAgent !== undefined ? { disableAgent: config.disableAgent } : {}),
-    ...(config.managementUrl !== undefined ? { managementUrl: config.managementUrl } : {}),
     ...(config.enableAppMetricInstrumentation !== undefined
       ? { enableAppMetricInstrumentation: config.enableAppMetricInstrumentation }
       : {}),

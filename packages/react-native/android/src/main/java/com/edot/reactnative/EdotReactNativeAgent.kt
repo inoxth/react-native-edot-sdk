@@ -36,7 +36,6 @@ object EdotReactNativeAgent {
         sessionSamplingRate: Double? = null,
         exportProtocol: String? = null,
         diskBufferingEnabled: Boolean? = null,
-        managementUrl: String? = null,
     ) {
         require(serverUrl.isNotBlank()) { "[EDOT] serverUrl must not be blank" }
         requireResourceIdentity("serviceName", serviceName)
@@ -118,7 +117,6 @@ object EdotReactNativeAgent {
         serviceName: String?,
         serviceVersion: String?,
         deploymentEnvironment: String?,
-        managementUrl: String? = null,
         spanExporterFilter: Interceptor<SpanExporter>? = null,
         logExporterFilter: Interceptor<LogRecordExporter>? = null,
         enableAppMetrics: Boolean = true,

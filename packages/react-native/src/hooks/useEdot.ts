@@ -17,7 +17,6 @@ const NATIVE_RELEVANT_KEYS = [
   'exportProtocol',
   'sessionSamplingRate',
   'trackingConsent',
-  'managementUrl',
   'disableAgent',
   'enableAppMetricInstrumentation',
   'enableSystemMetrics',
