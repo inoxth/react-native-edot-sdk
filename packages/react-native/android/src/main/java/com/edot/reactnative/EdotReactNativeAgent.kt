@@ -70,7 +70,6 @@ object EdotReactNativeAgent {
                 if (it) DiskBufferingConfiguration.enabled() else DiskBufferingConfiguration.disabled()
             )
         }
-        attachSpanAttributesInterceptor(builder)
 
         val builtAgent = builder.build()
         agent = builtAgent
@@ -99,14 +98,6 @@ object EdotReactNativeAgent {
         require(rate in 0.0..1.0) {
             "[EDOT] sessionSamplingRate must be between 0.0 and 1.0 (got: $rate)"
         }
-    }
-
-    private fun attachSpanAttributesInterceptor(builder: ElasticApmAgent.Builder) {
-        builder.addSpanAttributesInterceptor(
-            Interceptor<Attributes> { existing ->
-                EdotReactNativeModuleImpl.mergeUserSessionGlobalAttributes(existing)
-            }
-        )
     }
 
     private fun installAppMetrics(application: Application, openTelemetry: OpenTelemetry) {
@@ -157,10 +148,6 @@ object EdotReactNativeAgent {
         serviceName?.takeIf { it.isNotBlank() }?.let { builder.setServiceName(it) }
         serviceVersion?.takeIf { it.isNotBlank() }?.let { builder.setServiceVersion(it) }
         deploymentEnvironment?.takeIf { it.isNotBlank() }?.let { builder.setDeploymentEnvironment(it) }
-        attachSpanAttributesInterceptor(builder)
-        // User-supplied redactors are registered AFTER the user/session/global
-        // interceptor so consumers can drop or mask values we just injected
-        // (e.g. user.email). Mirrors iOS ordering in EdotReactNative.swift.
         spanAttributeRedactor?.let { builder.addSpanAttributesInterceptor(it) }
         logAttributeRedactor?.let { builder.addLogRecordAttributesInterceptor(it) }
         spanExporterFilter?.let { builder.addSpanExporterInterceptor(it) }

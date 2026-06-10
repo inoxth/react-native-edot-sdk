@@ -9,11 +9,6 @@ RCT_EXTERN_METHOD(initialize:(NSDictionary *)config
 RCT_EXTERN_METHOD(getCurrentSessionId:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(setUser:(NSDictionary *)userInfo)
-RCT_EXTERN_METHOD(clearUser)
-RCT_EXTERN_METHOD(setSessionAttribute:(NSString *)key value:(NSString *)value)
-RCT_EXTERN_METHOD(setGlobalAttribute:(NSString *)key value:(NSString *)value)
-RCT_EXTERN_METHOD(removeGlobalAttribute:(NSString *)key)
 RCT_EXTERN_METHOD(reportJsException:(NSDictionary *)errorInfo)
 
 RCT_EXTERN__BLOCKING_SYNCHRONOUS_METHOD(startSpan:(NSString *)name

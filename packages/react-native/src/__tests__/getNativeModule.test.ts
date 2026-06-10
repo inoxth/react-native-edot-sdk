@@ -3,11 +3,6 @@ import { getNativeModule, resetNativeModuleCacheForTesting } from '@inoxth/react
 const mockNativeModule = {
   initialize: jest.fn(),
   getCurrentSessionId: jest.fn(),
-  setUser: jest.fn(),
-  clearUser: jest.fn(),
-  setSessionAttribute: jest.fn(),
-  setGlobalAttribute: jest.fn(),
-  removeGlobalAttribute: jest.fn(),
   reportJsException: jest.fn(),
   startSpan: jest.fn().mockReturnValue('span-1'),
   endSpan: jest.fn(),

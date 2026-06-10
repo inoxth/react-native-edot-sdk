@@ -20,21 +20,6 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
     fun getCurrentSessionId(promise: Promise) = impl.getCurrentSessionId(promise)
 
     @ReactMethod
-    fun setUser(userInfo: ReadableMap) = impl.setUser(userInfo)
-
-    @ReactMethod
-    fun clearUser() = impl.clearUser()
-
-    @ReactMethod
-    fun setSessionAttribute(key: String, value: String) = impl.setSessionAttribute(key, value)
-
-    @ReactMethod
-    fun setGlobalAttribute(key: String, value: String) = impl.setGlobalAttribute(key, value)
-
-    @ReactMethod
-    fun removeGlobalAttribute(key: String) = impl.removeGlobalAttribute(key)
-
-    @ReactMethod
     fun reportJsException(errorInfo: ReadableMap) = impl.reportJsException(errorInfo)
 
     @ReactMethod(isBlockingSynchronousMethod = true)

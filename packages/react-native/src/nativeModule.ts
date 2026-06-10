@@ -15,11 +15,6 @@ function createNoOpModule(): Spec {
   const target: Spec = {
     initialize: () => Promise.resolve(),
     getCurrentSessionId: () => Promise.resolve(''),
-    setUser: () => undefined,
-    clearUser: () => undefined,
-    setSessionAttribute: () => undefined,
-    setGlobalAttribute: () => undefined,
-    removeGlobalAttribute: () => undefined,
     reportJsException: () => undefined,
     startSpan: () => '',
     startClientSpan: () => '',

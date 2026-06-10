@@ -16,18 +16,6 @@ class EdotReactNativeModule(reactContext: ReactApplicationContext) :
 
     override fun getCurrentSessionId(promise: Promise) = impl.getCurrentSessionId(promise)
 
-    override fun setUser(userInfo: ReadableMap) = impl.setUser(userInfo)
-
-    override fun clearUser() = impl.clearUser()
-
-    override fun setSessionAttribute(key: String, value: String) =
-        impl.setSessionAttribute(key, value)
-
-    override fun setGlobalAttribute(key: String, value: String) =
-        impl.setGlobalAttribute(key, value)
-
-    override fun removeGlobalAttribute(key: String) = impl.removeGlobalAttribute(key)
-
     override fun reportJsException(errorInfo: ReadableMap) = impl.reportJsException(errorInfo)
 
     override fun startSpan(

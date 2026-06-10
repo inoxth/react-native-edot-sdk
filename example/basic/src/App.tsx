@@ -18,7 +18,6 @@ import { MetricsSection } from './sections/MetricsSection';
 import { NetworkSection } from './sections/NetworkSection';
 import { StatusSection } from './sections/StatusSection';
 import { TracingSection } from './sections/TracingSection';
-import { UserSection } from './sections/UserSection';
 import { styles } from './styles';
 
 export function App(): React.JSX.Element {
@@ -107,7 +106,6 @@ function InitializedApp(): React.JSX.Element {
           </Text>
 
           <StatusSection status={statusText} sessionId={sessionId} />
-          <UserSection addLog={addLog} />
           <TracingSection addLog={addLog} />
           <MetricsSection addLog={addLog} />
           <LogsSection addLog={addLog} />
