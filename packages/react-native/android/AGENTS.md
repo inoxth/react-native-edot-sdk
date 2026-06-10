@@ -15,7 +15,7 @@ Android half of `@inoxth/react-native-edot-sdk`. Kotlin module that bridges JS �
 | `src/main/java/.../EdotReactNativePackage.kt` | `BaseReactPackage`. `getReactModuleInfoProvider()` feeds `ReactModuleInfo` with `isTurboModule = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED` so the same package class works on both architectures. |
 | `src/main/java/.../EdotAppMetrics.kt` | Emits `application.launch.time` histogram (unit `s`, scope `ApplicationMetrics`). Singleton via `install(application, openTelemetry)`. Registers `ActivityLifecycleCallbacks` + posts a `Choreographer` frame callback; `AtomicBoolean recorded` guarantees one sample per process. |
 | `src/main/java/.../EdotSystemMetrics.kt` | Observable gauges `system.cpu.usage` (double, `state=app`) and `system.memory.usage` (long, `state=app`). Scopes `CPU Sampler` / `Memory Sampler`, version `1.0.0` (matches iOS). |
-| `src/main/java/.../EdotConfigCompilers.kt` | Ports iOS `compileAttributeRedactor` / `compileSpanNamePredicates` / `compileLogPredicates`. Builds typed `Interceptor<Attributes>` / `Interceptor<SpanExporter>` / `Interceptor<LogRecordExporter>` for the agent builder. Regex flag mapping: `i`→`CASE_INSENSITIVE`, `m`→`MULTILINE`, `s`→`DOTALL`. |
+| `src/main/java/.../EdotConfigCompilers.kt` | Ports iOS `compileSpanNamePredicates` / `compileLogPredicates`. Builds typed `Interceptor<SpanExporter>` / `Interceptor<LogRecordExporter>` exporter filters for the agent builder. Regex flag mapping: `i`→`CASE_INSENSITIVE`, `m`→`MULTILINE`, `s`→`DOTALL`. |
 | `src/newarch/java/.../EdotReactNativeModule.kt` | Extends codegen `NativeEdotReactNativeSpec`. All methods delegate to `EdotReactNativeModuleImpl`. |
 | `src/oldarch/java/.../EdotReactNativeModule.kt` | Extends `ReactContextBaseJavaModule`. Same method set with `@ReactMethod`. `startSpan`, `startClientSpan`, `getTraceparent` declare `isBlockingSynchronousMethod = true`. |
 | `build.gradle.kts` | `compileSdk 36`, `minSdk 24`, Java/JVM 17. Reads `newArchEnabled` Gradle property to select `src/newarch/java` vs `src/oldarch/java`. Generates `IS_NEW_ARCHITECTURE_ENABLED` `BuildConfig` field. |
@@ -29,11 +29,11 @@ Android half of `@inoxth/react-native-edot-sdk`. Kotlin module that bridges JS �
 ### Two agent-start paths
 
 - **`EdotReactNativeAgent.preInitialize(...)`** — called from `MainApplication` before the JS bridge loads. Validates identity (`serviceName`, `serviceVersion`, `deploymentEnvironment` non-blank, no `,` or `=`), `secretToken`/`apiKey` mutex, `sessionSamplingRate` ∈ [0, 1]. Idempotent via `preInitialized.compareAndSet(false, true)`. Builds the agent, then installs `EdotAppMetrics` and `EdotSystemMetrics`.
-- **`EdotReactNativeAgent.buildFromJsConfig(...)`** — called from `EdotReactNativeModuleImpl.initialize(...)` when not pre-initialized. Accepts the full JS surface including span/log redactors and exporter filters. Skipped entirely if `config.disableAgent == true`.
+- **`EdotReactNativeAgent.buildFromJsConfig(...)`** — called from `EdotReactNativeModuleImpl.initialize(...)` when not pre-initialized. Accepts the full JS surface including span/log exporter filters. Skipped entirely if `config.disableAgent == true`.
 
 ### Interceptor registration order
 
-Only `buildFromJsConfig` registers interceptors, in order: `spanAttributeRedactor`, `logAttributeRedactor`, `spanExporterFilter`, `logExporterFilter`. `preInitialize` takes no redactor/filter surface and registers none.
+Only `buildFromJsConfig` registers interceptors, in order: `spanExporterFilter`, `logExporterFilter`. `preInitialize` takes no filter surface and registers none.
 
 ### Post-pre-init JS field drop warning
 

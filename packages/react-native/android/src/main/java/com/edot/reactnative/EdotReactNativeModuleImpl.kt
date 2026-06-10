@@ -96,8 +96,6 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
                 debugLog("disableAgent=true; skipping native agent startup")
             } else if (!EdotReactNativeAgent.isPreInitialized) {
                 val application = reactContext.applicationContext as Application
-                val redactions = config.takeIf { it.hasKey("attributeRedactions") }
-                    ?.getMap("attributeRedactions")
                 EdotReactNativeAgent.buildFromJsConfig(
                     application = application,
                     serverUrl = serverUrl,
@@ -110,12 +108,6 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
                     serviceVersion = config.getStringSafe("serviceVersion"),
                     deploymentEnvironment = config.getStringSafe("deploymentEnvironment"),
                     managementUrl = config.getStringSafe("managementUrl"),
-                    spanAttributeRedactor = EdotConfigCompilers.compileAttributeRedactor(
-                        redactions?.takeIf { it.hasKey("spans") }?.getMap("spans")
-                    ),
-                    logAttributeRedactor = EdotConfigCompilers.compileAttributeRedactor(
-                        redactions?.takeIf { it.hasKey("logs") }?.getMap("logs")
-                    ),
                     spanExporterFilter = EdotConfigCompilers.makeSpanFilteringExporterInterceptor(
                         EdotConfigCompilers.compileSpanNamePredicates(config, "ignoreSpanNames")
                     ),

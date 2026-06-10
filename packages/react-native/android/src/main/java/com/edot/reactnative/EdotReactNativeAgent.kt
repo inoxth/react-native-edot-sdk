@@ -7,7 +7,6 @@ import co.elastic.otel.android.exporters.configuration.ExportProtocol
 import co.elastic.otel.android.features.diskbuffering.DiskBufferingConfiguration
 import co.elastic.otel.android.interceptor.Interceptor
 import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.sdk.logs.export.LogRecordExporter
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import java.util.concurrent.atomic.AtomicBoolean
@@ -120,8 +119,6 @@ object EdotReactNativeAgent {
         serviceVersion: String?,
         deploymentEnvironment: String?,
         managementUrl: String? = null,
-        spanAttributeRedactor: Interceptor<Attributes>? = null,
-        logAttributeRedactor: Interceptor<Attributes>? = null,
         spanExporterFilter: Interceptor<SpanExporter>? = null,
         logExporterFilter: Interceptor<LogRecordExporter>? = null,
         enableAppMetrics: Boolean = true,
@@ -148,8 +145,6 @@ object EdotReactNativeAgent {
         serviceName?.takeIf { it.isNotBlank() }?.let { builder.setServiceName(it) }
         serviceVersion?.takeIf { it.isNotBlank() }?.let { builder.setServiceVersion(it) }
         deploymentEnvironment?.takeIf { it.isNotBlank() }?.let { builder.setDeploymentEnvironment(it) }
-        spanAttributeRedactor?.let { builder.addSpanAttributesInterceptor(it) }
-        logAttributeRedactor?.let { builder.addLogRecordAttributesInterceptor(it) }
         spanExporterFilter?.let { builder.addSpanExporterInterceptor(it) }
         logExporterFilter?.let { builder.addLogRecordExporterInterceptor(it) }
 
