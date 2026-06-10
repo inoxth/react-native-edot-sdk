@@ -41,6 +41,6 @@ android {
 
 dependencies {
     implementation("com.facebook.react:react-android")
-    implementation("io.opentelemetry:opentelemetry-api:1.60.1")
-    implementation("co.elastic.otel.android:agent-sdk:1.5.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.51.0")
+    implementation("co.elastic.otel.android:agent-sdk:1.1.0")
 }

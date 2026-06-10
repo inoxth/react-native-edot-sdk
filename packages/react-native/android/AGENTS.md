@@ -2,7 +2,7 @@
 
 ## Overview
 
-Android half of `@inoxth/react-native-edot-sdk`. Kotlin module that bridges JS → `apm-agent-android` (EDOT Gradle plugin `co.elastic.otel.android.agent` v1.5.0, runtime `co.elastic.otel.android:agent-sdk:1.5.0`) and `io.opentelemetry:opentelemetry-api:1.60.1`. Supports Old Arch (`ReactContextBaseJavaModule` + `@ReactMethod`) and New Arch (codegen-generated `NativeEdotReactNativeSpec`) from a single codebase via arch-conditional source sets.
+Android half of `@inoxth/react-native-edot-sdk`. Kotlin module that bridges JS → `apm-agent-android` (EDOT Gradle plugin `co.elastic.otel.android.agent` v1.1.0, runtime `co.elastic.otel.android:agent-sdk:1.1.0`) and `io.opentelemetry:opentelemetry-api:1.51.0`. Pinned to the 1.1.x line so the module compiles under stock RN 0.81 (Kotlin 2.1.20) — `agent-sdk` ≥ 1.2.0 requires Kotlin ≥ 2.2 (see DEV-420). Supports Old Arch (`ReactContextBaseJavaModule` + `@ReactMethod`) and New Arch (codegen-generated `NativeEdotReactNativeSpec`) from a single codebase via arch-conditional source sets.
 
 `apm-agent-android` v1.5.0 does **not** auto-emit `application.launch.time`, `system.cpu.usage`, or `system.memory.usage` — all three are filled in by this module (`EdotAppMetrics.kt`, `EdotSystemMetrics.kt`). Without those classes the metrics never reach APM Server. `getCurrentSessionId()` always returns `""` — `ElasticApmAgent` 1.5.0 exposes `SessionManager` only as an internal `$agent_sdk` API.
 
@@ -71,9 +71,18 @@ These rules have an observable failure if removed.
 
 ## Distribution
 
-`build.gradle.kts`: `compileSdk 36`, `minSdk 24`, Java/JVM 17. Dependencies: `com.facebook.react:react-android`, `io.opentelemetry:opentelemetry-api:1.60.1`, `co.elastic.otel.android:agent-sdk:1.5.0`.
+`build.gradle.kts`: `compileSdk 36`, `minSdk 24`, Java/JVM 17. Dependencies: `com.facebook.react:react-android`, `io.opentelemetry:opentelemetry-api:1.51.0`, `co.elastic.otel.android:agent-sdk:1.1.0`.
 
-Example apps apply the EDOT Gradle plugin `co.elastic.otel.android.agent` v1.5.0 for build-time code-generation and instrumentation hooks. Requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36. Don't add `co.elastic.otel.android.instrumentation.okhttp` — see Anti-Patterns.
+Example apps apply the EDOT Gradle plugin `co.elastic.otel.android.agent` v1.1.0 for build-time code-generation and instrumentation hooks. **The plugin version must match the runtime `agent-sdk` (1.1.0)** — a newer plugin transitively pulls a newer `agent-sdk` (≥ 1.2.0 requires Kotlin ≥ 2.2, which breaks stock RN 0.81 / Kotlin 2.1.20 with an internal compiler error). Requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36. Don't add `co.elastic.otel.android.instrumentation.okhttp` — see Anti-Patterns.
+
+### `READ_PHONE_STATE` permission
+
+`agent-sdk` 1.1.0 declares `READ_PHONE_STATE` in its manifest, which merges into consumer apps. It's a *dangerous* permission used only for an optional cellular network-subtype attribute, and the agent **runtime-guards** it (`NetworkService.getSubtypeName()` checks `isPermissionGranted` before any telephony read — no crash if ungranted). We intentionally do **not** strip it from this library's manifest — the app owns its merged manifest, and a library-side `tools:node="remove"` is non-idiomatic and can conflict with consumers who legitimately need the permission. Consumers who don't want it remove it in their **own** `AndroidManifest.xml`:
+
+```xml
+<uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove" />
+```
+(requires `xmlns:tools="http://schemas.android.com/tools"` on the `<manifest>` element). Removal is crash-safe — the agent simply skips the cellular network-subtype attribute. Elastic removed this permission upstream in `agent-sdk` 1.3.1 (PR #651).
 
 ## Conventions
 
