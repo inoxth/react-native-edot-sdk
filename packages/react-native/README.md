@@ -224,13 +224,6 @@ Both are wrapped in a redacted-string container immediately on receipt — `JSON
 | `exportProtocol` | `'http' \| 'grpc'` | Defaults to `'http'` on both platforms. The SDK overrides upstream defaults (apm-agent-ios → gRPC, apm-agent-android → HTTP) so the same omitted-config produces the same transport everywhere. Set explicitly for gRPC. |
 | `managementUrl`  | `string`           | Override the central-config polling endpoint without affecting OTLP exports. Falls back to `serverUrl`. Wired on both platforms.                                                                                         |
 
-### Attributes
-
-| Option                          | Type                                          | Description                                                                 |
-| ------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------- |
-| `globalAttributes`              | `Record<string, string \| number \| boolean>` | Attributes attached to every signal.                                        |
-| `userAttributes.includeInSpans` | `'all' \| 'id-only' \| 'none'`                | How user identity propagates onto span attributes. Defaults to `'id-only'`. |
-
 ### Native metrics (cross-platform)
 
 | Option                           | Type      | Default | Description                                                                                                                                                                                  |
@@ -331,27 +324,15 @@ function CheckoutScreen() {
 }
 ```
 
-## User & session APIs
+## Tracking consent
 
 ```typescript
 import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
 
-EdotReactNative.setUser({
-  id: 'user-123',
-  email: 'user@example.com',
-  name: 'Alice',
-});
-EdotReactNative.clearUser();
-
-EdotReactNative.setSessionAttribute('subscription', 'premium');
-
-EdotReactNative.setGlobalAttribute('tenant_id', 'acme-corp');
-EdotReactNative.removeGlobalAttribute('tenant_id');
-
 EdotReactNative.setTrackingConsent('granted');
 ```
 
-`setGlobalAttribute` accepts `string | number | boolean` and is forwarded as a string on the native side.
+`setTrackingConsent` gates JS-side emission at runtime — `'granted'` | `'not_granted'` | `'pending'`. To suppress the native agent entirely, set `disableAgent: true` in the init config instead.
 
 ## Structured logs
 

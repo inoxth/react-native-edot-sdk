@@ -1,11 +1,6 @@
 export interface EdotNativeModule {
   initialize(config: Record<string, unknown>): Promise<void>;
   getCurrentSessionId(): Promise<string>;
-  setUser(userInfo: Record<string, unknown>): void;
-  clearUser(): void;
-  setSessionAttribute(key: string, value: string): void;
-  setGlobalAttribute(key: string, value: string): void;
-  removeGlobalAttribute(key: string): void;
   reportJsException(errorInfo: Record<string, unknown>): void;
   startSpan(
     name: string,

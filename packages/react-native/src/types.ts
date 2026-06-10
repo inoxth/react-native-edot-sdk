@@ -122,10 +122,6 @@ export interface EdotConfig {
   trackingConsent?: TrackingConsent;
   urlSanitizer?: (url: string) => string;
 
-  globalAttributes?: Record<string, string | number | boolean>;
-
-  userAttributes?: UserAttributesConfig;
-
   graphqlUrls?: (string | RegExp)[];
 
   debug?: boolean;
@@ -238,15 +234,3 @@ export interface EdotAndroidConfig {
 }
 
 export type TrackingConsent = 'granted' | 'not_granted' | 'pending';
-
-export type UserAttributesSpanScope = 'all' | 'id-only' | 'none';
-
-export interface UserAttributesConfig {
-  includeInSpans?: UserAttributesSpanScope;
-}
-
-export interface EdotUser {
-  id: string;
-  email?: string;
-  name?: string;
-}

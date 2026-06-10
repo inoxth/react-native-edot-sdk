@@ -5,11 +5,6 @@ import { TurboModuleRegistry } from 'react-native';
 export interface Spec extends TurboModule {
   initialize(config: Object): Promise<void>;
   getCurrentSessionId(): Promise<string>;
-  setUser(userInfo: Object): void;
-  clearUser(): void;
-  setSessionAttribute(key: string, value: string): void;
-  setGlobalAttribute(key: string, value: string): void;
-  removeGlobalAttribute(key: string): void;
   reportJsException(errorInfo: Object): void;
   startSpan(
     name: string,

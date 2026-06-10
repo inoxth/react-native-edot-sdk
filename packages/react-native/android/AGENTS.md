@@ -10,7 +10,7 @@ Android half of `@inoxth/react-native-edot-sdk`. Kotlin module that bridges JS �
 
 | File | Role |
 | --- | --- |
-| `src/main/java/.../EdotReactNativeModuleImpl.kt` | Shared bridge logic — all bridge methods (`initialize`, `startSpan`, `startClientSpan`, `endSpan`, `setSpanAttribute*`, `recordSpanException`, `recordMetric`, `emitLog`, `setUser`, `setSessionAttribute`, `setGlobalAttribute`, `reportJsException`, `setTrackingConsent`, `getCurrentSessionId`, `getTraceparent`). Companion holds `isInitialized`, `debugEnabled`, `userAttributesSpanScope`, `trackingConsent`, and the three `ConcurrentHashMap`-backed attribute dicts plus `mergeUserSessionGlobalAttributes`. `activeSpans` is a synchronized `LinkedHashMap` (LRU, evicts at >512, evicted spans auto-ended). |
+| `src/main/java/.../EdotReactNativeModuleImpl.kt` | Shared bridge logic — all bridge methods (`initialize`, `startSpan`, `startClientSpan`, `endSpan`, `setSpanAttribute*`, `recordSpanException`, `recordMetric`, `emitLog`, `reportJsException`, `setTrackingConsent`, `getCurrentSessionId`, `getTraceparent`). Companion holds `isInitialized`, `debugEnabled`, and `trackingConsent`. `activeSpans` is a synchronized `LinkedHashMap` (LRU, evicts at >512, evicted spans auto-ended). |
 | `src/main/java/.../EdotReactNativeAgent.kt` | Agent lifecycle singleton. `preInitialize(...)` for `MainApplication` pre-start. `buildFromJsConfig(...)` for the JS-init path. Holds `agent: ElasticApmAgent?` and exposes `openTelemetry: OpenTelemetry?`. |
 | `src/main/java/.../EdotReactNativePackage.kt` | `BaseReactPackage`. `getReactModuleInfoProvider()` feeds `ReactModuleInfo` with `isTurboModule = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED` so the same package class works on both architectures. |
 | `src/main/java/.../EdotAppMetrics.kt` | Emits `application.launch.time` histogram (unit `s`, scope `ApplicationMetrics`). Singleton via `install(application, openTelemetry)`. Registers `ActivityLifecycleCallbacks` + posts a `Choreographer` frame callback; `AtomicBoolean recorded` guarantees one sample per process. |
@@ -31,9 +31,9 @@ Android half of `@inoxth/react-native-edot-sdk`. Kotlin module that bridges JS �
 - **`EdotReactNativeAgent.preInitialize(...)`** — called from `MainApplication` before the JS bridge loads. Validates identity (`serviceName`, `serviceVersion`, `deploymentEnvironment` non-blank, no `,` or `=`), `secretToken`/`apiKey` mutex, `sessionSamplingRate` ∈ [0, 1]. Idempotent via `preInitialized.compareAndSet(false, true)`. Builds the agent, then installs `EdotAppMetrics` and `EdotSystemMetrics`.
 - **`EdotReactNativeAgent.buildFromJsConfig(...)`** — called from `EdotReactNativeModuleImpl.initialize(...)` when not pre-initialized. Accepts the full JS surface including span/log redactors and exporter filters. Skipped entirely if `config.disableAgent == true`.
 
-### Interceptor registration order (load-bearing)
+### Interceptor registration order
 
-In both `preInitialize` and `buildFromJsConfig`, `attachSpanAttributesInterceptor(builder)` is registered **first** (delegates to `EdotReactNativeModuleImpl.mergeUserSessionGlobalAttributes`). Only `buildFromJsConfig` then registers, in order: `spanAttributeRedactor`, `logAttributeRedactor`, `spanExporterFilter`, `logExporterFilter`. The user/session/global injector must run before user-supplied redactors so consumers can drop or mask values we just injected (e.g. `user.email`). Mirrors iOS ordering in `EdotReactNative.swift`.
+Only `buildFromJsConfig` registers interceptors, in order: `spanAttributeRedactor`, `logAttributeRedactor`, `spanExporterFilter`, `logExporterFilter`. `preInitialize` takes no redactor/filter surface and registers none.
 
 ### Post-pre-init JS field drop warning
 
@@ -59,15 +59,14 @@ When `EdotReactNativeAgent.isPreInitialized` is true, `EdotReactNativeModuleImpl
 
 These rules have an observable failure if removed.
 
-1. **`attachSpanAttributesInterceptor` before user redactors** (`EdotReactNativeAgent.kt:74, 162-169`) — removing or reordering breaks the invariant that consumers can mask `user.email` etc. after injection. Both `preInitialize` and `buildFromJsConfig` must call it before any user-supplied interceptor.
-2. **`AtomicBoolean recorded` in `EdotAppMetrics.scheduleRecord`** (`EdotAppMetrics.kt:69`) — `scheduleRecord()` is invoked twice: once eagerly in `init` (for the JS-init path where the activity is already resumed) and again on `onActivityResumed`. `compareAndSet(false, true)` guarantees exactly one histogram sample per process even when both fire.
-3. **`installed` double-check in `EdotSystemMetrics.install`** (`EdotSystemMetrics.kt:88-93`) — `synchronized(this)` with the null check prevents double-registration of the observable gauges. A duplicate registration would attach a second callback to the same `Meter` and double-count samples.
-4. **`preInitialized.compareAndSet(false, true)` in `preInitialize`** (`EdotReactNativeAgent.kt:49`) — host apps may call `preInitialize` twice (e.g. multiple `Application.onCreate` paths in flavored builds); this guard avoids building a second `ElasticApmAgent`.
-5. **Explicit `setExplicitBucketBoundariesAdvice` for `application.launch.time`** (`EdotAppMetrics.kt:40, 85-88`) — OTel's default histogram boundaries are tuned for ms-scale HTTP durations. Without this advice, a typical 1–4s cold start collapses into bucket `[0, 5]` and APM Server reports the midpoint (2.5s) regardless of the true value. iOS doesn't hit this because `EdotAppMetrics.swift` already supplies bucket boundaries derived from MetricKit.
-6. **`AtomicLong` pair for CPU delta** (`EdotSystemMetrics.kt:44-45, 50-57`) — `lastCpuMs` / `lastWallMs` use `getAndSet` so the gauge callback is thread-safe across SDK metric reader threads. Non-atomic reads would produce incorrect deltas under contention.
-7. **`BuildConfig.IS_NEW_ARCHITECTURE_ENABLED` wired into `ReactModuleInfo.isTurboModule`** (`EdotReactNativePackage.kt:26`, `build.gradle.kts:15`) — a wrong value loads the module under the wrong arch pipeline at runtime.
-8. **`getCurrentSessionId()` resolves `""` (never throws)** (`EdotReactNativeModuleImpl.kt:197-202`) — `ElasticApmAgent` 1.5.0 exposes no public session accessor. JS callers depend on the promise resolving; rejecting would surface as a noisy app-level error for a benign upstream gap.
-9. **`isBlockingSynchronousMethod = true` on `startSpan`, `startClientSpan`, `getTraceparent`** (`src/oldarch/.../EdotReactNativeModule.kt:40, 48, 56`) — these methods return a span ID / traceparent synchronously and JS reads the return value immediately (`fetch.ts` sets `X-Edot-Traceparent` headers before await). Removing the flag makes them async-only under Old Arch and breaks the bridge contract.
+1. **`AtomicBoolean recorded` in `EdotAppMetrics.scheduleRecord`** (`EdotAppMetrics.kt:69`) — `scheduleRecord()` is invoked twice: once eagerly in `init` (for the JS-init path where the activity is already resumed) and again on `onActivityResumed`. `compareAndSet(false, true)` guarantees exactly one histogram sample per process even when both fire.
+2. **`installed` double-check in `EdotSystemMetrics.install`** (`EdotSystemMetrics.kt:88-93`) — `synchronized(this)` with the null check prevents double-registration of the observable gauges. A duplicate registration would attach a second callback to the same `Meter` and double-count samples.
+3. **`preInitialized.compareAndSet(false, true)` in `preInitialize`** (`EdotReactNativeAgent.kt:49`) — host apps may call `preInitialize` twice (e.g. multiple `Application.onCreate` paths in flavored builds); this guard avoids building a second `ElasticApmAgent`.
+4. **Explicit `setExplicitBucketBoundariesAdvice` for `application.launch.time`** (`EdotAppMetrics.kt:40, 85-88`) — OTel's default histogram boundaries are tuned for ms-scale HTTP durations. Without this advice, a typical 1–4s cold start collapses into bucket `[0, 5]` and APM Server reports the midpoint (2.5s) regardless of the true value. iOS doesn't hit this because `EdotAppMetrics.swift` already supplies bucket boundaries derived from MetricKit.
+5. **`AtomicLong` pair for CPU delta** (`EdotSystemMetrics.kt:44-45, 50-57`) — `lastCpuMs` / `lastWallMs` use `getAndSet` so the gauge callback is thread-safe across SDK metric reader threads. Non-atomic reads would produce incorrect deltas under contention.
+6. **`BuildConfig.IS_NEW_ARCHITECTURE_ENABLED` wired into `ReactModuleInfo.isTurboModule`** (`EdotReactNativePackage.kt:26`, `build.gradle.kts:15`) — a wrong value loads the module under the wrong arch pipeline at runtime.
+7. **`getCurrentSessionId()` resolves `""` (never throws)** (`EdotReactNativeModuleImpl.kt:197-202`) — `ElasticApmAgent` 1.5.0 exposes no public session accessor. JS callers depend on the promise resolving; rejecting would surface as a noisy app-level error for a benign upstream gap.
+8. **`isBlockingSynchronousMethod = true` on `startSpan`, `startClientSpan`, `getTraceparent`** (`src/oldarch/.../EdotReactNativeModule.kt:40, 48, 56`) — these methods return a span ID / traceparent synchronously and JS reads the return value immediately (`fetch.ts` sets `X-Edot-Traceparent` headers before await). Removing the flag makes them async-only under Old Arch and breaks the bridge contract.
 
 ## Distribution
 
@@ -88,9 +87,6 @@ Example apps apply the EDOT Gradle plugin `co.elastic.otel.android.agent` v1.1.0
 
 - All debug output via `EdotReactNativeModuleImpl.debugLog(message)` — gated by `@Volatile debugEnabled`, logs to `android.util.Log.d("EDOT", ...)`. Tag is always `"EDOT"`.
 - Don't call `android.util.Log.d/e/w` directly. The one exception is the warning emitted in `recordMetric` / `emitLog` for an unsupported attribute type — non-suppressible by design.
-- Static companion state (`userAttributes`, `sessionAttributes`, `globalAttributes`) uses `ConcurrentHashMap` — do not swap to a non-concurrent map.
-- `mergeUserSessionGlobalAttributes` fills missing keys only — never overwrites explicit span attributes. Merge direction is load-bearing for the "consumer redactor runs after injection" invariant.
-- `UserAttributesSpanScope` default `ID_ONLY` — only `user.id` ships on spans unless `userAttributesIncludeInSpans: "all"` (or `"none"`).
 - `TrackingConsent` default `GRANTED`. `emissionAllowed()` is the single gate checked before every span/log/metric emission path; new emission code must call it first.
 
 ## Anti-Patterns

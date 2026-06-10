@@ -11,20 +11,6 @@ import URLSessionInstrumentation
 
 private let log = OSLog(subsystem: "com.edot.react-native", category: "SDK")
 
-enum UserAttributesSpanScope {
-  case all
-  case idOnly
-  case none
-
-  static func parse(_ raw: String?) -> UserAttributesSpanScope {
-    switch raw {
-    case "all": return .all
-    case "none": return .none
-    default: return .idOnly
-    }
-  }
-}
-
 enum TrackingConsent {
   case granted
   case notGranted
@@ -52,15 +38,13 @@ enum TrackingConsent {
 ///   JS fetch/XHR instrumentation (see `installURLSessionInstrumentation`).
 /// - Owns the lifetime of spans started from JS (`startSpan` / `endSpan`),
 ///   indexed by id and capped at `activeSpansCap`.
-/// - Forwards user/session/global attributes and tracking-consent state
-///   into every span emitted from JS.
+/// - Gates all JS-side emission on the current tracking-consent state.
 @objc(EdotReactNative)
 class EdotReactNative: NSObject {
 
   private static let stateLock = NSLock()
   private static var isInitialized = false
   private static var isInitializing = false
-  private static var userAttributesSpanScope: UserAttributesSpanScope = .idOnly
   private static var trackingConsent: TrackingConsent = .granted
 
   /// Dedicated lock for the `debug` flag. Decoupled from `stateLock` so that
@@ -94,11 +78,6 @@ class EdotReactNative: NSObject {
   private var activeSpanQueue: [String] = []
 
   #if ELASTIC_APM_AVAILABLE
-  private static let attrLock = NSLock()
-  private static var userAttributes: [String: AttributeValue] = [:]
-  private static var sessionAttributes: [String: AttributeValue] = [:]
-  private static var globalAttributes: [String: AttributeValue] = [:]
-
   private func tracer(named instrumentationName: String?) -> any Tracer {
     let resolved: String
     if let name = instrumentationName, !name.isEmpty {
@@ -107,54 +86,6 @@ class EdotReactNative: NSObject {
       resolved = "react-native-edot"
     }
     return OpenTelemetry.instance.tracerProvider.get(instrumentationName: resolved, instrumentationVersion: nil)
-  }
-
-  private static func readAttributes() -> (global: [String: AttributeValue],
-                                            session: [String: AttributeValue],
-                                            user: [String: AttributeValue]) {
-    attrLock.lock()
-    let g = globalAttributes
-    let s = sessionAttributes
-    let u = userAttributes
-    attrLock.unlock()
-
-    stateLock.lock()
-    let scope = userAttributesSpanScope
-    stateLock.unlock()
-
-    return (g, s, filterUserAttributes(u, scope: scope))
-  }
-
-  private static func filterUserAttributes(_ all: [String: AttributeValue],
-                                            scope: UserAttributesSpanScope)
-    -> [String: AttributeValue] {
-    switch scope {
-    case .all:
-      return all
-    case .idOnly:
-      if let id = all["user.id"] {
-        return ["user.id": id]
-      }
-      return [:]
-    case .none:
-      return [:]
-    }
-  }
-
-  /// Merges user / session / global attributes into an existing attribute set
-  /// without overwriting explicitly-set keys. Shared between the JS-init and
-  /// host pre-init paths so the synthetic transaction parent that
-  /// `ElasticSpanProcessor.onEnd` builds for orphan HTTP spans gets the same
-  /// enrichment regardless of how the agent was started.
-  static func mergeUserSessionGlobalAttributes(
-    _ existing: [String: AttributeValue]
-  ) -> [String: AttributeValue] {
-    var merged = existing
-    let (global, session, user) = readAttributes()
-    for (k, v) in global where merged[k] == nil { merged[k] = v }
-    for (k, v) in session where merged[k] == nil { merged[k] = v }
-    for (k, v) in user where merged[k] == nil { merged[k] = v }
-    return merged
   }
   #endif
 
@@ -190,8 +121,6 @@ class EdotReactNative: NSObject {
       return
     }
     EdotReactNative.isInitializing = true
-    EdotReactNative.userAttributesSpanScope =
-      UserAttributesSpanScope.parse(config["userAttributesIncludeInSpans"] as? String)
     EdotReactNative.trackingConsent =
       TrackingConsent.parse(config["trackingConsent"] as? String)
     EdotReactNative.stateLock.unlock()
@@ -317,61 +246,6 @@ class EdotReactNative: NSObject {
     #endif
   }
 
-  @objc
-  func setUser(_ userInfo: NSDictionary) {
-    #if ELASTIC_APM_AVAILABLE
-    EdotReactNative.attrLock.lock()
-    if let userId = userInfo["id"] as? String {
-      EdotReactNative.userAttributes["user.id"] = .string(userId)
-    }
-    if let email = userInfo["email"] as? String {
-      EdotReactNative.userAttributes["user.email"] = .string(email)
-    }
-    if let name = userInfo["name"] as? String {
-      EdotReactNative.userAttributes["user.name"] = .string(name)
-    }
-    EdotReactNative.attrLock.unlock()
-    #endif
-  }
-
-  @objc
-  func clearUser() {
-    #if ELASTIC_APM_AVAILABLE
-    EdotReactNative.attrLock.lock()
-    EdotReactNative.userAttributes.removeAll()
-    EdotReactNative.attrLock.unlock()
-    #endif
-  }
-
-  // MARK: - Attributes
-
-  @objc
-  func setSessionAttribute(_ key: String, value: String) {
-    #if ELASTIC_APM_AVAILABLE
-    EdotReactNative.attrLock.lock()
-    EdotReactNative.sessionAttributes[key] = .string(value)
-    EdotReactNative.attrLock.unlock()
-    #endif
-  }
-
-  @objc
-  func setGlobalAttribute(_ key: String, value: String) {
-    #if ELASTIC_APM_AVAILABLE
-    EdotReactNative.attrLock.lock()
-    EdotReactNative.globalAttributes[key] = .string(value)
-    EdotReactNative.attrLock.unlock()
-    #endif
-  }
-
-  @objc
-  func removeGlobalAttribute(_ key: String) {
-    #if ELASTIC_APM_AVAILABLE
-    EdotReactNative.attrLock.lock()
-    EdotReactNative.globalAttributes.removeValue(forKey: key)
-    EdotReactNative.attrLock.unlock()
-    #endif
-  }
-
   // MARK: - Error Reporting
 
   @objc
@@ -456,17 +330,6 @@ class EdotReactNative: NSObject {
       if let attr = EdotReactNative.attributeValue(from: value) {
         builder = builder.setAttribute(key: k, value: attr)
       }
-    }
-
-    let (global, session, user) = EdotReactNative.readAttributes()
-    for (key, value) in global {
-      builder = builder.setAttribute(key: key, value: value)
-    }
-    for (key, value) in session {
-      builder = builder.setAttribute(key: key, value: value)
-    }
-    for (key, value) in user {
-      builder = builder.setAttribute(key: key, value: value)
     }
 
     let span = builder.startSpan()

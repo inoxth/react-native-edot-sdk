@@ -92,11 +92,6 @@ describe('nativeModule', () => {
     const mockModule = {
       initialize: jest.fn(),
       getCurrentSessionId: jest.fn(),
-      setUser: jest.fn(),
-      clearUser: jest.fn(),
-      setSessionAttribute: jest.fn(),
-      setGlobalAttribute: jest.fn(),
-      removeGlobalAttribute: jest.fn(),
       reportJsException: jest.fn(),
       startSpan: jest.fn().mockReturnValue('span-1'),
       endSpan: jest.fn(),
@@ -156,11 +151,6 @@ describe('nativeModule', () => {
     class FakeTurboModule {
       initialize = jest.fn().mockResolvedValue(undefined);
       getCurrentSessionId = jest.fn().mockResolvedValue('');
-      setUser = jest.fn();
-      clearUser = jest.fn();
-      setSessionAttribute = jest.fn();
-      setGlobalAttribute = jest.fn();
-      removeGlobalAttribute = jest.fn();
       reportJsException = jest.fn();
       startSpan = jest.fn().mockReturnValue('span-1');
       endSpan = jest.fn();
@@ -184,11 +174,6 @@ describe('nativeModule', () => {
     // Verify ALL other Spec methods remain accessible (not dropped by spread)
     expect(EdotNativeModule.initialize).toBe(turboModule.initialize);
     expect(EdotNativeModule.getCurrentSessionId).toBe(turboModule.getCurrentSessionId);
-    expect(EdotNativeModule.setUser).toBe(turboModule.setUser);
-    expect(EdotNativeModule.clearUser).toBe(turboModule.clearUser);
-    expect(EdotNativeModule.setSessionAttribute).toBe(turboModule.setSessionAttribute);
-    expect(EdotNativeModule.setGlobalAttribute).toBe(turboModule.setGlobalAttribute);
-    expect(EdotNativeModule.removeGlobalAttribute).toBe(turboModule.removeGlobalAttribute);
     expect(EdotNativeModule.reportJsException).toBe(turboModule.reportJsException);
     expect(EdotNativeModule.endSpan).toBe(turboModule.endSpan);
     expect(EdotNativeModule.setSpanAttribute).toBe(turboModule.setSpanAttribute);
@@ -207,11 +192,6 @@ describe('nativeModule', () => {
       return {
         initialize: jest.fn(),
         getCurrentSessionId: jest.fn(),
-        setUser: jest.fn(),
-        clearUser: jest.fn(),
-        setSessionAttribute: jest.fn(),
-        setGlobalAttribute: jest.fn(),
-        removeGlobalAttribute: jest.fn(),
         reportJsException: jest.fn(),
         startSpan,
         endSpan: jest.fn(),
@@ -276,11 +256,6 @@ describe('nativeModule', () => {
       return {
         initialize: jest.fn(),
         getCurrentSessionId: jest.fn(),
-        setUser: jest.fn(),
-        clearUser: jest.fn(),
-        setSessionAttribute: jest.fn(),
-        setGlobalAttribute: jest.fn(),
-        removeGlobalAttribute: jest.fn(),
         reportJsException: jest.fn(),
         startSpan: jest.fn(),
         startClientSpan,

@@ -14,23 +14,8 @@ import io.opentelemetry.api.trace.StatusCode
 import java.util.Collections
 import java.util.LinkedHashMap
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 
 class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContext) {
-
-    enum class UserAttributesSpanScope {
-        ALL,
-        ID_ONLY,
-        NONE;
-
-        companion object {
-            fun parse(raw: String?): UserAttributesSpanScope = when (raw) {
-                "all" -> ALL
-                "none" -> NONE
-                else -> ID_ONLY
-            }
-        }
-    }
 
     enum class TrackingConsent {
         GRANTED,
@@ -58,14 +43,7 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         private var debugEnabled = false
 
         @Volatile
-        private var userAttributesSpanScope = UserAttributesSpanScope.ID_ONLY
-
-        @Volatile
         private var trackingConsent = TrackingConsent.GRANTED
-
-        private val userAttributes = ConcurrentHashMap<String, String>()
-        private val sessionAttributes = ConcurrentHashMap<String, String>()
-        private val globalAttributes = ConcurrentHashMap<String, String>()
 
         private val PRE_INIT_RESERVED_FIELDS = listOf(
             "apiKey",
@@ -81,29 +59,6 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         }
 
         fun emissionAllowed(): Boolean = trackingConsent.allowsEmission
-
-        internal fun mergeUserSessionGlobalAttributes(existing: Attributes): Attributes {
-            val builder = existing.toBuilder()
-            val existingKeys = existing.asMap().keys.mapTo(HashSet()) { it.key }
-
-            for ((key, value) in globalAttributes) {
-                if (key !in existingKeys) builder.put(key, value)
-            }
-            for ((key, value) in sessionAttributes) {
-                if (key !in existingKeys) builder.put(key, value)
-            }
-            for ((key, value) in filteredUserAttributesForSpan()) {
-                if (key !in existingKeys) builder.put(key, value)
-            }
-            return builder.build()
-        }
-
-        private fun filteredUserAttributesForSpan(): Map<String, String> = when (userAttributesSpanScope) {
-            UserAttributesSpanScope.ALL -> userAttributes
-            UserAttributesSpanScope.ID_ONLY ->
-                userAttributes["user.id"]?.let { mapOf("user.id" to it) } ?: emptyMap()
-            UserAttributesSpanScope.NONE -> emptyMap()
-        }
     }
 
     private val activeSpans: MutableMap<String, Span> = Collections.synchronizedMap(
@@ -125,9 +80,6 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
 
         try {
             debugEnabled = config.getBooleanSafe("debug", false)
-            userAttributesSpanScope = UserAttributesSpanScope.parse(
-                config.getStringSafe("userAttributesIncludeInSpans")
-            )
             trackingConsent = TrackingConsent.parse(
                 config.getStringSafe("trackingConsent")
             )
@@ -199,28 +151,6 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         // $agent_sdk API with no public accessor. Returns empty until
         // upstream adds a public SessionProvider/SessionManager getter.
         promise.resolve("")
-    }
-
-    fun setUser(userInfo: ReadableMap) {
-        userInfo.getStringSafe("id")?.let { userAttributes["user.id"] = it }
-        userInfo.getStringSafe("email")?.let { userAttributes["user.email"] = it }
-        userInfo.getStringSafe("name")?.let { userAttributes["user.name"] = it }
-    }
-
-    fun clearUser() {
-        userAttributes.clear()
-    }
-
-    fun setSessionAttribute(key: String, value: String) {
-        sessionAttributes[key] = value
-    }
-
-    fun setGlobalAttribute(key: String, value: String) {
-        globalAttributes[key] = value
-    }
-
-    fun removeGlobalAttribute(key: String) {
-        globalAttributes.remove(key)
     }
 
     fun reportJsException(errorInfo: ReadableMap) {

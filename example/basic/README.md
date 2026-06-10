@@ -95,7 +95,6 @@ Severities: `trace`, `debug`, `info`, `warn`, `error`, `fatal`. Attribute values
 Each section under [`src/sections/`](./src/sections/) is a self-contained example of one SDK surface:
 
 - `StatusSection` — `EdotReactNative.getCurrentSessionId`
-- `UserSection` — `setUser`, `clearUser`, `setSessionAttribute`, `setGlobalAttribute`, `removeGlobalAttribute`
 - `NetworkSection` — auto-instrumented `fetch` / XHR
 - `TracingSection` — `getTracerProvider().getTracer().startSpan()`, `withSpanContext`
 - `MetricsSection` — `getMeterProvider()` with `createCounter`, `createHistogram`, `createUpDownCounter`

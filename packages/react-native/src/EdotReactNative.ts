@@ -1,13 +1,12 @@
 import { Platform } from 'react-native';
 import type {
   EdotConfig,
-  EdotUser,
   IgnoreLogRule,
   IgnoreSpanRule,
   RegexSource,
   TrackingConsent,
 } from './types';
-import { DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE, EDOT_DEFAULTS } from './defaults';
+import { EDOT_DEFAULTS } from './defaults';
 import { resolveResourceField, validateConfig } from './config';
 import { EdotNativeModule } from './nativeModule';
 import { redactedString } from '@inoxth/react-native-edot-shared';
@@ -25,13 +24,11 @@ interface InternalConfig {
   serviceVersion: string;
   deploymentEnvironment: string;
   debug: boolean;
-  userAttributesIncludeInSpans: string;
   sessionSamplingRate?: number;
   trackingConsent?: string;
   secretToken?: RedactedString;
   apiKey?: RedactedString;
   exportProtocol?: string;
-  globalAttributes?: Record<string, string | number | boolean>;
   [key: string]: unknown;
 }
 
@@ -52,8 +49,6 @@ function mergeConfig(config: EdotConfig): InternalConfig {
     serviceVersion: config.serviceVersion,
     deploymentEnvironment: config.deploymentEnvironment,
     debug: config.debug ?? EDOT_DEFAULTS.debug,
-    userAttributesIncludeInSpans:
-      config.userAttributes?.includeInSpans ?? DEFAULT_USER_ATTRIBUTES_SPAN_SCOPE,
     ...(config.sessionSamplingRate !== undefined
       ? { sessionSamplingRate: config.sessionSamplingRate }
       : {}),
@@ -61,7 +56,6 @@ function mergeConfig(config: EdotConfig): InternalConfig {
     ...(config.secretToken ? { secretToken: redactedString(config.secretToken) } : {}),
     ...(config.apiKey ? { apiKey: redactedString(config.apiKey) } : {}),
     exportProtocol: config.exportProtocol ?? 'http',
-    ...(config.globalAttributes ? { globalAttributes: config.globalAttributes } : {}),
     ...(config.disableAgent !== undefined ? { disableAgent: config.disableAgent } : {}),
     ...(config.managementUrl !== undefined ? { managementUrl: config.managementUrl } : {}),
     ...(config.enableAppMetricInstrumentation !== undefined
@@ -185,26 +179,6 @@ export const EdotReactNative = {
    */
   async getCurrentSessionId(): Promise<string> {
     return EdotNativeModule.getCurrentSessionId();
-  },
-
-  setUser(user: EdotUser): void {
-    EdotNativeModule.setUser(user);
-  },
-
-  clearUser(): void {
-    EdotNativeModule.clearUser();
-  },
-
-  setSessionAttribute(key: string, value: string): void {
-    EdotNativeModule.setSessionAttribute(key, value);
-  },
-
-  setGlobalAttribute(key: string, value: string | number | boolean): void {
-    EdotNativeModule.setGlobalAttribute(key, String(value));
-  },
-
-  removeGlobalAttribute(key: string): void {
-    EdotNativeModule.removeGlobalAttribute(key);
   },
 
   setTrackingConsent(consent: TrackingConsent): void {

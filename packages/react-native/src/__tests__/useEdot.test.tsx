@@ -20,11 +20,6 @@ jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
     initialize: jest.fn().mockResolvedValue(undefined),
     getCurrentSessionId: jest.fn().mockResolvedValue('session-1'),
-    setUser: jest.fn(),
-    clearUser: jest.fn(),
-    setSessionAttribute: jest.fn(),
-    setGlobalAttribute: jest.fn(),
-    removeGlobalAttribute: jest.fn(),
     reportJsException: jest.fn(),
     startSpan: jest.fn().mockReturnValue('span-1'),
     endSpan: jest.fn(),
