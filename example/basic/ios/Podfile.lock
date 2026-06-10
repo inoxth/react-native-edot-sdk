@@ -1,5 +1,5 @@
 PODS:
-  - EdotReactNative (0.1.0):
+  - EdotReactNative (0.1.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2072,7 +2072,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  EdotReactNative: 4ea0fe2805b78cc4a7e92eb9bbf5483c6d8d3ced
+  EdotReactNative: 8a71ce8d75b7f3532857a75576a41463b5e6f311
   FBLazyVector: ed7eadee1965b0b918ca9d0f2c2328f7eb3fd095
   hermes-engine: 80949f5a7fd0c51bacfb3412e0ce790e4955b672
   RCTDeprecation: d69f6f20a20f669a0aa3115ab1109f28e98ae03e

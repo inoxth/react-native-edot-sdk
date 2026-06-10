@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.author       = 'INOX'
   s.source       = { :git => 'https://github.com/inoxth/react-native-edot-sdk.git', :tag => s.version }
 
-  s.platform     = :ios, '16.0'
+  s.platform     = :ios, '15.6'
   s.swift_version = '5.9'
 
   s.source_files = 'ios/**/*.{swift,h,m}'
@@ -23,25 +23,16 @@ Pod::Spec.new do |s|
   if defined?(spm_dependency)
     spm_dependency(s,
       url: 'https://github.com/elastic/apm-agent-ios.git',
-      requirement: { kind: 'upToNextMajorVersion', minimumVersion: '2.0.0' },
+      requirement: { kind: 'exactVersion', version: '1.2.1' },
       products: ['ElasticApm']
     )
     spm_dependency(s,
-      url: 'https://github.com/open-telemetry/opentelemetry-swift-core.git',
-      requirement: { kind: 'upToNextMajorVersion', minimumVersion: '2.3.0' },
+      url: 'https://github.com/open-telemetry/opentelemetry-swift.git',
+      requirement: { kind: 'exactVersion', version: '1.13.0' },
       products: [
         'OpenTelemetryApi',
-        'OpenTelemetrySdk'
-      ]
-    )
-    spm_dependency(s,
-      url: 'https://github.com/open-telemetry/opentelemetry-swift.git',
-      requirement: { kind: 'upToNextMajorVersion', minimumVersion: '2.2.1' },
-      products: [
-        'URLSessionInstrumentation',
-        'OpenTelemetryProtocolExporter',
-        'OpenTelemetryProtocolExporterHTTP',
-        'PersistenceExporter'
+        'OpenTelemetrySdk',
+        'URLSessionInstrumentation'
       ]
     )
     s.pod_target_xcconfig = base_xcconfig.merge(
