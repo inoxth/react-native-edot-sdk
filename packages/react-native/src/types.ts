@@ -8,42 +8,6 @@ export interface RegexSource {
 }
 
 /**
- * Rules for dropping or masking individual attributes on a single signal type
- * (spans OR logs — not both simultaneously).
- *
- * Application order per signal: `drop` → `dropPattern` → `mask` → `maskPattern`.
- */
-export interface RedactionRules {
-  /** Exact attribute keys to remove. */
-  drop?: string[];
-  /**
-   * Regex whose full match against an attribute key causes that key to be
-   * removed. Specified as a `{ source, flags? }` object because `RegExp`
-   * values do not survive the React Native bridge.
-   */
-  dropPattern?: RegexSource;
-  /** Exact attribute keys whose values are replaced by the given string. */
-  mask?: Record<string, string>;
-  /**
-   * Regex patterns whose full match against an attribute key causes the
-   * value to be replaced by `replacement`.
-   */
-  maskPattern?: Array<RegexSource & { replacement: string }>;
-}
-
-/**
- * Per-signal attribute redaction rules applied before export.
- *
- * Spans and logs have independent rule sets; metrics are out of v1 scope.
- * Omitting `attributeRedactions` (or any nested key) means no redaction is
- * applied to that signal.
- */
-export interface AttributeRedactions {
-  spans?: RedactionRules;
-  logs?: RedactionRules;
-}
-
-/**
  * A rule for ignoring spans by name. Either an exact string match or a
  * serialisable regex source.
  */
@@ -166,12 +130,6 @@ export interface EdotConfig {
    * Android via Process.getElapsedCpuTime and Debug.MemoryInfo).
    */
   enableSystemMetrics?: boolean;
-
-  /**
-   * Drop or mask span / log attributes before export.
-   * Metrics are not in scope for v1.
-   */
-  attributeRedactions?: AttributeRedactions;
 
   /**
    * Drop entire spans whose name matches any rule.

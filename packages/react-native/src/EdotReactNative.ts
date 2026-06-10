@@ -64,9 +64,6 @@ function mergeConfig(config: EdotConfig): InternalConfig {
     ...(config.enableSystemMetrics !== undefined
       ? { enableSystemMetrics: config.enableSystemMetrics }
       : {}),
-    ...(config.attributeRedactions !== undefined
-      ? { attributeRedactions: config.attributeRedactions }
-      : {}),
     ...(config.ignoreSpanNames !== undefined
       ? { ignoreSpanNames: serializeSpanRules(config.ignoreSpanNames) }
       : {}),

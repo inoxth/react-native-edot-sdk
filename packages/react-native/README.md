@@ -14,7 +14,7 @@ OpenTelemetry-compliant observability SDK for React Native. Wraps the native [ED
 - **User interactions** — `withEdotTracking` HOC and `useEdotAction` hook for tap/action tracking
 - **Manual instrumentation** — see [`@inoxth/react-native-edot-tracer-provider`](../react-native-tracer-provider) for custom spans and metrics
 - **Navigation tracking** — see [`@inoxth/react-native-edot-navigation`](../react-native-navigation) for screen spans
-- **Attribute redaction + ignore filters** — `attributeRedactions`, `ignoreSpanNames`, `ignoreLogPatterns` for PII handling and noise control on both platforms
+- **Ignore filters** — `ignoreSpanNames`, `ignoreLogPatterns` for noise control on both platforms
 
 ## Install
 
@@ -231,11 +231,10 @@ Both are wrapped in a redacted-string container immediately on receipt — `JSON
 | `enableAppMetricInstrumentation` | `boolean` | `true`  | Emit `application.launch.time` histogram (iOS via MetricKit, Android via Choreographer). Set `false` to skip the install.                                                                    |
 | `enableSystemMetrics`            | `boolean` | `true`  | Emit `system.cpu.usage` and `system.memory.usage` observable gauges (iOS via Mach task APIs, Android via `Process.getElapsedCpuTime` + `Debug.MemoryInfo`). Set `false` to skip the install. |
 
-### Filtering & redaction
+### Ignore filters
 
 | Option                | Type                                                                                                                  | Description                                                                                                                                               |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `attributeRedactions` | `{ spans?: RedactionRules; logs?: RedactionRules }`                                                                   | Drop or mask span / log attributes before export. Each `RedactionRules` block supports `drop`, `dropPattern` (`{source, flags?}`), `mask`, `maskPattern`. |
 | `ignoreSpanNames`     | `(string \| { source: string; flags?: string })[]`                                                                    | Drop spans whose name matches any rule. Exact-string or regex-source matches.                                                                             |
 | `ignoreLogPatterns`   | `Array<{ name?: string \| RegexSource; minSeverity?: 'trace' \| 'debug' \| 'info' \| 'warn' \| 'error' \| 'fatal' }>` | Drop log records matching any rule (name match OR severity below `minSeverity`).                                                                          |
 
