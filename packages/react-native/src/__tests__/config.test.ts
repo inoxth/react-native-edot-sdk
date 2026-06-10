@@ -111,27 +111,6 @@ describe('validateConfig', () => {
     ).toThrow('ios.persistencePreset must be one of: default, lowUsage, highVolume');
   });
 
-  it('accepts valid managementUrl', () => {
-    expect(() =>
-      validateConfig({ ...validConfig, managementUrl: 'https://config.example.com' }),
-    ).not.toThrow();
-    expect(() =>
-      validateConfig({ ...validConfig, managementUrl: 'http://config.example.com:9200' }),
-    ).not.toThrow();
-  });
-
-  it('throws on non-parseable managementUrl', () => {
-    expect(() => validateConfig({ ...validConfig, managementUrl: 'not a url' })).toThrow(
-      'managementUrl is not a valid URL',
-    );
-  });
-
-  it('throws when managementUrl uses a non-http scheme', () => {
-    expect(() =>
-      validateConfig({ ...validConfig, managementUrl: 'ftp://config.example.com' }),
-    ).toThrow('managementUrl must use http or https');
-  });
-
   it('accepts disableAgent boolean', () => {
     expect(() => validateConfig({ ...validConfig, disableAgent: true })).not.toThrow();
     expect(() => validateConfig({ ...validConfig, disableAgent: false })).not.toThrow();

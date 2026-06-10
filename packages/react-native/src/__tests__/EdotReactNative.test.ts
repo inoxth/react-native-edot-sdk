@@ -247,23 +247,6 @@ describe('EdotReactNative', () => {
       expect(nativeConfig.exportProtocol).toBe('grpc');
     });
 
-    it('forwards ios.useOpAMP to native when true', async () => {
-      jest.doMock('react-native', () => ({ Platform: { OS: 'ios' } }));
-      jest.resetModules();
-
-      const { EdotReactNative: Fresh } = require('../EdotReactNative');
-      Fresh._resetForTesting();
-
-      await Fresh.initialize({
-        ...validConfig,
-        ios: { useOpAMP: true },
-      });
-
-      const { EdotNativeModule: MockModule } = require('../nativeModule');
-      const nativeConfig = (MockModule.initialize as jest.Mock).mock.calls[0][0];
-      expect(nativeConfig.useOpAMP).toBe(true);
-    });
-
     it('only sends optional fields when explicitly set', async () => {
       await EdotReactNative.initialize(validConfig);
 

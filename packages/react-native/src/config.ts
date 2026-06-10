@@ -100,20 +100,6 @@ export function validateConfig(config: EdotConfig): void {
     );
   }
 
-  if (config.managementUrl !== undefined) {
-    let parsed: URL;
-    try {
-      parsed = new URL(config.managementUrl);
-    } catch {
-      throw new Error(`[EDOT] managementUrl is not a valid URL: ${config.managementUrl}`);
-    }
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      throw new Error(
-        `[EDOT] managementUrl must use http or https (got: ${parsed.protocol.replace(':', '')})`,
-      );
-    }
-  }
-
   if (config.ignoreSpanNames !== undefined) {
     if (config.ignoreSpanNames.length === 0) {
       throw new Error('[EDOT] ignoreSpanNames must not be an empty array');

@@ -102,17 +102,6 @@ export interface EdotConfig {
   disableAgent?: boolean;
 
   /**
-   * Overrides the central-config polling endpoint without affecting OTLP
-   * exports. Must be an absolute `http://` or `https://` URL.
-   *
-   * Falls back to `serverUrl` when omitted.
-   *
-   * Wired on both iOS and Android (`apm-agent-ios.withManagementUrl` /
-   * `ElasticApmAgent.Builder.setManagementUrl`).
-   */
-  managementUrl?: string;
-
-  /**
    * Enables the `application.launch.time` histogram. Defaults to `true`.
    * Set to `false` to skip installing the launch-time instrumentation.
    *
@@ -159,7 +148,6 @@ export interface EdotIosConfig {
   enableURLSessionInstrumentation?: boolean;
   enableViewControllerInstrumentation?: boolean;
   enableLifecycleEvents?: boolean;
-  useOpAMP?: boolean;
 
   /**
    * Tunes the on-disk persistence buffer used by the iOS agent for failed
@@ -170,16 +158,6 @@ export interface EdotIosConfig {
    * - `'highVolume'` — instant delivery, shorter rotation interval; use on lossy networks.
    */
   persistencePreset?: 'default' | 'lowUsage' | 'highVolume';
-
-  /**
-   * Enables or disables central-config remote management polling.
-   * Defaults to `true` when omitted. Set to `false` to disable polling
-   * entirely regardless of `managementUrl`.
-   *
-   * `apm-agent-android` v1.5.0 has no public API to disable central-config
-   * polling, so this flag is iOS-only.
-   */
-  remoteManagement?: boolean;
 }
 
 export interface EdotAndroidConfig {

@@ -56,7 +56,7 @@ This package exposes subpath imports used by sibling packages:
 
 ### Initialization Flow
 
-`useEdot(config)` from `hooks/useEdot.ts` is the React-friendly entry point — calls `EdotReactNative.initialize` once via `useEffect`, captures config in a ref so subsequent renders never re-init, and returns `{ ready, error }`. First-wins: a `__DEV__` `console.warn` fires when a native-relevant primitive key (`serverUrl`, `serviceName`, `serviceVersion`, `deploymentEnvironment`, `secretToken`, `apiKey`, `exportProtocol`, `sessionSamplingRate`, `trackingConsent`, `managementUrl`, `disableAgent`, `enableAppMetricInstrumentation`, `enableSystemMetrics`, `instrumentNetworkRequests`, `instrumentJsErrors`, `instrumentAppStartup`, `appStateTracking`, `debug`) changes after first render. Object-shaped fields (`ignoreSpanNames`, `ignoreLogPatterns`, `ios`, `android`) are excluded from the compare to avoid identity false-positives. Init failures are passive — `console.warn`'d once, never thrown — so observability degrades silently rather than crashing the app via an `EdotErrorBoundary`. The imperative `EdotReactNative.initialize(config)` remains for non-React contexts.
+`useEdot(config)` from `hooks/useEdot.ts` is the React-friendly entry point — calls `EdotReactNative.initialize` once via `useEffect`, captures config in a ref so subsequent renders never re-init, and returns `{ ready, error }`. First-wins: a `__DEV__` `console.warn` fires when a native-relevant primitive key (`serverUrl`, `serviceName`, `serviceVersion`, `deploymentEnvironment`, `secretToken`, `apiKey`, `exportProtocol`, `sessionSamplingRate`, `trackingConsent`, `disableAgent`, `enableAppMetricInstrumentation`, `enableSystemMetrics`, `instrumentNetworkRequests`, `instrumentJsErrors`, `instrumentAppStartup`, `appStateTracking`, `debug`) changes after first render. Object-shaped fields (`ignoreSpanNames`, `ignoreLogPatterns`, `ios`, `android`) are excluded from the compare to avoid identity false-positives. Init failures are passive — `console.warn`'d once, never thrown — so observability degrades silently rather than crashing the app via an `EdotErrorBoundary`. The imperative `EdotReactNative.initialize(config)` remains for non-React contexts.
 
 `EdotReactNative.initialize(config)`:
 
@@ -144,7 +144,7 @@ See [`android/AGENTS.md`](./android/AGENTS.md) for the full Android-specific rul
 
 ### JS Bridge Forwarding for Native-Only Config Keys
 
-`mergeConfig` in `EdotReactNative.ts` is the single source of truth for what reaches the native bridge. Top-level config keys whose values only matter to native code (`disableAgent`, `managementUrl`, `remoteManagement`, `persistencePreset`, `ignoreSpanNames`, `ignoreLogPatterns`) must be explicitly spread into the returned `InternalConfig` — otherwise they're silently dropped at the JS layer and the native side reads `null`. Platform-specific keys (`config.ios.*` / `config.android.*`) flow automatically via `...platformExtras`. Regex-bearing fields (`ignoreSpanNames`, `ignoreLogPatterns.name`) use the `RegexSource` shape (`{ source, flags }`) because real `RegExp` objects don't survive the bridge.
+`mergeConfig` in `EdotReactNative.ts` is the single source of truth for what reaches the native bridge. Top-level config keys whose values only matter to native code (`disableAgent`, `persistencePreset`, `ignoreSpanNames`, `ignoreLogPatterns`) must be explicitly spread into the returned `InternalConfig` — otherwise they're silently dropped at the JS layer and the native side reads `null`. Platform-specific keys (`config.ios.*` / `config.android.*`) flow automatically via `...platformExtras`. Regex-bearing fields (`ignoreSpanNames`, `ignoreLogPatterns.name`) use the `RegexSource` shape (`{ source, flags }`) because real `RegExp` objects don't survive the bridge.
 
 ### App-State Tracking
 
@@ -189,8 +189,6 @@ JS-callable config knobs that pass through to apm-agent-ios v2.0.0's builder:
 
 - `disableAgent` — fully suppresses native agent startup
 - `persistencePreset: 'default' | 'lowUsage' | 'highVolume'` — tunes `PersistencePerformancePreset`
-- `managementUrl` + `remoteManagement` — separate central-config endpoint
-- `ios.useOpAMP` — opt-in OpAMP central-config protocol
 - `ignoreSpanNames` and `ignoreLogPatterns` — predicate filters via `addSpanFilter` / `addLogFilter`
 
 Validation lives in `config.ts` and throws at `validateConfig` time on invalid input. Native compilation (regex compilation, predicate building) happens in `EdotReactNative.swift:initialize`.
