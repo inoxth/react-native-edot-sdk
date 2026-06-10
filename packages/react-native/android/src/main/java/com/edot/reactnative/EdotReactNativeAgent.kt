@@ -70,7 +70,6 @@ object EdotReactNativeAgent {
                 if (it) DiskBufferingConfiguration.enabled() else DiskBufferingConfiguration.disabled()
             )
         }
-        managementUrl?.takeIf { it.isNotBlank() }?.let { builder.setManagementUrl(it) }
         attachSpanAttributesInterceptor(builder)
 
         val builtAgent = builder.build()
@@ -158,7 +157,6 @@ object EdotReactNativeAgent {
         serviceName?.takeIf { it.isNotBlank() }?.let { builder.setServiceName(it) }
         serviceVersion?.takeIf { it.isNotBlank() }?.let { builder.setServiceVersion(it) }
         deploymentEnvironment?.takeIf { it.isNotBlank() }?.let { builder.setDeploymentEnvironment(it) }
-        managementUrl?.takeIf { it.isNotBlank() }?.let { builder.setManagementUrl(it) }
         attachSpanAttributesInterceptor(builder)
         // User-supplied redactors are registered AFTER the user/session/global
         // interceptor so consumers can drop or mask values we just injected
