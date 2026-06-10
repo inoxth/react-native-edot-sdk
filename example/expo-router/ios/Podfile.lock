@@ -1,5 +1,5 @@
 PODS:
-  - EdotReactNative (0.1.0):
+  - EdotReactNative (0.1.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2322,7 +2322,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  EdotReactNative: 8542eb6782ebc75d64ec9208586eab6ab4dfe18d
+  EdotReactNative: 7fccd16c7ccbf56d2409b94588fc1cbc75c10a9a
   EXConstants: bfe4ae4e5d882e2e0b130e049665d0af4f4cc1b8
   Expo: a43f44ff1e3a1c73fcabba766e13a38dea22236a
   ExpoAsset: dc4f25f84886120f82b23233bba563ea7afa88f5
@@ -2421,6 +2421,6 @@ SPEC CHECKSUMS:
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   Yoga: acd565934addf7423687593ec490bd4491b2a802
 
-PODFILE CHECKSUM: d3e61723ce9206bae01598d8d99cdce0373cdd13
+PODFILE CHECKSUM: 8f5ee4622410e0a4ff6a2f6ddc6cbaf54ffe43ca
 
 COCOAPODS: 1.16.2
