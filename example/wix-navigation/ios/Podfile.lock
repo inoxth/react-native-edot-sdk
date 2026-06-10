@@ -1,7 +1,7 @@
 PODS:
   - boost (1.84.0)
   - DoubleConversion (1.1.6)
-  - EdotReactNative (0.1.0):
+  - EdotReactNative (0.1.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -2852,7 +2852,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
-  EdotReactNative: 8ef30705c9b2afcca8f48ac9e41e3737559cf01d
+  EdotReactNative: 040173c40f459d5ebdc3c8966634e7d20ab1b16e
   fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
   FBLazyVector: 82d1d7996af4c5850242966eb81e73f9a6dfab1e
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
@@ -2933,6 +2933,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: b669e79fa0f8d3f6f5e35372345f54b99e06b13c
 
-PODFILE CHECKSUM: bd9e9c0f33d8ab686ad4530034a49c462936eaf5
+PODFILE CHECKSUM: 1f11c23000a37ab5b77c92725772eb09e2354862
 
 COCOAPODS: 1.16.2

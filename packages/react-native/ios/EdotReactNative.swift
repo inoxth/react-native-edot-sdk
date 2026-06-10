@@ -6,7 +6,6 @@ import os.log
 import ElasticApm
 import OpenTelemetryApi
 import OpenTelemetrySdk
-import PersistenceExporter
 import URLSessionInstrumentation
 #endif
 
@@ -84,11 +83,6 @@ class EdotReactNative: NSObject {
 
   #if ELASTIC_APM_AVAILABLE
   private static var urlSessionInstrumentation: URLSessionInstrumentation?
-  private static var meterProvider: (any MeterProvider)?
-  private static var appMetrics: EdotAppMetrics?
-  private static var systemMetrics: EdotSystemMetrics?
-  private static var centralConfigObserver: NSObjectProtocol?
-  private static var lastSeenCentralConfig: String?
   #endif
 
   private let spanLock = NSLock()
@@ -112,7 +106,7 @@ class EdotReactNative: NSObject {
     } else {
       resolved = "react-native-edot"
     }
-    return OpenTelemetry.instance.tracerProvider.get(instrumentationName: resolved)
+    return OpenTelemetry.instance.tracerProvider.get(instrumentationName: resolved, instrumentationVersion: nil)
   }
 
   private static func readAttributes() -> (global: [String: AttributeValue],
@@ -216,7 +210,7 @@ class EdotReactNative: NSObject {
     }
 
     var configBuilder = AgentConfigBuilder()
-      .withExportUrl(url)
+      .withServerUrl(url)
 
     if let secretToken = config["secretToken"] as? String {
       configBuilder = configBuilder.withSecretToken(secretToken)
@@ -232,19 +226,6 @@ class EdotReactNative: NSObject {
 
     if let exportProtocol = config["exportProtocol"] as? String {
       configBuilder = configBuilder.useConnectionType(exportProtocol == "http" ? .http : .grpc)
-    }
-
-    if config["useOpAMP"] as? Bool == true {
-      configBuilder = configBuilder.useOpAMP()
-    }
-
-    if let managementUrlString = config["managementUrl"] as? String,
-       let managementUrl = URL(string: managementUrlString) {
-      configBuilder = configBuilder.withManagementUrl(managementUrl)
-    }
-
-    if let remoteManagement = config["remoteManagement"] as? Bool {
-      configBuilder = configBuilder.withRemoteManagement(remoteManagement)
     }
 
     var instrumentationConfig = InstrumentationConfiguration()
@@ -265,49 +246,9 @@ class EdotReactNative: NSObject {
     if let v = config["enableLifecycleEvents"] as? Bool {
       instrumentationConfig.enableLifecycleEvents = v
     }
-    if let preset = config["persistencePreset"] as? String {
-      instrumentationConfig.storageConfiguration = EdotReactNative.persistencePreset(from: preset)
-    }
-    // apm-agent-ios v2.0.0's OpenTelemetryInitializer builds the global
-    // MeterProvider without setResource(...), so any metrics it emits land
-    // under `unknown_service:*`. We disable its built-in metric sources and
-    // replace them with EdotAppMetrics / EdotSystemMetrics, which use a
-    // local resource-aware MeterProvider built below.
-    instrumentationConfig.enableAppMetricInstrumentation = false
-    instrumentationConfig.enableSystemMetrics = false
-    let userAppMetricsEnabled = config["enableAppMetricInstrumentation"] as? Bool ?? true
-    let userSystemMetricsEnabled = config["enableSystemMetrics"] as? Bool ?? true
-    // Force-off here regardless of JS config — we replace it with a filtered
-    // instance below. See `installURLSessionInstrumentation` for the reasoning.
+    // We install our own filtered URLSessionInstrumentation below (see
+    // installURLSessionInstrumentation); disable the agent's built-in one.
     instrumentationConfig.enableURLSessionInstrumentation = false
-
-    // Inject user / session / global attributes onto every span — including
-    // the synthetic transaction parent that apm-agent-ios's
-    // ElasticSpanProcessor.onEnd builds for orphan HTTP spans (which APM
-    // Server promotes ECS fields like `user.id` from). Without this,
-    // `user.id` lands on child spans only as `labels.user_id` and the
-    // transaction document carries no user context. Registered before the
-    // user-supplied redactor so consumers can still drop or mask values.
-    configBuilder = configBuilder.addSpanAttributeInterceptor(
-      ClosureInterceptor<[String: AttributeValue]> { attrs in
-        EdotReactNative.mergeUserSessionGlobalAttributes(attrs)
-      }
-    )
-
-    if let redactions = config["attributeRedactions"] as? [String: Any] {
-      if let spanRules = redactions["spans"] as? [String: Any],
-         let spanRedactor = Self.compileAttributeRedactor(spanRules) {
-        configBuilder = configBuilder.addSpanAttributeInterceptor(
-          ClosureInterceptor<[String: AttributeValue]>(spanRedactor)
-        )
-      }
-      if let logRules = redactions["logs"] as? [String: Any],
-         let logRedactor = Self.compileAttributeRedactor(logRules) {
-        configBuilder = configBuilder.addLogRecordAttributeInterceptor(
-          ClosureInterceptor<[String: AttributeValue]>(logRedactor)
-        )
-      }
-    }
 
     if let spanNameRules = config["ignoreSpanNames"] as? [Any] {
       let predicates = Self.compileSpanNamePredicates(spanNameRules)
@@ -340,28 +281,6 @@ class EdotReactNative: NSObject {
       } else {
         EdotReactNative.warnDroppedJsFieldsAfterPreInit(config)
       }
-
-      EdotReactNative.installCentralConfigSampleRateObserver()
-
-      let metricTransport: EdotMetricTransport =
-        (config["exportProtocol"] as? String) == "http" ? .http : .grpc
-      let meterProvider = EdotMeterProviderFactory.build(
-        serverUrl: url,
-        secretToken: config["secretToken"] as? String,
-        apiKey: config["apiKey"] as? String,
-        debug: EdotReactNative.debugEnabledSnapshot(),
-        transport: metricTransport,
-        persistencePreset: config["persistencePreset"] as? String
-      )
-      EdotReactNative.stateLock.lock()
-      EdotReactNative.meterProvider = meterProvider
-      if userAppMetricsEnabled {
-        EdotReactNative.appMetrics = EdotAppMetrics(meterProvider: meterProvider)
-      }
-      if userSystemMetricsEnabled {
-        EdotReactNative.systemMetrics = EdotSystemMetrics(meterProvider: meterProvider)
-      }
-      EdotReactNative.stateLock.unlock()
 
       let urlSessionEnabled = config["enableURLSessionInstrumentation"] as? Bool ?? true
       if urlSessionEnabled {
@@ -679,20 +598,21 @@ class EdotReactNative: NSObject {
                     metricType: String) {
     #if ELASTIC_APM_AVAILABLE
     guard EdotReactNative.emissionAllowed() else { return }
-    EdotReactNative.stateLock.lock()
-    let provider = EdotReactNative.meterProvider
-    EdotReactNative.stateLock.unlock()
-    guard let provider else {
-      debugLog("recordMetric: meterProvider not initialized — skipping")
-      return
-    }
-    let meter = provider.get(name: "react-native-edot")
+    // apm-agent-ios 1.2.1 registers only the legacy (resource-aware) MeterProvider,
+    // not a stable one — so recordMetric uses the legacy meter API. Its labels are
+    // string-only, so custom-metric attribute values are stringified here.
+    let meter = OpenTelemetry.instance.meterProvider.get(
+      instrumentationName: "react-native-edot",
+      instrumentationVersion: nil
+    )
 
-    var otelAttrs: [String: AttributeValue] = [:]
+    var labels: [String: String] = [:]
     for (key, val) in attributes {
       guard let k = key as? String else { continue }
-      if let attr = EdotReactNative.attributeValue(from: val) {
-        otelAttrs[k] = attr
+      if let s = val as? String {
+        labels[k] = s
+      } else if let n = val as? NSNumber {
+        labels[k] = n.stringValue
       } else {
         debugLog("recordMetric: skipping attribute '\(k)' — unsupported type")
       }
@@ -700,14 +620,14 @@ class EdotReactNative: NSObject {
 
     switch metricType {
     case "counter":
-      var counter = meter.counterBuilder(name: name).build()
-      counter.add(value: Int(value), attributes: otelAttrs)
+      let counter = meter.createIntCounter(name: name, monotonic: true)
+      counter.add(value: Int(value), labels: labels)
     case "histogram":
-      var histogram = meter.histogramBuilder(name: name).build()
-      histogram.record(value: value, attributes: otelAttrs)
+      let measure = meter.createDoubleMeasure(name: name, absolute: true)
+      measure.record(value: value, labels: labels)
     case "upDownCounter":
-      var counter = meter.upDownCounterBuilder(name: name).build()
-      counter.add(value: Int(value), attributes: otelAttrs)
+      let counter = meter.createIntCounter(name: name, monotonic: false)
+      counter.add(value: Int(value), labels: labels)
     default:
       debugLog("Unknown metric type: \(metricType)")
     }
@@ -799,15 +719,6 @@ class EdotReactNative: NSObject {
   private static func installURLSessionInstrumentation(serverUrl: String) {
     guard urlSessionInstrumentation == nil else { return }
 
-    // Brand native URLSession spans under the same scope as the JS HTTP client
-    // instrumentation so a single SLO filter (`service.framework.name :
-    // "@inoxth/react-native-edot-sdk/http"`) catches every HTTP request the app
-    // makes -- JS-initiated, native third-party SDKs, and WebViews alike.
-    let httpTracer = OpenTelemetry.instance.tracerProvider.get(
-      instrumentationName: "@inoxth/react-native-edot-sdk/http",
-      instrumentationVersion: "1.0.0"
-    )
-
     let urlSessionConfig = URLSessionInstrumentationConfiguration(
       shouldInstrument: { request in
         if let url = request.url?.absoluteString, url.hasPrefix(serverUrl) {
@@ -826,52 +737,10 @@ class EdotReactNative: NSObject {
       },
       spanCustomization: { _, builder in
         _ = builder.setAttribute(key: "http.client", value: AttributeValue.string("urlsession"))
-      },
-      tracer: httpTracer
+      }
     )
     urlSessionInstrumentation = URLSessionInstrumentation(configuration: urlSessionConfig)
   }
-
-  static func persistencePreset(from raw: String) -> PersistencePerformancePreset {
-    switch raw {
-    case "highVolume": return .instantDataDelivery
-    default: return .default
-    }
-  }
-
-  /// Observes UserDefaults for changes to the apm-agent-ios central-config key.
-  ///
-  /// When `CentralConfigFetcher` writes a new config payload, UserDefaults posts
-  /// `.didChangeNotification`. We detect the change and re-post
-  /// `.elasticSessionManagerDidRefreshSession` so that `SessionSampler` re-runs
-  /// its `sampleRateResolver` closure — which reads `CentralConfig().data.sampleRate`
-  /// — and updates its cached `shouldSample` flag. This makes central-config
-  /// `sampleRate` changes apply at the next polling boundary rather than only at
-  /// the next session refresh.
-  private static func installCentralConfigSampleRateObserver() {
-    guard centralConfigObserver == nil else { return }
-    let key = "elastic.central.configuration"
-    lastSeenCentralConfig = UserDefaults.standard.object(forKey: key) as? String
-    centralConfigObserver = NotificationCenter.default.addObserver(
-      forName: UserDefaults.didChangeNotification,
-      object: UserDefaults.standard,
-      queue: nil
-    ) { _ in
-      let current = UserDefaults.standard.object(forKey: key) as? String
-      stateLock.lock()
-      let previous = lastSeenCentralConfig
-      if current != previous {
-        lastSeenCentralConfig = current
-      }
-      stateLock.unlock()
-      guard current != previous else { return }
-      NotificationCenter.default.post(
-        name: .elasticSessionManagerDidRefreshSession,
-        object: nil
-      )
-    }
-  }
-
 
   private static func compileAttributeRedactor(
     _ rules: [String: Any]
@@ -972,7 +841,7 @@ class EdotReactNative: NSObject {
   private static func compileLogPredicates(
     _ rules: [[String: Any]]
   ) -> [(ReadableLogRecord) -> Bool] {
-    return rules.compactMap { rule in
+    return rules.compactMap { rule -> ((ReadableLogRecord) -> Bool)? in
       var namePredicate: ((String?) -> Bool)?
       var minSeverity: Severity?
 
@@ -1001,7 +870,11 @@ class EdotReactNative: NSObject {
       guard namePredicate != nil || minSeverity != nil else { return nil }
 
       return { record in
-        if let predicate = namePredicate, predicate(record.eventName) {
+        var recordEventName: String?
+        if case let .string(name)? = record.attributes["event.name"] {
+          recordEventName = name
+        }
+        if let predicate = namePredicate, predicate(recordEventName) {
           return true
         }
         if let min = minSeverity, let recordSeverity = record.severity {
