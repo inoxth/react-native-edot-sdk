@@ -598,16 +598,21 @@ class EdotReactNative: NSObject {
                     metricType: String) {
     #if ELASTIC_APM_AVAILABLE
     guard EdotReactNative.emissionAllowed() else { return }
-    guard let meter = OpenTelemetry.instance.stableMeterProvider?.get(name: "react-native-edot") else {
-      debugLog("recordMetric: no stable meter provider available — skipping")
-      return
-    }
+    // apm-agent-ios 1.2.1 registers only the legacy (resource-aware) MeterProvider,
+    // not a stable one — so recordMetric uses the legacy meter API. Its labels are
+    // string-only, so custom-metric attribute values are stringified here.
+    let meter = OpenTelemetry.instance.meterProvider.get(
+      instrumentationName: "react-native-edot",
+      instrumentationVersion: nil
+    )
 
-    var otelAttrs: [String: AttributeValue] = [:]
+    var labels: [String: String] = [:]
     for (key, val) in attributes {
       guard let k = key as? String else { continue }
-      if let attr = EdotReactNative.attributeValue(from: val) {
-        otelAttrs[k] = attr
+      if let s = val as? String {
+        labels[k] = s
+      } else if let n = val as? NSNumber {
+        labels[k] = n.stringValue
       } else {
         debugLog("recordMetric: skipping attribute '\(k)' — unsupported type")
       }
@@ -615,14 +620,14 @@ class EdotReactNative: NSObject {
 
     switch metricType {
     case "counter":
-      var counter = meter.counterBuilder(name: name).build()
-      counter.add(value: Int(value), attribute: otelAttrs)
+      let counter = meter.createIntCounter(name: name, monotonic: true)
+      counter.add(value: Int(value), labels: labels)
     case "histogram":
-      var histogram = meter.histogramBuilder(name: name).build()
-      histogram.record(value: value, attributes: otelAttrs)
+      let measure = meter.createDoubleMeasure(name: name, absolute: true)
+      measure.record(value: value, labels: labels)
     case "upDownCounter":
-      var counter = meter.upDownCounterBuilder(name: name).build()
-      counter.add(value: Int(value), attributes: otelAttrs)
+      let counter = meter.createIntCounter(name: name, monotonic: false)
+      counter.add(value: Int(value), labels: labels)
     default:
       debugLog("Unknown metric type: \(metricType)")
     }
