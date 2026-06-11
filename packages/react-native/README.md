@@ -43,7 +43,7 @@ Apply the EDOT Android Gradle plugin — it provides the `co.elastic.otel.androi
 ```groovy
 buildscript {
   dependencies {
-    classpath("co.elastic.otel.android.agent:co.elastic.otel.android.agent.gradle.plugin:1.5.0")
+    classpath("co.elastic.otel.android.agent:co.elastic.otel.android.agent.gradle.plugin:1.1.0")
   }
   repositories {
     google()
@@ -64,6 +64,12 @@ Requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36, minSdk 24. See [`example/react-
 No extra command needed — RN Gradle autolinking wires the SDK on the next `yarn android` / `./gradlew` build.
 
 > ⚠️ **Do not apply `co.elastic.otel.android.instrumentation.okhttp`.** RN's `fetch` / `XHR` are already instrumented at the JS layer — adding the OkHttp Gradle plugin would emit a second span per HTTP call, doubling APM ingest cost. If you need OkHttp instrumentation for non-RN code paths in the same app, install an interceptor that skips requests carrying the `X-Edot-RN-Traced` header (set by the JS-layer instrumentation).
+
+> ℹ️ **Optional — opt out of `READ_PHONE_STATE`.** The EDOT Android agent (`agent-sdk` 1.1.0) declares the `READ_PHONE_STATE` "dangerous" permission, used only for an optional cellular network-subtype attribute. It is runtime-guarded (crash-safe when ungranted) and was removed upstream in `agent-sdk` 1.3.1. To strip it from your merged manifest, add this to `android/app/src/main/AndroidManifest.xml` (ensure the root `<manifest>` tag has `xmlns:tools="http://schemas.android.com/tools"`):
+>
+> ```xml
+> <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove" />
+> ```
 
 ## Initialize
 
@@ -345,7 +351,7 @@ Severity is one of `'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'`.
 ## Requirements
 
 - React Native >= 0.75 (required for the `spm_dependency` Cocoapods helper)
-- iOS >= 16.0
+- iOS >= 15.6
 - Android minSdk 24, compileSdk 36
 - Node.js >= 18
 

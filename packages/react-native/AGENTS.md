@@ -94,7 +94,7 @@ When iOS pre-init is in use, the `serviceName` passed to `EdotReactNativeAgent.p
 
 Each `setup*()` function in `instrumentation/` monkey-patches a global (fetch, XHR, ErrorUtils) and returns a `() => void` teardown that restores the original. `startup.ts` uses `requestIdleCallback` (not `InteractionManager`) to mark first-render. Startup emits a `AppStartup: cold` parent span with two child spans (`AppStartup: js_bundle_load` and `AppStartup: first_render`) and closes all three via `requestIdleCallback`.
 
-These JS-side startup span names are RN-specific. EDOT iOS reports app launch as a metric only (`application.launch.time` histogram via MetricKit — see `EdotAppMetrics.swift`) and EDOT Android does not auto-instrument app startup at all (`AppMetrics.kt` fills the gap with a matching histogram). OTel mobile semantic conventions do not yet define startup span names. The `AppStartup:` prefix is therefore not changed to match a non-existent upstream convention; the native `application.launch.time` metric remains the cross-platform comparable signal.
+These JS-side startup span names are RN-specific. EDOT iOS reports app launch as a metric only (`application.launch.time`, emitted by apm-agent-ios 1.2.1's built-in `AppMetrics`) and EDOT Android does not auto-instrument app startup at all (`EdotAppMetrics.kt` fills the gap with a matching histogram). OTel mobile semantic conventions do not yet define startup span names. The `AppStartup:` prefix is therefore not changed to match a non-existent upstream convention; the native `application.launch.time` metric remains the cross-platform comparable signal.
 
 ### Typed Span-Attribute Bridge
 
@@ -134,9 +134,9 @@ All four scopes share the `@inoxth/react-native-edot-sdk/<class>` shape so a sin
 
 Resource attributes (`service.name`, `service.version`, `os.*`, `device.id`, `process.runtime.*`, `telemetry.sdk.*`, etc.) are auto-injected by apm-agent-ios's `AgentResource` and OpenTelemetry-Swift's `SDKResourceExtension` when `ElasticApmAgent.start(...)` runs. JS supplies service identity (`serviceName`, `serviceVersion`, `deploymentEnvironment`) via `OTEL_RESOURCE_ATTRIBUTES` env var (set in `EdotReactNativeAgent.swift` before agent start). No JS-side resource detection — see `ios/AGENTS.md`.
 
-### iOS Metrics Pipeline
+### iOS Metrics
 
-The iOS module replaces apm-agent-ios's global `MeterProvider` with a resource-aware one (`EdotMeterProviderFactory`). Pipeline: `PeriodicMetricReader (60s) → Logging? → Persistence (Caches/elastic/) → CentralConfigGate → HTTP|gRPC`. Default transport gRPC; `exportProtocol: "http"` overrides. `EdotAppMetrics` (MetricKit `application.launch.time`) and `EdotSystemMetrics` (CPU/memory observable gauges) replace apm-agent-ios's reimplementations because they emit through the resource-less global. The `CentralConfigGate` (`EdotCentralConfigMetricExporter`) is a deliberate divergence — upstream v2.0.0 doesn't gate metrics on the central-config `recording` flag. See `ios/AGENTS.md` for the full set of load-bearing rules.
+No custom metrics pipeline — the 2.x-era `EdotMeterProviderFactory` / `EdotCentralConfigMetricExporter` / `EdotAppMetrics` / `EdotSystemMetrics` were removed in the downgrade. On apm-agent-ios 1.2.1, `recordMetric` uses the agent's legacy (resource-aware) global meter (`OpenTelemetry.instance.meterProvider`), and `application.launch.time` / `system.cpu.usage` / `system.memory.usage` are emitted by the agent's built-in `AppMetrics` / `CPUSampler` / `MemorySampler` (same names + `state=app` as Android), toggled by `enableAppMetricInstrumentation` / `enableSystemMetrics`. See `ios/AGENTS.md` and `docs/parity-after-downgrade.md`.
 
 ### Android Native Metrics, OkHttp Anti-Pattern, and Filters
 
@@ -169,7 +169,7 @@ The legacy `'JS Error'` (JS-side) and `'js_error: <name>'` (native-side) spans w
 `fetch.ts` and `xhr.ts` emit **legacy** HTTP semantic-conv attribute names (`http.method`, `http.url`, `http.status_code`, `http.scheme`, `http.target`, `net.peer.name`, `net.peer.port`, `http.request_body.size`, `http.response_body.size`) — NOT the v1.23 stable names (`http.request.method`, `url.full`, `http.response.status_code`, …). This matches:
 
 1. The Elastic mobile attributes spec (`https://github.com/elastic/apm/blob/main/specs/agents/mobile/README.md`) — which documents legacy names as the "OTel Convention" agents should send; APM Server remaps to ECS field names internally.
-2. apm-agent-ios v2.0.0 via opentelemetry-swift v2.2.1's `URLSessionLogger` (which emits the same legacy names on native HTTP spans).
+2. apm-agent-ios 1.2.1 via opentelemetry-swift 1.13.0's `URLSessionLogger` (which emits the same legacy names on native HTTP spans).
 
 This alignment lets apm-agent-ios's `ElasticSpanProcessor` recognize JS HTTP spans as HTTP via `isHttpSpan()` (which keys on `http.url` presence) and apply the same enrichment as native: `network.connection.type` via `NetworkStatusInjector`, synthetic-parent transaction wrapping for orphan spans. See `ios/AGENTS.md` "JS-driven HTTP Spans Get Native Enrichment Automatically".
 
@@ -185,7 +185,7 @@ For Wix consumers: `registerEdotNavigationListener` is called inside `Navigation
 
 ### Configuration Surface (recent additions)
 
-JS-callable config knobs that pass through to apm-agent-ios v2.0.0's builder:
+JS-callable config knobs that pass through to apm-agent-ios 1.2.1's builder:
 
 - `disableAgent` — fully suppresses native agent startup
 - `ignoreSpanNames` and `ignoreLogPatterns` — predicate filters via `addSpanFilter` / `addLogFilter`

@@ -109,12 +109,11 @@ Swift, gated by `#if ELASTIC_APM_AVAILABLE`. Entry points:
 
 - **`EdotReactNative.swift`** — the RN TurboModule. Calls `ElasticApmAgent.start(...)` unless `EdotReactNativeAgent.isPreInitialized` is true. Disables apm-agent-ios's URLSession swizzle and reinstalls a filtered `URLSessionInstrumentation` keyed off the `X-Edot-RN-Traced` header so JS-driven `fetch`/`XHR` aren't double-spanned.
 - **`EdotReactNativeAgent.swift`** — optional pre-init for AppDelegate, before the JS bridge loads. Enforces resource-identity validation (`serviceName`, `serviceVersion`, `deploymentEnvironment` must be non-blank and must not contain `,` or `=`) and double-sets both `deployment.environment` and `deployment.environment.name` in `OTEL_RESOURCE_ATTRIBUTES` to override apm-agent-ios's hardcoded `"default"` for APM Server 8.16+ semantic conventions.
-- **`EdotMeterProviderFactory.swift`** — builds a resource-aware `MeterProvider` that replaces apm-agent-ios's upstream global (which is constructed without `.setResource(...)` and exports under `unknown_service:*`). Pipeline: `PeriodicMetricReader (60s) → Logging? → Persistence (Caches/elastic/) → CentralConfigGate → HTTP|gRPC`. Default transport is gRPC. The `CentralConfigGate` (`EdotCentralConfigMetricExporter`) gates metric export on the `recording: Bool` central-config flag — apm-agent-ios v2.0.0 doesn't honor it for metrics.
-- **`EdotAppMetrics.swift`** + **`EdotSystemMetrics.swift`** — local reimplementations of MetricKit launch-time and CPU/memory observable gauges. Required because apm-agent-ios's versions emit through the resource-less global meter provider.
+- **Metrics** — no custom pipeline. `recordMetric` uses apm-agent-ios 1.2.1's legacy (resource-aware) global meter, and `application.launch.time` / `system.cpu.usage` / `system.memory.usage` come from the agent's built-in `AppMetrics` / `CPUSampler` / `MemorySampler` (same names + `state=app` as Android), gated by `enableAppMetricInstrumentation` / `enableSystemMetrics`. The 2.x-era `EdotMeterProviderFactory` / `EdotCentralConfigMetricExporter` / `EdotAppMetrics` / `EdotSystemMetrics` were removed in the downgrade.
 
 See `packages/react-native/ios/AGENTS.md` for the full set of load-bearing rules and the upstream issues these workarounds track.
 
-The SDK ships a real podspec (`packages/react-native/EdotReactNative.podspec`) that compiles its iOS sources and declares the `apm-agent-ios` Swift Package as a dependency via React Native's top-level `spm_dependency` helper (RN 0.75+; resolved by `SPMManager#apply_on_post_install` in `react_native/scripts/cocoapods/spm.rb`). `pod install` mutates `installer.pods_project` to add the SPM package reference and link the `ElasticApm` and `OpenTelemetryProtocolExporter` / `OpenTelemetryProtocolExporterHTTP` / `PersistenceExporter` products onto the EdotReactNative pod target — no per-app Xcode SPM configuration is required. The pod target sets `SWIFT_ACTIVE_COMPILATION_CONDITIONS = ELASTIC_APM_AVAILABLE` so the `#if ELASTIC_APM_AVAILABLE` gate fires only when SPM is actually wired up.
+The SDK ships a real podspec (`packages/react-native/EdotReactNative.podspec`) that compiles its iOS sources and declares the `apm-agent-ios` Swift Package as a dependency via React Native's top-level `spm_dependency` helper (RN 0.75+; resolved by `SPMManager#apply_on_post_install` in `react_native/scripts/cocoapods/spm.rb`). `pod install` mutates `installer.pods_project` to add the SPM package reference and link the `ElasticApm` and `OpenTelemetryApi` / `OpenTelemetrySdk` / `URLSessionInstrumentation` products onto the EdotReactNative pod target — no per-app Xcode SPM configuration is required. The pod target sets `SWIFT_ACTIVE_COMPILATION_CONDITIONS = ELASTIC_APM_AVAILABLE` so the `#if ELASTIC_APM_AVAILABLE` gate fires only when SPM is actually wired up.
 
 ### Android (`packages/react-native/android/`)
 
@@ -123,9 +122,9 @@ Kotlin. Two entry points:
 - **`EdotReactNativeModule.kt`** — the RN module. On `initialize(config)`, if not pre-initialized, calls `EdotReactNativeAgent.buildFromJsConfig(...)` to start the agent programmatically from JS config.
 - **`EdotReactNativeAgent.kt`** — builds `ElasticApmAgent` via the EDOT Android builder. Applies `exportProtocol` (http/grpc), `sessionSamplingRate`, `diskBufferingEnabled`, service identity, and auth (secret token or API key).
 
-`getCurrentSessionId()` returns `""` — ElasticApmAgent 1.5.0 exposes `SessionManager` only as an internal `$agent_sdk` API. Re-enable once upstream adds a public accessor.
+`getCurrentSessionId()` returns `""` — the EDOT Android agent exposes `SessionManager` only as an internal `$agent_sdk` API. Re-enable once upstream adds a public accessor.
 
-The EDOT Gradle plugin (`co.elastic.otel.android.agent` v1.5.0) must be applied by consumers; it brings the `co.elastic.otel.android` runtime onto the classpath. Requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36, minSdk 24.
+The EDOT Gradle plugin (`co.elastic.otel.android.agent` v1.1.0) must be applied by consumers; it brings the `co.elastic.otel.android` runtime onto the classpath. Requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36, minSdk 24.
 
 ## Active View Correlation
 

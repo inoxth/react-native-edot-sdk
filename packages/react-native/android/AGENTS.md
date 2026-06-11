@@ -4,7 +4,7 @@
 
 Android half of `@inoxth/react-native-edot-sdk`. Kotlin module that bridges JS → `apm-agent-android` (EDOT Gradle plugin `co.elastic.otel.android.agent` v1.1.0, runtime `co.elastic.otel.android:agent-sdk:1.1.0`) and `io.opentelemetry:opentelemetry-api:1.51.0`. Pinned to the 1.1.x line so the module compiles under stock RN 0.81 (Kotlin 2.1.20) — `agent-sdk` ≥ 1.2.0 requires Kotlin ≥ 2.2 (see DEV-420). Supports Old Arch (`ReactContextBaseJavaModule` + `@ReactMethod`) and New Arch (codegen-generated `NativeEdotReactNativeSpec`) from a single codebase via arch-conditional source sets.
 
-`apm-agent-android` v1.5.0 does **not** auto-emit `application.launch.time`, `system.cpu.usage`, or `system.memory.usage` — all three are filled in by this module (`EdotAppMetrics.kt`, `EdotSystemMetrics.kt`). Without those classes the metrics never reach APM Server. `getCurrentSessionId()` always returns `""` — `ElasticApmAgent` 1.5.0 exposes `SessionManager` only as an internal `$agent_sdk` API.
+`apm-agent-android` 1.1.0 does **not** auto-emit `application.launch.time`, `system.cpu.usage`, or `system.memory.usage` — all three are filled in by this module (`EdotAppMetrics.kt`, `EdotSystemMetrics.kt`). Without those classes the metrics never reach APM Server. `getCurrentSessionId()` always returns `""` — `ElasticApmAgent` 1.1.0 exposes `SessionManager` only as an internal `$agent_sdk` API.
 
 ## Files
 
@@ -45,7 +45,7 @@ When `EdotReactNativeAgent.isPreInitialized` is true, `EdotReactNativeModuleImpl
 
 ### No custom `MeterProvider` (contrast iOS)
 
-`apm-agent-android`'s `ElasticApmAgent.getOpenTelemetry()` returns a resource-aware `OpenTelemetry` instance. `EdotAppMetrics` and `EdotSystemMetrics` call `openTelemetry.getMeter(...)` / `openTelemetry.meterBuilder(...)` directly. iOS has to build its own `MeterProvider` because apm-agent-ios v2.0.0's global is resource-less; Android has no equivalent issue.
+`apm-agent-android`'s `ElasticApmAgent.getOpenTelemetry()` returns a resource-aware `OpenTelemetry` instance. `EdotAppMetrics` and `EdotSystemMetrics` call `openTelemetry.getMeter(...)` / `openTelemetry.meterBuilder(...)` directly. apm-agent-ios 1.2.1's global meter is likewise resource-aware, so neither platform needs a custom `MeterProvider` — the 2.x-era custom iOS pipeline was removed in the downgrade.
 
 ### Export protocol selection
 
@@ -65,7 +65,7 @@ These rules have an observable failure if removed.
 4. **Explicit `setExplicitBucketBoundariesAdvice` for `application.launch.time`** (`EdotAppMetrics.kt:40, 85-88`) — OTel's default histogram boundaries are tuned for ms-scale HTTP durations. Without this advice, a typical 1–4s cold start collapses into bucket `[0, 5]` and APM Server reports the midpoint (2.5s) regardless of the true value. iOS doesn't hit this because `EdotAppMetrics.swift` already supplies bucket boundaries derived from MetricKit.
 5. **`AtomicLong` pair for CPU delta** (`EdotSystemMetrics.kt:44-45, 50-57`) — `lastCpuMs` / `lastWallMs` use `getAndSet` so the gauge callback is thread-safe across SDK metric reader threads. Non-atomic reads would produce incorrect deltas under contention.
 6. **`BuildConfig.IS_NEW_ARCHITECTURE_ENABLED` wired into `ReactModuleInfo.isTurboModule`** (`EdotReactNativePackage.kt:26`, `build.gradle.kts:15`) — a wrong value loads the module under the wrong arch pipeline at runtime.
-7. **`getCurrentSessionId()` resolves `""` (never throws)** (`EdotReactNativeModuleImpl.kt:197-202`) — `ElasticApmAgent` 1.5.0 exposes no public session accessor. JS callers depend on the promise resolving; rejecting would surface as a noisy app-level error for a benign upstream gap.
+7. **`getCurrentSessionId()` resolves `""` (never throws)** (`EdotReactNativeModuleImpl.kt:197-202`) — `ElasticApmAgent` 1.1.0 exposes no public session accessor. JS callers depend on the promise resolving; rejecting would surface as a noisy app-level error for a benign upstream gap.
 8. **`isBlockingSynchronousMethod = true` on `startSpan`, `startClientSpan`, `getTraceparent`** (`src/oldarch/.../EdotReactNativeModule.kt:40, 48, 56`) — these methods return a span ID / traceparent synchronously and JS reads the return value immediately (`fetch.ts` sets `X-Edot-Traceparent` headers before await). Removing the flag makes them async-only under Old Arch and breaks the bridge contract.
 
 ## Distribution
