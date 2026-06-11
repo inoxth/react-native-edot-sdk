@@ -284,27 +284,25 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
         }
 
         val attrsBuilder = Attributes.builder()
+        // Metric attributes are string-only labels on both platforms (iOS 1.2.1's
+        // legacy meter supports only string labels). Stringify numeric/boolean
+        // values so the same JS call produces identical metric dimensions everywhere.
         val iterator = attributes.keySetIterator()
         while (iterator.hasNextKey()) {
             val key = iterator.nextKey()
-            when (attributes.getType(key)) {
-                ReadableType.String -> attrsBuilder.put(
-                    io.opentelemetry.api.common.AttributeKey.stringKey(key),
-                    attributes.getString(key)!!
-                )
+            val stringValue = when (attributes.getType(key)) {
+                ReadableType.String -> attributes.getString(key)
                 ReadableType.Number -> {
                     val d = attributes.getDouble(key)
-                    if (isIntegerValued(d)) attrsBuilder.put(
-                        io.opentelemetry.api.common.AttributeKey.longKey(key), d.toLong()
-                    ) else attrsBuilder.put(
-                        io.opentelemetry.api.common.AttributeKey.doubleKey(key), d
-                    )
+                    if (isIntegerValued(d)) d.toLong().toString() else d.toString()
                 }
-                ReadableType.Boolean -> attrsBuilder.put(
-                    io.opentelemetry.api.common.AttributeKey.booleanKey(key),
-                    attributes.getBoolean(key)
-                )
-                else -> android.util.Log.w("EDOT", "recordMetric: skipping attribute '$key' — unsupported type")
+                ReadableType.Boolean -> attributes.getBoolean(key).toString()
+                else -> null
+            }
+            if (stringValue != null) {
+                attrsBuilder.put(io.opentelemetry.api.common.AttributeKey.stringKey(key), stringValue)
+            } else {
+                android.util.Log.w("EDOT", "recordMetric: skipping attribute '$key' — unsupported type")
             }
         }
         val attrs = attrsBuilder.build()

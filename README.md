@@ -83,7 +83,7 @@ Each row links to the package that provides the API. Features marked **Auto** ar
 | Log | 3rd arg of `EdotReactNative.log(severity, message, attributes?)` | `string \| number \| boolean` | [`@inoxth/react-native-edot-sdk`](./packages/react-native/README.md) |
 | User action | 3rd arg of `addAction(type, name, attributes?)` / `trackAction(...)` | `string \| number \| boolean` | [`@inoxth/react-native-edot-sdk`](./packages/react-native/README.md) |
 | Span (manual) | `span.setAttribute(key, value)`, `startSpan(name, { attributes })` | `string \| number \| boolean` | [`@inoxth/react-native-edot-tracer-provider`](./packages/react-native-tracer-provider/README.md) |
-| Metric | 2nd arg of `counter.add(value, attributes?)`, `histogram.record(...)`, `upDown.add(...)` | `string \| number \| boolean` | [`@inoxth/react-native-edot-tracer-provider`](./packages/react-native-tracer-provider/README.md) |
+| Metric | 2nd arg of `counter.add(value, attributes?)`, `histogram.record(...)`, `upDown.add(...)` | `string` | [`@inoxth/react-native-edot-tracer-provider`](./packages/react-native-tracer-provider/README.md) |
 
 User attribute propagation onto spans is controlled by `EdotConfig.userAttributes.includeInSpans` (`'all' \| 'id-only' \| 'none'`, default `'id-only'`).
 

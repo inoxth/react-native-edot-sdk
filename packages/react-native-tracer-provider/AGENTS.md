@@ -37,7 +37,7 @@ src/
 - Both providers are lazy singletons (created on first call)
 - Delegates all operations to `EdotNativeModule` via `getNativeModule()` from `@inoxth/react-native-edot-shared`. The shared accessor lazy-`require()`s `@inoxth/react-native-edot-sdk/nativeModule` and caches the result, breaking the dependency cycle that would form if this package imported the SDK directly
 - `withSpanContext` uses a module-scoped `contextStack: Span[]` (stack-based). Push on entry, pop in `finally`. Detects async interleave: if the top of the stack on exit differs from what was pushed, a `console.warn` fires and the mismatched entry is spliced out to keep the stack balanced. Still not safe across truly concurrent async boundaries — pass `parentSpan` explicitly in `SpanOptions` for async code.
-- Metric attributes are passed to `recordMetric` with their original `string | number | boolean` types (no stringification). The native module (`iOS`/`Android`) currently only reads string-typed attributes and silently drops numbers/booleans — tracked as **F-17b** (native follow-up).
+- Metric attributes are **string-only** (`Record<string, string>`). iOS 1.2.1's legacy meter supports only string labels; Android stringifies to match, so the same `counter.add` / `histogram.record` / `upDownCounter.add` call produces identical metric dimensions on both platforms. (Span attributes stay typed `string | number | boolean`.)
 - Both modules export `resetForTesting()` / `resetMeterForTesting()` to clear singletons and cached native module between tests
 
 ## Dependencies

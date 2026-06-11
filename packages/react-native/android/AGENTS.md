@@ -53,7 +53,7 @@ When `EdotReactNativeAgent.isPreInitialized` is true, `EdotReactNativeModuleImpl
 
 ### Numeric attribute typing
 
-`isIntegerValued(value: Double)` returns true iff `value.isFinite() && value == value.toLong().toDouble()`. Integer-valued doubles are stored as `Long`, fractional as `Double`. Applied at every numeric write site: `setSpanAttributeNumber`, `recordMetric` attributes, `emitLog` attributes. Mirrors iOS's `CFNumberIsFloatType` logic so APM Server stores the right OTel type.
+`isIntegerValued(value: Double)` returns true iff `value.isFinite() && value == value.toLong().toDouble()`. Integer-valued doubles are stored as `Long`, fractional as `Double`. Applied at the numeric write sites `setSpanAttributeNumber` and `emitLog` attributes (`recordMetric` attributes are string-only labels — stringified to match iOS). Mirrors iOS's `CFNumberIsFloatType` logic so APM Server stores the right OTel type.
 
 ## Load-Bearing Rules
 
@@ -94,5 +94,5 @@ Example apps apply the EDOT Gradle plugin `co.elastic.otel.android.agent` v1.1.0
 - **Don't add `co.elastic.otel.android.instrumentation.okhttp`** to consumer apps. RN's `fetch` / `XHR` are already instrumented at the JS layer; the plugin would emit a second span for every JS HTTP call. Android has no `X-Edot-RN-Traced` dedup filter because the plugin isn't active by default (iOS's `URLSessionInstrumentation` filter handles the equivalent concern on that platform).
 - **Don't call `buildFromJsConfig` when `isPreInitialized == true`.** `EdotReactNativeModuleImpl.initialize` already guards this; bypassing the guard would build a second `ElasticApmAgent`.
 - **Don't use the SDK's default tracer scope (`"react-native-edot"`) inside `EdotAppMetrics` or `EdotSystemMetrics`.** Those classes use their own scopes (`ApplicationMetrics`, `CPU Sampler`, `Memory Sampler`) so cross-platform dashboards can group iOS + Android samples under one `instrumentation.scope.name`.
-- **Don't skip `isIntegerValued` when writing numeric attributes.** `setSpanAttributeNumber`, `recordMetric`, and `emitLog` must preserve the int/double distinction so APM Server stores the correct OTel attribute type.
+- **Don't skip `isIntegerValued` when writing numeric attributes.** `setSpanAttributeNumber` and `emitLog` must preserve the int/double distinction so APM Server stores the correct OTel attribute type (`recordMetric` attributes are string-only).
 - **Don't partial-init when `disableAgent == true`.** `buildFromJsConfig` must be skipped wholesale; `EdotAppMetrics` / `EdotSystemMetrics` are not installed; `emissionAllowed()` plus the missing `EdotReactNativeAgent.openTelemetry` short-circuits the bridge cleanly. A no-op agent built halfway would still register lifecycle callbacks.
