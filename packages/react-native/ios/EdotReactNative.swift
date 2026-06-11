@@ -178,6 +178,17 @@ class EdotReactNative: NSObject {
     // installURLSessionInstrumentation); disable the agent's built-in one.
     instrumentationConfig.enableURLSessionInstrumentation = false
 
+    // App/system metrics come from the agent's built-in AppMetrics / CPUSampler /
+    // MemorySampler — `application.launch.time`, `system.cpu.usage`,
+    // `system.memory.usage` (same names + `state=app` as Android). They default
+    // on; let JS config toggle them so the flags behave the same on both platforms.
+    if let v = config["enableAppMetricInstrumentation"] as? Bool {
+      instrumentationConfig.enableAppMetricInstrumentation = v
+    }
+    if let v = config["enableSystemMetrics"] as? Bool {
+      instrumentationConfig.enableSystemMetrics = v
+    }
+
     if let spanNameRules = config["ignoreSpanNames"] as? [Any] {
       let predicates = Self.compileSpanNamePredicates(spanNameRules)
       if !predicates.isEmpty {
@@ -213,11 +224,6 @@ class EdotReactNative: NSObject {
       let urlSessionEnabled = config["enableURLSessionInstrumentation"] as? Bool ?? true
       if urlSessionEnabled {
         EdotReactNative.installURLSessionInstrumentation(serverUrl: serverUrl)
-      }
-
-      let systemMetricsEnabled = config["enableSystemMetrics"] as? Bool ?? true
-      if systemMetricsEnabled {
-        EdotSystemMetrics.install()
       }
     }
 
