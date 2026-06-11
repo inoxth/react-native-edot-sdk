@@ -1,9 +1,7 @@
 import { getNativeModule } from '@inoxth/react-native-edot-shared';
 import type { MeterProvider, Meter, Counter, Histogram, UpDownCounter } from './types';
 
-function resolveAttributes(
-  attributes?: Record<string, string | number | boolean>,
-): Record<string, string | number | boolean> {
+function resolveAttributes(attributes?: Record<string, string>): Record<string, string> {
   return attributes ?? {};
 }
 
@@ -11,7 +9,7 @@ function createMeter(_name: string, _version?: string): Meter {
   return {
     createCounter(name: string): Counter {
       return {
-        add(value: number, attributes?: Record<string, string | number | boolean>): void {
+        add(value: number, attributes?: Record<string, string>): void {
           getNativeModule().recordMetric(name, value, resolveAttributes(attributes), 'counter');
         },
       };
@@ -19,7 +17,7 @@ function createMeter(_name: string, _version?: string): Meter {
 
     createHistogram(name: string): Histogram {
       return {
-        record(value: number, attributes?: Record<string, string | number | boolean>): void {
+        record(value: number, attributes?: Record<string, string>): void {
           getNativeModule().recordMetric(name, value, resolveAttributes(attributes), 'histogram');
         },
       };
@@ -27,7 +25,7 @@ function createMeter(_name: string, _version?: string): Meter {
 
     createUpDownCounter(name: string): UpDownCounter {
       return {
-        add(value: number, attributes?: Record<string, string | number | boolean>): void {
+        add(value: number, attributes?: Record<string, string>): void {
           getNativeModule().recordMetric(
             name,
             value,
