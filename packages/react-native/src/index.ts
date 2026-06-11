@@ -11,7 +11,6 @@ export type { UseEdotResult } from './hooks/useEdot';
 export type { ActiveView } from './activeViewContext';
 export type {
   EdotConfig,
-  EdotUser,
   TrackingConsent,
   EdotIosConfig,
   EdotAndroidConfig,

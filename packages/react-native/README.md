@@ -14,7 +14,7 @@ OpenTelemetry-compliant observability SDK for React Native. Wraps the native [ED
 - **User interactions** — `withEdotTracking` HOC and `useEdotAction` hook for tap/action tracking
 - **Manual instrumentation** — see [`@inoxth/react-native-edot-tracer-provider`](../react-native-tracer-provider) for custom spans and metrics
 - **Navigation tracking** — see [`@inoxth/react-native-edot-navigation`](../react-native-navigation) for screen spans
-- **Attribute redaction + ignore filters** — `attributeRedactions`, `ignoreSpanNames`, `ignoreLogPatterns` for PII handling and noise control on both platforms
+- **Ignore filters** — `ignoreSpanNames`, `ignoreLogPatterns` for noise control on both platforms
 
 ## Install
 
@@ -43,7 +43,7 @@ Apply the EDOT Android Gradle plugin — it provides the `co.elastic.otel.androi
 ```groovy
 buildscript {
   dependencies {
-    classpath("co.elastic.otel.android.agent:co.elastic.otel.android.agent.gradle.plugin:1.5.0")
+    classpath("co.elastic.otel.android.agent:co.elastic.otel.android.agent.gradle.plugin:1.1.0")
   }
   repositories {
     google()
@@ -64,6 +64,12 @@ Requires Gradle 8.7+, AGP 8.9.1+, compileSdk 36, minSdk 24. See [`example/react-
 No extra command needed — RN Gradle autolinking wires the SDK on the next `yarn android` / `./gradlew` build.
 
 > ⚠️ **Do not apply `co.elastic.otel.android.instrumentation.okhttp`.** RN's `fetch` / `XHR` are already instrumented at the JS layer — adding the OkHttp Gradle plugin would emit a second span per HTTP call, doubling APM ingest cost. If you need OkHttp instrumentation for non-RN code paths in the same app, install an interceptor that skips requests carrying the `X-Edot-RN-Traced` header (set by the JS-layer instrumentation).
+
+> ℹ️ **Optional — opt out of `READ_PHONE_STATE`.** The EDOT Android agent (`agent-sdk` 1.1.0) declares the `READ_PHONE_STATE` "dangerous" permission, used only for an optional cellular network-subtype attribute. It is runtime-guarded (crash-safe when ungranted) and was removed upstream in `agent-sdk` 1.3.1. To strip it from your merged manifest, add this to `android/app/src/main/AndroidManifest.xml` (ensure the root `<manifest>` tag has `xmlns:tools="http://schemas.android.com/tools"`):
+>
+> ```xml
+> <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove" />
+> ```
 
 ## Initialize
 
@@ -168,7 +174,7 @@ EdotReactNativeAgent.preInitialize(
 )
 ```
 
-Both signatures accept the same optional auth + transport surface as JS init: `secretToken`, `apiKey`, `sessionSamplingRate`, `exportProtocol`, plus `persistencePreset` (iOS) / `diskBufferingEnabled` (Android). When pre-initialized, the JS `initialize()` call skips agent start and (under `debug`) logs any reserved fields it receives that pre-init should have owned, since the agent is already running.
+Both signatures accept the same optional auth + transport surface as JS init: `secretToken`, `apiKey`, `sessionSamplingRate`, `exportProtocol`, plus `diskBufferingEnabled` (Android). When pre-initialized, the JS `initialize()` call skips agent start and (under `debug`) logs any reserved fields it receives that pre-init should have owned, since the agent is already running.
 
 ## Configuration
 
@@ -222,14 +228,6 @@ Both are wrapped in a redacted-string container immediately on receipt — `JSON
 | Option           | Type               | Description                                                                                                                                                                                                              |
 | ---------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `exportProtocol` | `'http' \| 'grpc'` | Defaults to `'http'` on both platforms. The SDK overrides upstream defaults (apm-agent-ios → gRPC, apm-agent-android → HTTP) so the same omitted-config produces the same transport everywhere. Set explicitly for gRPC. |
-| `managementUrl`  | `string`           | Override the central-config polling endpoint without affecting OTLP exports. Falls back to `serverUrl`. Wired on both platforms.                                                                                         |
-
-### Attributes
-
-| Option                          | Type                                          | Description                                                                 |
-| ------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------- |
-| `globalAttributes`              | `Record<string, string \| number \| boolean>` | Attributes attached to every signal.                                        |
-| `userAttributes.includeInSpans` | `'all' \| 'id-only' \| 'none'`                | How user identity propagates onto span attributes. Defaults to `'id-only'`. |
 
 ### Native metrics (cross-platform)
 
@@ -238,11 +236,10 @@ Both are wrapped in a redacted-string container immediately on receipt — `JSON
 | `enableAppMetricInstrumentation` | `boolean` | `true`  | Emit `application.launch.time` histogram (iOS via MetricKit, Android via Choreographer). Set `false` to skip the install.                                                                    |
 | `enableSystemMetrics`            | `boolean` | `true`  | Emit `system.cpu.usage` and `system.memory.usage` observable gauges (iOS via Mach task APIs, Android via `Process.getElapsedCpuTime` + `Debug.MemoryInfo`). Set `false` to skip the install. |
 
-### Filtering & redaction
+### Ignore filters
 
 | Option                | Type                                                                                                                  | Description                                                                                                                                               |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `attributeRedactions` | `{ spans?: RedactionRules; logs?: RedactionRules }`                                                                   | Drop or mask span / log attributes before export. Each `RedactionRules` block supports `drop`, `dropPattern` (`{source, flags?}`), `mask`, `maskPattern`. |
 | `ignoreSpanNames`     | `(string \| { source: string; flags?: string })[]`                                                                    | Drop spans whose name matches any rule. Exact-string or regex-source matches.                                                                             |
 | `ignoreLogPatterns`   | `Array<{ name?: string \| RegexSource; minSeverity?: 'trace' \| 'debug' \| 'info' \| 'warn' \| 'error' \| 'fatal' }>` | Drop log records matching any rule (name match OR severity below `minSeverity`).                                                                          |
 
@@ -265,9 +262,6 @@ Pass these under `ios: { … }` in the config:
 | `ios.enableURLSessionInstrumentation`     | `boolean`                                 | Enable native `URLSession` HTTP spans. Off by default — JS-side fetch/XHR instrumentation is the canonical path.        |
 | `ios.enableViewControllerInstrumentation` | `boolean`                                 | Enable `UIViewController` lifecycle spans. Off by default — JS navigation plugin is the canonical path.                 |
 | `ios.enableLifecycleEvents`               | `boolean`                                 | Enable foreground/background/inactive/terminate lifecycle events.                                                       |
-| `ios.useOpAMP`                            | `boolean`                                 | Use OpAMP transport for central config. `apm-agent-android` v1.5.0 has no Builder toggle, so this is iOS-only.          |
-| `ios.persistencePreset`                   | `'default' \| 'lowUsage' \| 'highVolume'` | iOS on-disk persistence buffer tuning. Android uses `android.diskBufferingEnabled` instead.                             |
-| `ios.remoteManagement`                    | `boolean`                                 | Disable central-config polling entirely. `apm-agent-android` has no public API to disable polling, so this is iOS-only. |
 
 ### Android-only
 
@@ -276,7 +270,7 @@ Pass these under `android: { … }` in the config:
 | Option                         | Type      | Description                                                                            |
 | ------------------------------ | --------- | -------------------------------------------------------------------------------------- |
 | `android.serviceName`          | `string`  | Override `serviceName` on Android. Falls back to top-level `serviceName` when omitted. |
-| `android.diskBufferingEnabled` | `boolean` | Persist signals across process restarts. iOS uses `ios.persistencePreset` instead.     |
+| `android.diskBufferingEnabled` | `boolean` | Persist signals across process restarts. (Android only.)     |
 
 ### Debug
 
@@ -331,27 +325,15 @@ function CheckoutScreen() {
 }
 ```
 
-## User & session APIs
+## Tracking consent
 
 ```typescript
 import { EdotReactNative } from '@inoxth/react-native-edot-sdk';
 
-EdotReactNative.setUser({
-  id: 'user-123',
-  email: 'user@example.com',
-  name: 'Alice',
-});
-EdotReactNative.clearUser();
-
-EdotReactNative.setSessionAttribute('subscription', 'premium');
-
-EdotReactNative.setGlobalAttribute('tenant_id', 'acme-corp');
-EdotReactNative.removeGlobalAttribute('tenant_id');
-
 EdotReactNative.setTrackingConsent('granted');
 ```
 
-`setGlobalAttribute` accepts `string | number | boolean` and is forwarded as a string on the native side.
+`setTrackingConsent` gates JS-side emission at runtime — `'granted'` | `'not_granted'` | `'pending'`. To suppress the native agent entirely, set `disableAgent: true` in the init config instead.
 
 ## Structured logs
 
@@ -369,7 +351,7 @@ Severity is one of `'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'`.
 ## Requirements
 
 - React Native >= 0.75 (required for the `spm_dependency` Cocoapods helper)
-- iOS >= 16.0
+- iOS >= 15.6
 - Android minSdk 24, compileSdk 36
 - Node.js >= 18
 

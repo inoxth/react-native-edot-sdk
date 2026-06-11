@@ -1,13 +1,13 @@
 {
-  "originHash" : "d3326dbf4d0f38f1e5337bd878f7b5cdb8c04dfb9b5168349043dfa9edea1b86",
+  "originHash" : "547d3953ad0cccf860f0403d83b70e39e510196c86a35946b82daa03db804720",
   "pins" : [
     {
       "identity" : "apm-agent-ios",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/elastic/apm-agent-ios",
       "state" : {
-        "revision" : "27903f185c98c3d5039f4aec7142a2259fce2e9e",
-        "version" : "2.0.0"
+        "revision" : "4ce3eb03f2f31470e138d70a9b8a93c408d19ed3",
+        "version" : "1.2.1"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/grpc/grpc-swift.git",
       "state" : {
-        "revision" : "f857994e146f5146d702e9c31ac6f3c27d55d18a",
-        "version" : "1.27.0"
+        "revision" : "8c5e99d0255c373e0330730d191a3423c57373fb",
+        "version" : "1.24.2"
       }
     },
     {
@@ -33,17 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/open-telemetry/opentelemetry-swift",
       "state" : {
-        "revision" : "df57cc4fd0b4cf4f9d715253c6aaba4b6912f7e0",
-        "version" : "2.3.0"
-      }
-    },
-    {
-      "identity" : "opentelemetry-swift-core",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/open-telemetry/opentelemetry-swift-core",
-      "state" : {
-        "revision" : "84b9e341cbb7b4dd62cd1b89cd9e008995084132",
-        "version" : "2.4.1"
+        "revision" : "2ffffae2a027e2159dbf3fd53de1f25ba6d2d11d",
+        "version" : "1.13.0"
       }
     },
     {

@@ -36,8 +36,7 @@ public class EdotReactNativeAgent: NSObject {
     secretToken: String? = nil,
     apiKey: String? = nil,
     sessionSamplingRate: NSNumber? = nil,
-    exportProtocol: String? = nil,
-    persistencePreset: String? = nil
+    exportProtocol: String? = nil
   ) {
     if serverUrl.isEmpty {
       raiseInvalid("serverUrl must not be blank")
@@ -65,7 +64,7 @@ public class EdotReactNativeAgent: NSObject {
     )
 
     var configBuilder = AgentConfigBuilder()
-      .withExportUrl(url)
+      .withServerUrl(url)
 
     if let token = secretToken, !token.isEmpty {
       configBuilder = configBuilder.withSecretToken(token)
@@ -83,20 +82,7 @@ public class EdotReactNativeAgent: NSObject {
       configBuilder = configBuilder.useConnectionType(proto == "http" ? .http : .grpc)
     }
 
-    // Mirrors the JS-init interceptor so user / session / global attrs reach
-    // every span — including the synthetic transaction parent that
-    // `ElasticSpanProcessor.onEnd` builds for orphan HTTP spans — even when
-    // the host app pre-initializes the agent before JS loads.
-    configBuilder = configBuilder.addSpanAttributeInterceptor(
-      ClosureInterceptor<[String: AttributeValue]> { attrs in
-        EdotReactNative.mergeUserSessionGlobalAttributes(attrs)
-      }
-    )
-
-    var instrumentationConfig = InstrumentationConfiguration()
-    if let preset = persistencePreset {
-      instrumentationConfig.storageConfiguration = EdotReactNative.persistencePreset(from: preset)
-    }
+    let instrumentationConfig = InstrumentationConfiguration()
 
     ElasticApmAgent.start(with: configBuilder.build(), instrumentationConfig)
     #endif

@@ -1,10 +1,8 @@
 import { Platform } from 'react-native';
 import type {
-  AttributeRedactions,
   EdotConfig,
   IgnoreLogRule,
   IgnoreSpanRule,
-  RedactionRules,
   RegexSource,
 } from './types';
 
@@ -37,48 +35,6 @@ function assertValidRegexSource(source: string, flags: string | undefined, field
 
 function validateRegexSource(value: RegexSource, field: string): void {
   assertValidRegexSource(value.source, value.flags, field);
-}
-
-function validateRedactionRules(rules: RedactionRules, prefix: string): void {
-  if (rules.drop !== undefined) {
-    for (let i = 0; i < rules.drop.length; i++) {
-      const key = rules.drop[i];
-      if (typeof key !== 'string' || key.length === 0) {
-        throw new Error(`[EDOT] ${prefix}.drop[${i}]: must be a non-empty string`);
-      }
-    }
-  }
-
-  if (rules.dropPattern !== undefined) {
-    validateRegexSource(rules.dropPattern, `${prefix}.dropPattern`);
-  }
-
-  if (rules.mask !== undefined) {
-    for (const [key, value] of Object.entries(rules.mask)) {
-      if (key.length === 0) {
-        throw new Error(`[EDOT] ${prefix}.mask: keys must be non-empty strings`);
-      }
-      if (typeof value !== 'string') {
-        throw new Error(`[EDOT] ${prefix}.mask[${JSON.stringify(key)}]: value must be a string`);
-      }
-    }
-  }
-
-  if (rules.maskPattern !== undefined) {
-    for (let i = 0; i < rules.maskPattern.length; i++) {
-      const entry = rules.maskPattern[i];
-      validateRegexSource(entry, `${prefix}.maskPattern[${i}]`);
-    }
-  }
-}
-
-function validateAttributeRedactions(redactions: AttributeRedactions): void {
-  if (redactions.spans !== undefined) {
-    validateRedactionRules(redactions.spans, 'attributeRedactions.spans');
-  }
-  if (redactions.logs !== undefined) {
-    validateRedactionRules(redactions.logs, 'attributeRedactions.logs');
-  }
 }
 
 function validateIgnoreSpanRule(rule: IgnoreSpanRule, field: string): void {
@@ -132,34 +88,6 @@ export function validateConfig(config: EdotConfig): void {
     if (config.sessionSamplingRate < 0 || config.sessionSamplingRate > 1) {
       throw new Error('[EDOT] sessionSamplingRate must be between 0.0 and 1.0');
     }
-  }
-
-  const PERSISTENCE_PRESETS = ['default', 'lowUsage', 'highVolume'] as const;
-  if (
-    config.ios?.persistencePreset !== undefined &&
-    !PERSISTENCE_PRESETS.includes(config.ios.persistencePreset)
-  ) {
-    throw new Error(
-      `[EDOT] ios.persistencePreset must be one of: ${PERSISTENCE_PRESETS.join(', ')}`,
-    );
-  }
-
-  if (config.managementUrl !== undefined) {
-    let parsed: URL;
-    try {
-      parsed = new URL(config.managementUrl);
-    } catch {
-      throw new Error(`[EDOT] managementUrl is not a valid URL: ${config.managementUrl}`);
-    }
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      throw new Error(
-        `[EDOT] managementUrl must use http or https (got: ${parsed.protocol.replace(':', '')})`,
-      );
-    }
-  }
-
-  if (config.attributeRedactions !== undefined) {
-    validateAttributeRedactions(config.attributeRedactions);
   }
 
   if (config.ignoreSpanNames !== undefined) {

@@ -26,16 +26,20 @@ export interface TracerProvider {
   getTracer(name: string, version?: string): Tracer;
 }
 
+// Metric attributes are string-only on both platforms. iOS 1.2.1's legacy
+// meter supports only string labels; restricting the type avoids the same JS
+// call producing mixed-typed metric dimensions (and split time-series) across
+// platforms. Span attributes (SpanOptions / Span.setAttribute) stay typed.
 export interface Counter {
-  add(value: number, attributes?: Record<string, string | number | boolean>): void;
+  add(value: number, attributes?: Record<string, string>): void;
 }
 
 export interface Histogram {
-  record(value: number, attributes?: Record<string, string | number | boolean>): void;
+  record(value: number, attributes?: Record<string, string>): void;
 }
 
 export interface UpDownCounter {
-  add(value: number, attributes?: Record<string, string | number | boolean>): void;
+  add(value: number, attributes?: Record<string, string>): void;
 }
 
 export interface Meter {

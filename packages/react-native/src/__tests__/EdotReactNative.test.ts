@@ -17,11 +17,6 @@ jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
     initialize: jest.fn().mockResolvedValue(undefined),
     getCurrentSessionId: jest.fn().mockResolvedValue('session-123'),
-    setUser: jest.fn(),
-    clearUser: jest.fn(),
-    setSessionAttribute: jest.fn(),
-    setGlobalAttribute: jest.fn(),
-    removeGlobalAttribute: jest.fn(),
     reportJsException: jest.fn(),
     startSpan: jest.fn().mockReturnValue('span-1'),
     endSpan: jest.fn(),
@@ -61,17 +56,6 @@ describe('EdotReactNative', () => {
       expect(nativeConfig.serverUrl).toBe('https://apm.example.com:8200');
       expect(nativeConfig.sessionSamplingRate).toBeUndefined();
       expect(nativeConfig.debug).toBe(false);
-      expect(nativeConfig.userAttributesIncludeInSpans).toBe('id-only');
-    });
-
-    it('forwards userAttributes.includeInSpans when set', async () => {
-      await EdotReactNative.initialize({
-        ...validConfig,
-        userAttributes: { includeInSpans: 'all' },
-      });
-
-      const nativeConfig = (EdotNativeModule.initialize as jest.Mock).mock.calls[0][0];
-      expect(nativeConfig.userAttributesIncludeInSpans).toBe('all');
     });
 
     it('warns and returns on duplicate initialize', async () => {
@@ -112,31 +96,6 @@ describe('EdotReactNative', () => {
     it('getCurrentSessionId delegates to native', async () => {
       const id = await EdotReactNative.getCurrentSessionId();
       expect(id).toBe('session-123');
-    });
-
-    it('setUser delegates to native', () => {
-      EdotReactNative.setUser({ id: 'user-1', email: 'test@test.com' });
-      expect(EdotNativeModule.setUser).toHaveBeenCalledWith({
-        id: 'user-1',
-        email: 'test@test.com',
-      });
-    });
-
-    it('clearUser delegates to native', () => {
-      EdotReactNative.clearUser();
-      expect(EdotNativeModule.clearUser).toHaveBeenCalled();
-    });
-  });
-
-  describe('global attributes', () => {
-    it('setGlobalAttribute delegates to native', () => {
-      EdotReactNative.setGlobalAttribute('key', 'value');
-      expect(EdotNativeModule.setGlobalAttribute).toHaveBeenCalledWith('key', 'value');
-    });
-
-    it('removeGlobalAttribute delegates to native', () => {
-      EdotReactNative.removeGlobalAttribute('key');
-      expect(EdotNativeModule.removeGlobalAttribute).toHaveBeenCalledWith('key');
     });
   });
 
@@ -288,23 +247,6 @@ describe('EdotReactNative', () => {
       expect(nativeConfig.exportProtocol).toBe('grpc');
     });
 
-    it('forwards ios.useOpAMP to native when true', async () => {
-      jest.doMock('react-native', () => ({ Platform: { OS: 'ios' } }));
-      jest.resetModules();
-
-      const { EdotReactNative: Fresh } = require('../EdotReactNative');
-      Fresh._resetForTesting();
-
-      await Fresh.initialize({
-        ...validConfig,
-        ios: { useOpAMP: true },
-      });
-
-      const { EdotNativeModule: MockModule } = require('../nativeModule');
-      const nativeConfig = (MockModule.initialize as jest.Mock).mock.calls[0][0];
-      expect(nativeConfig.useOpAMP).toBe(true);
-    });
-
     it('only sends optional fields when explicitly set', async () => {
       await EdotReactNative.initialize(validConfig);
 
@@ -313,7 +255,6 @@ describe('EdotReactNative', () => {
       expect(nativeConfig.trackingConsent).toBeUndefined();
       expect(nativeConfig.secretToken).toBeUndefined();
       expect(nativeConfig.apiKey).toBeUndefined();
-      expect(nativeConfig.globalAttributes).toBeUndefined();
     });
 
     it('sends optional fields when set', async () => {
@@ -321,13 +262,11 @@ describe('EdotReactNative', () => {
         ...validConfig,
         sessionSamplingRate: 0.5,
         secretToken: 'tok',
-        globalAttributes: { env: 'test' },
       });
 
       const nativeConfig = (EdotNativeModule.initialize as jest.Mock).mock.calls[0][0];
       expect(nativeConfig.sessionSamplingRate).toBe(0.5);
       expect(nativeConfig.secretToken).toBe('tok');
-      expect(nativeConfig.globalAttributes).toEqual({ env: 'test' });
     });
 
     it('forwards trackingConsent to native when set', async () => {

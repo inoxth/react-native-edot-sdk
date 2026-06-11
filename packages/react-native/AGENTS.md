@@ -9,11 +9,11 @@ Core React Native EDOT SDK. Config validation, native bridge (TurboModule + Nati
 ```
 src/
 ├── index.ts                    # Public exports
-├── EdotReactNative.ts          # Main SDK — initialize(), setUser(), log(), etc.
+├── EdotReactNative.ts          # Main SDK — initialize(), log(), etc.
 ├── nativeModule.ts             # Native bridge with TurboModule-first fallback
 ├── NativeEdotReactNative.ts    # TurboModule spec (codegen interface)
 ├── config.ts                   # Config validation (throws on invalid)
-├── types.ts                    # EdotConfig, EdotUser, platform config types
+├── types.ts                    # EdotConfig, platform config types
 ├── defaults.ts                 # EDOT_DEFAULTS for instrumentation toggles
 ├── activeViewContext.ts        # Re-export from @inoxth/react-native-edot-shared
 ├── globals.d.ts                # Ambient typings for global / ErrorUtils / requestIdleCallback
@@ -56,13 +56,13 @@ This package exposes subpath imports used by sibling packages:
 
 ### Initialization Flow
 
-`useEdot(config)` from `hooks/useEdot.ts` is the React-friendly entry point — calls `EdotReactNative.initialize` once via `useEffect`, captures config in a ref so subsequent renders never re-init, and returns `{ ready, error }`. First-wins: a `__DEV__` `console.warn` fires when a native-relevant primitive key (`serverUrl`, `serviceName`, `serviceVersion`, `deploymentEnvironment`, `secretToken`, `apiKey`, `exportProtocol`, `sessionSamplingRate`, `trackingConsent`, `managementUrl`, `disableAgent`, `enableAppMetricInstrumentation`, `enableSystemMetrics`, `instrumentNetworkRequests`, `instrumentJsErrors`, `instrumentAppStartup`, `appStateTracking`, `debug`) changes after first render. Object-shaped fields (`globalAttributes`, `attributeRedactions`, `ignoreSpanNames`, `ignoreLogPatterns`, `ios`, `android`) are excluded from the compare to avoid identity false-positives. Init failures are passive — `console.warn`'d once, never thrown — so observability degrades silently rather than crashing the app via an `EdotErrorBoundary`. The imperative `EdotReactNative.initialize(config)` remains for non-React contexts.
+`useEdot(config)` from `hooks/useEdot.ts` is the React-friendly entry point — calls `EdotReactNative.initialize` once via `useEffect`, captures config in a ref so subsequent renders never re-init, and returns `{ ready, error }`. First-wins: a `__DEV__` `console.warn` fires when a native-relevant primitive key (`serverUrl`, `serviceName`, `serviceVersion`, `deploymentEnvironment`, `secretToken`, `apiKey`, `exportProtocol`, `sessionSamplingRate`, `trackingConsent`, `disableAgent`, `enableAppMetricInstrumentation`, `enableSystemMetrics`, `instrumentNetworkRequests`, `instrumentJsErrors`, `instrumentAppStartup`, `appStateTracking`, `debug`) changes after first render. Object-shaped fields (`ignoreSpanNames`, `ignoreLogPatterns`, `ios`, `android`) are excluded from the compare to avoid identity false-positives. Init failures are passive — `console.warn`'d once, never thrown — so observability degrades silently rather than crashing the app via an `EdotErrorBoundary`. The imperative `EdotReactNative.initialize(config)` remains for non-React contexts.
 
 `EdotReactNative.initialize(config)`:
 
 1. Validates config (required fields, resource-identity chars, token mutual exclusivity, sampling range) → 2. Flattens platform overrides onto the native payload → 3. Calls native `initialize()` → 4. Sets up JS instrumentation (fetch, XHR, errors, startup) based on `EDOT_DEFAULTS`-merged toggles, plus unconditional `setupSpanCleanup` → 5. Stores teardown functions; `_resetForTesting()` drains them.
 
-`EdotReactNativeAgent.preInitialize(...)` runs before the JS bridge loads — iOS calls it from AppDelegate (`ios/EdotReactNativeAgent.swift`), Android from `MainApplication` (`android/.../EdotReactNativeAgent.kt`). Both enforce the same resource-identity rules as JS `validateConfig` (no `,` or `=`, `secretToken`/`apiKey` mutex, `sessionSamplingRate` ∈ [0, 1]) and accept the optional surface that affects the agent at start time: `secretToken`, `apiKey`, `sessionSamplingRate`, `exportProtocol`, plus `persistencePreset` (iOS) / `diskBufferingEnabled` (Android). iOS injects identity into `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. Both also register the user/session/global span-attribute interceptor at this point so its enrichment reaches every span — including the synthetic transaction parent that `ElasticSpanProcessor.onEnd` builds for orphan HTTP spans on iOS — even when the host app pre-initializes. If `isPreInitialized`, JS `initialize()` skips agent start and logs (under `debug`) any reserved fields it received that pre-init should have owned, since they cannot be applied to a running agent.
+`EdotReactNativeAgent.preInitialize(...)` runs before the JS bridge loads — iOS calls it from AppDelegate (`ios/EdotReactNativeAgent.swift`), Android from `MainApplication` (`android/.../EdotReactNativeAgent.kt`). Both enforce the same resource-identity rules as JS `validateConfig` (no `,` or `=`, `secretToken`/`apiKey` mutex, `sessionSamplingRate` ∈ [0, 1]) and accept the optional surface that affects the agent at start time: `secretToken`, `apiKey`, `sessionSamplingRate`, `exportProtocol`, plus `diskBufferingEnabled` (Android). iOS injects identity into `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. If `isPreInitialized`, JS `initialize()` skips agent start and logs (under `debug`) any reserved fields it received that pre-init should have owned, since they cannot be applied to a running agent.
 
 #### Per-platform service identity
 
@@ -94,7 +94,7 @@ When iOS pre-init is in use, the `serviceName` passed to `EdotReactNativeAgent.p
 
 Each `setup*()` function in `instrumentation/` monkey-patches a global (fetch, XHR, ErrorUtils) and returns a `() => void` teardown that restores the original. `startup.ts` uses `requestIdleCallback` (not `InteractionManager`) to mark first-render. Startup emits a `AppStartup: cold` parent span with two child spans (`AppStartup: js_bundle_load` and `AppStartup: first_render`) and closes all three via `requestIdleCallback`.
 
-These JS-side startup span names are RN-specific. EDOT iOS reports app launch as a metric only (`application.launch.time` histogram via MetricKit — see `EdotAppMetrics.swift`) and EDOT Android does not auto-instrument app startup at all (`AppMetrics.kt` fills the gap with a matching histogram). OTel mobile semantic conventions do not yet define startup span names. The `AppStartup:` prefix is therefore not changed to match a non-existent upstream convention; the native `application.launch.time` metric remains the cross-platform comparable signal.
+These JS-side startup span names are RN-specific. EDOT iOS reports app launch as a metric only (`application.launch.time`, emitted by apm-agent-ios 1.2.1's built-in `AppMetrics`) and EDOT Android does not auto-instrument app startup at all (`EdotAppMetrics.kt` fills the gap with a matching histogram). OTel mobile semantic conventions do not yet define startup span names. The `AppStartup:` prefix is therefore not changed to match a non-existent upstream convention; the native `application.launch.time` metric remains the cross-platform comparable signal.
 
 ### Typed Span-Attribute Bridge
 
@@ -134,17 +134,17 @@ All four scopes share the `@inoxth/react-native-edot-sdk/<class>` shape so a sin
 
 Resource attributes (`service.name`, `service.version`, `os.*`, `device.id`, `process.runtime.*`, `telemetry.sdk.*`, etc.) are auto-injected by apm-agent-ios's `AgentResource` and OpenTelemetry-Swift's `SDKResourceExtension` when `ElasticApmAgent.start(...)` runs. JS supplies service identity (`serviceName`, `serviceVersion`, `deploymentEnvironment`) via `OTEL_RESOURCE_ATTRIBUTES` env var (set in `EdotReactNativeAgent.swift` before agent start). No JS-side resource detection — see `ios/AGENTS.md`.
 
-### iOS Metrics Pipeline
+### iOS Metrics
 
-The iOS module replaces apm-agent-ios's global `MeterProvider` with a resource-aware one (`EdotMeterProviderFactory`). Pipeline: `PeriodicMetricReader (60s) → Logging? → Persistence (Caches/elastic/) → CentralConfigGate → HTTP|gRPC`. Default transport gRPC; `exportProtocol: "http"` overrides. `EdotAppMetrics` (MetricKit `application.launch.time`) and `EdotSystemMetrics` (CPU/memory observable gauges) replace apm-agent-ios's reimplementations because they emit through the resource-less global. The `CentralConfigGate` (`EdotCentralConfigMetricExporter`) is a deliberate divergence — upstream v2.0.0 doesn't gate metrics on the central-config `recording` flag. See `ios/AGENTS.md` for the full set of load-bearing rules.
+No custom metrics pipeline — the 2.x-era `EdotMeterProviderFactory` / `EdotCentralConfigMetricExporter` / `EdotAppMetrics` / `EdotSystemMetrics` were removed in the downgrade. On apm-agent-ios 1.2.1, `recordMetric` uses the agent's legacy (resource-aware) global meter (`OpenTelemetry.instance.meterProvider`), and `application.launch.time` / `system.cpu.usage` / `system.memory.usage` are emitted by the agent's built-in `AppMetrics` / `CPUSampler` / `MemorySampler` (same names + `state=app` as Android), toggled by `enableAppMetricInstrumentation` / `enableSystemMetrics`. See `ios/AGENTS.md` and `docs/parity-after-downgrade.md`.
 
 ### Android Native Metrics, OkHttp Anti-Pattern, and Filters
 
-See [`android/AGENTS.md`](./android/AGENTS.md) for the full Android-specific rules: `application.launch.time` histogram bucket boundaries, `system.cpu.usage` / `system.memory.usage` observable gauges, the "don't add `co.elastic.otel.android.instrumentation.okhttp`" anti-pattern, attribute redactions, span/log exporter filters, and `disableAgent` plumbing.
+See [`android/AGENTS.md`](./android/AGENTS.md) for the full Android-specific rules: `application.launch.time` histogram bucket boundaries, `system.cpu.usage` / `system.memory.usage` observable gauges, the "don't add `co.elastic.otel.android.instrumentation.okhttp`" anti-pattern, span/log exporter filters, and `disableAgent` plumbing.
 
 ### JS Bridge Forwarding for Native-Only Config Keys
 
-`mergeConfig` in `EdotReactNative.ts` is the single source of truth for what reaches the native bridge. Top-level config keys whose values only matter to native code (`disableAgent`, `managementUrl`, `remoteManagement`, `persistencePreset`, `attributeRedactions`, `ignoreSpanNames`, `ignoreLogPatterns`) must be explicitly spread into the returned `InternalConfig` — otherwise they're silently dropped at the JS layer and the native side reads `null`. Platform-specific keys (`config.ios.*` / `config.android.*`) flow automatically via `...platformExtras`. Regex-bearing fields (`ignoreSpanNames`, `ignoreLogPatterns.name`, `attributeRedactions.*Pattern`) use the `RegexSource` shape (`{ source, flags }`) because real `RegExp` objects don't survive the bridge.
+`mergeConfig` in `EdotReactNative.ts` is the single source of truth for what reaches the native bridge. Top-level config keys whose values only matter to native code (`disableAgent`, `ignoreSpanNames`, `ignoreLogPatterns`) must be explicitly spread into the returned `InternalConfig` — otherwise they're silently dropped at the JS layer and the native side reads `null`. Platform-specific keys (`config.ios.*` / `config.android.*`) flow automatically via `...platformExtras`. Regex-bearing fields (`ignoreSpanNames`, `ignoreLogPatterns.name`) use the `RegexSource` shape (`{ source, flags }`) because real `RegExp` objects don't survive the bridge.
 
 ### App-State Tracking
 
@@ -169,26 +169,9 @@ The legacy `'JS Error'` (JS-side) and `'js_error: <name>'` (native-side) spans w
 `fetch.ts` and `xhr.ts` emit **legacy** HTTP semantic-conv attribute names (`http.method`, `http.url`, `http.status_code`, `http.scheme`, `http.target`, `net.peer.name`, `net.peer.port`, `http.request_body.size`, `http.response_body.size`) — NOT the v1.23 stable names (`http.request.method`, `url.full`, `http.response.status_code`, …). This matches:
 
 1. The Elastic mobile attributes spec (`https://github.com/elastic/apm/blob/main/specs/agents/mobile/README.md`) — which documents legacy names as the "OTel Convention" agents should send; APM Server remaps to ECS field names internally.
-2. apm-agent-ios v2.0.0 via opentelemetry-swift v2.2.1's `URLSessionLogger` (which emits the same legacy names on native HTTP spans).
+2. apm-agent-ios 1.2.1 via opentelemetry-swift 1.13.0's `URLSessionLogger` (which emits the same legacy names on native HTTP spans).
 
 This alignment lets apm-agent-ios's `ElasticSpanProcessor` recognize JS HTTP spans as HTTP via `isHttpSpan()` (which keys on `http.url` presence) and apply the same enrichment as native: `network.connection.type` via `NetworkStatusInjector`, synthetic-parent transaction wrapping for orphan spans. See `ios/AGENTS.md` "JS-driven HTTP Spans Get Native Enrichment Automatically".
-
-### User / Session / Global Attribute Propagation onto Spans
-
-`setUser`, `setSessionAttribute`, and `setGlobalAttribute` write into static attribute dicts on the native module (Swift `EdotReactNative` static state, Kotlin `EdotReactNativeModuleImpl.Companion`). `setUser({ id, email, name })` writes the OTel-stable keys `user.id` / `user.email` / `user.name` (https://opentelemetry.io/docs/specs/semconv/registry/attributes/user/) — these match the ECS field names exactly so APM Server can land them on top-level `user.*` ECS fields where supported.
-
-Both platforms inject these dicts onto every span via a span-attribute interceptor registered at agent build time:
-
-- **iOS**: `ClosureInterceptor<[String: AttributeValue]>` via `configBuilder.addSpanAttributeInterceptor(...)` — registered in **both** `EdotReactNativeAgent.preInitialize` and `EdotReactNative.initialize`, both calling the shared `EdotReactNative.mergeUserSessionGlobalAttributes(_:)` helper. It runs in apm-agent-ios's `ElasticSpanProcessor` for every `onStart` AND for the synthetic transaction parent that `onEnd` builds for orphan HTTP spans (only `type=mobile` and `session.id` are added by the agent itself there). Without the interceptor, user attrs land only on child HTTP spans and the transaction document carries no user context.
-- **Android**: `Interceptor<Attributes>` via `ElasticApmAgent.builder.addSpanAttributesInterceptor(...)` — registered in **both** `EdotReactNativeAgent.preInitialize` and `buildFromJsConfig`, both calling the shared `EdotReactNativeModuleImpl.mergeUserSessionGlobalAttributes(...)` helper. Mirrors the iOS pattern.
-
-The merge does not overwrite explicitly-set span attributes (it only fills missing keys). The user-attribute filter (`userAttributesSpanScope`) is applied inside the merge, so by default only `user.id` ships unless `userAttributesSpanScope: 'all'` is configured.
-
-Registration order matters on iOS: the user-attr injector runs **before** the user-supplied `attributeRedactions.spans` redactor (also registered as a span attribute interceptor) so consumers can still drop or mask values we just injected (`user.email`, etc.). Android currently has no span-attribute redaction surface.
-
-Note: APM Server in fully verbatim OTel ingest mode does not auto-promote OTel attributes to top-level ECS fields — they land under `labels.*` (e.g., `labels.user_id`). Consumers in that mode should add a `traces-apm@custom` ingest pipeline that copies `labels.user_id`/`labels.user_email`/`labels.user_name` to the corresponding ECS fields.
-
-iOS still has a per-span inline merge in `makeSpan` (`:530-539`) for redundancy. Android's `makeSpan` no longer has one — the interceptor is the single source of truth.
 
 ### Native UIKit View-Controller Instrumentation
 
@@ -202,13 +185,9 @@ For Wix consumers: `registerEdotNavigationListener` is called inside `Navigation
 
 ### Configuration Surface (recent additions)
 
-JS-callable config knobs that pass through to apm-agent-ios v2.0.0's builder:
+JS-callable config knobs that pass through to apm-agent-ios 1.2.1's builder:
 
 - `disableAgent` — fully suppresses native agent startup
-- `persistencePreset: 'default' | 'lowUsage' | 'highVolume'` — tunes `PersistencePerformancePreset`
-- `managementUrl` + `remoteManagement` — separate central-config endpoint
-- `ios.useOpAMP` — opt-in OpAMP central-config protocol
-- `attributeRedactions: { spans, logs }` with `drop` / `dropPattern` / `mask` / `maskPattern` — declarative attribute redaction (Option B; serializes across the bridge)
 - `ignoreSpanNames` and `ignoreLogPatterns` — predicate filters via `addSpanFilter` / `addLogFilter`
 
 Validation lives in `config.ts` and throws at `validateConfig` time on invalid input. Native compilation (regex compilation, predicate building) happens in `EdotReactNative.swift:initialize`.

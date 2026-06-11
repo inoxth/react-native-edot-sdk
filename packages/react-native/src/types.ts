@@ -8,42 +8,6 @@ export interface RegexSource {
 }
 
 /**
- * Rules for dropping or masking individual attributes on a single signal type
- * (spans OR logs — not both simultaneously).
- *
- * Application order per signal: `drop` → `dropPattern` → `mask` → `maskPattern`.
- */
-export interface RedactionRules {
-  /** Exact attribute keys to remove. */
-  drop?: string[];
-  /**
-   * Regex whose full match against an attribute key causes that key to be
-   * removed. Specified as a `{ source, flags? }` object because `RegExp`
-   * values do not survive the React Native bridge.
-   */
-  dropPattern?: RegexSource;
-  /** Exact attribute keys whose values are replaced by the given string. */
-  mask?: Record<string, string>;
-  /**
-   * Regex patterns whose full match against an attribute key causes the
-   * value to be replaced by `replacement`.
-   */
-  maskPattern?: Array<RegexSource & { replacement: string }>;
-}
-
-/**
- * Per-signal attribute redaction rules applied before export.
- *
- * Spans and logs have independent rule sets; metrics are out of v1 scope.
- * Omitting `attributeRedactions` (or any nested key) means no redaction is
- * applied to that signal.
- */
-export interface AttributeRedactions {
-  spans?: RedactionRules;
-  logs?: RedactionRules;
-}
-
-/**
  * A rule for ignoring spans by name. Either an exact string match or a
  * serialisable regex source.
  */
@@ -122,10 +86,6 @@ export interface EdotConfig {
   trackingConsent?: TrackingConsent;
   urlSanitizer?: (url: string) => string;
 
-  globalAttributes?: Record<string, string | number | boolean>;
-
-  userAttributes?: UserAttributesConfig;
-
   graphqlUrls?: (string | RegExp)[];
 
   debug?: boolean;
@@ -140,17 +100,6 @@ export interface EdotConfig {
    * opt-out before consent is captured).
    */
   disableAgent?: boolean;
-
-  /**
-   * Overrides the central-config polling endpoint without affecting OTLP
-   * exports. Must be an absolute `http://` or `https://` URL.
-   *
-   * Falls back to `serverUrl` when omitted.
-   *
-   * Wired on both iOS and Android (`apm-agent-ios.withManagementUrl` /
-   * `ElasticApmAgent.Builder.setManagementUrl`).
-   */
-  managementUrl?: string;
 
   /**
    * Enables the `application.launch.time` histogram. Defaults to `true`.
@@ -170,12 +119,6 @@ export interface EdotConfig {
    * Android via Process.getElapsedCpuTime and Debug.MemoryInfo).
    */
   enableSystemMetrics?: boolean;
-
-  /**
-   * Drop or mask span / log attributes before export.
-   * Metrics are not in scope for v1.
-   */
-  attributeRedactions?: AttributeRedactions;
 
   /**
    * Drop entire spans whose name matches any rule.
@@ -205,27 +148,6 @@ export interface EdotIosConfig {
   enableURLSessionInstrumentation?: boolean;
   enableViewControllerInstrumentation?: boolean;
   enableLifecycleEvents?: boolean;
-  useOpAMP?: boolean;
-
-  /**
-   * Tunes the on-disk persistence buffer used by the iOS agent for failed
-   * export retries. Applies to metrics, traces, and logs on iOS.
-   *
-   * - `'default'` — low runtime impact, 4 MB per file, 512 MB directory cap (default).
-   * - `'lowUsage'` — alias for `'default'`; use on storage-constrained devices.
-   * - `'highVolume'` — instant delivery, shorter rotation interval; use on lossy networks.
-   */
-  persistencePreset?: 'default' | 'lowUsage' | 'highVolume';
-
-  /**
-   * Enables or disables central-config remote management polling.
-   * Defaults to `true` when omitted. Set to `false` to disable polling
-   * entirely regardless of `managementUrl`.
-   *
-   * `apm-agent-android` v1.5.0 has no public API to disable central-config
-   * polling, so this flag is iOS-only.
-   */
-  remoteManagement?: boolean;
 }
 
 export interface EdotAndroidConfig {
@@ -238,15 +160,3 @@ export interface EdotAndroidConfig {
 }
 
 export type TrackingConsent = 'granted' | 'not_granted' | 'pending';
-
-export type UserAttributesSpanScope = 'all' | 'id-only' | 'none';
-
-export interface UserAttributesConfig {
-  includeInSpans?: UserAttributesSpanScope;
-}
-
-export interface EdotUser {
-  id: string;
-  email?: string;
-  name?: string;
-}
