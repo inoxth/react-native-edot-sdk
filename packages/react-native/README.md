@@ -168,7 +168,7 @@ EdotReactNativeAgent.preInitialize(
 )
 ```
 
-Both signatures accept the same optional auth + transport surface as JS init: `secretToken`, `apiKey`, `sessionSamplingRate`, `exportProtocol`, plus `persistencePreset` (iOS) / `diskBufferingEnabled` (Android). When pre-initialized, the JS `initialize()` call skips agent start and (under `debug`) logs any reserved fields it receives that pre-init should have owned, since the agent is already running.
+Both signatures accept the same optional auth + transport surface as JS init: `secretToken`, `apiKey`, `sessionSamplingRate`, `exportProtocol`, plus `diskBufferingEnabled` (Android). When pre-initialized, the JS `initialize()` call skips agent start and (under `debug`) logs any reserved fields it receives that pre-init should have owned, since the agent is already running.
 
 ## Configuration
 
@@ -256,7 +256,6 @@ Pass these under `ios: { … }` in the config:
 | `ios.enableURLSessionInstrumentation`     | `boolean`                                 | Enable native `URLSession` HTTP spans. Off by default — JS-side fetch/XHR instrumentation is the canonical path.        |
 | `ios.enableViewControllerInstrumentation` | `boolean`                                 | Enable `UIViewController` lifecycle spans. Off by default — JS navigation plugin is the canonical path.                 |
 | `ios.enableLifecycleEvents`               | `boolean`                                 | Enable foreground/background/inactive/terminate lifecycle events.                                                       |
-| `ios.persistencePreset`                   | `'default' \| 'lowUsage' \| 'highVolume'` | iOS on-disk persistence buffer tuning. Android uses `android.diskBufferingEnabled` instead.                             |
 
 ### Android-only
 
@@ -265,7 +264,7 @@ Pass these under `android: { … }` in the config:
 | Option                         | Type      | Description                                                                            |
 | ------------------------------ | --------- | -------------------------------------------------------------------------------------- |
 | `android.serviceName`          | `string`  | Override `serviceName` on Android. Falls back to top-level `serviceName` when omitted. |
-| `android.diskBufferingEnabled` | `boolean` | Persist signals across process restarts. iOS uses `ios.persistencePreset` instead.     |
+| `android.diskBufferingEnabled` | `boolean` | Persist signals across process restarts. (Android only.)     |
 
 ### Debug
 

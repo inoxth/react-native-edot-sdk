@@ -62,7 +62,7 @@ This package exposes subpath imports used by sibling packages:
 
 1. Validates config (required fields, resource-identity chars, token mutual exclusivity, sampling range) → 2. Flattens platform overrides onto the native payload → 3. Calls native `initialize()` → 4. Sets up JS instrumentation (fetch, XHR, errors, startup) based on `EDOT_DEFAULTS`-merged toggles, plus unconditional `setupSpanCleanup` → 5. Stores teardown functions; `_resetForTesting()` drains them.
 
-`EdotReactNativeAgent.preInitialize(...)` runs before the JS bridge loads — iOS calls it from AppDelegate (`ios/EdotReactNativeAgent.swift`), Android from `MainApplication` (`android/.../EdotReactNativeAgent.kt`). Both enforce the same resource-identity rules as JS `validateConfig` (no `,` or `=`, `secretToken`/`apiKey` mutex, `sessionSamplingRate` ∈ [0, 1]) and accept the optional surface that affects the agent at start time: `secretToken`, `apiKey`, `sessionSamplingRate`, `exportProtocol`, plus `persistencePreset` (iOS) / `diskBufferingEnabled` (Android). iOS injects identity into `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. If `isPreInitialized`, JS `initialize()` skips agent start and logs (under `debug`) any reserved fields it received that pre-init should have owned, since they cannot be applied to a running agent.
+`EdotReactNativeAgent.preInitialize(...)` runs before the JS bridge loads — iOS calls it from AppDelegate (`ios/EdotReactNativeAgent.swift`), Android from `MainApplication` (`android/.../EdotReactNativeAgent.kt`). Both enforce the same resource-identity rules as JS `validateConfig` (no `,` or `=`, `secretToken`/`apiKey` mutex, `sessionSamplingRate` ∈ [0, 1]) and accept the optional surface that affects the agent at start time: `secretToken`, `apiKey`, `sessionSamplingRate`, `exportProtocol`, plus `diskBufferingEnabled` (Android). iOS injects identity into `OTEL_RESOURCE_ATTRIBUTES` before `ElasticApmAgent.start(...)`. If `isPreInitialized`, JS `initialize()` skips agent start and logs (under `debug`) any reserved fields it received that pre-init should have owned, since they cannot be applied to a running agent.
 
 #### Per-platform service identity
 
@@ -144,7 +144,7 @@ See [`android/AGENTS.md`](./android/AGENTS.md) for the full Android-specific rul
 
 ### JS Bridge Forwarding for Native-Only Config Keys
 
-`mergeConfig` in `EdotReactNative.ts` is the single source of truth for what reaches the native bridge. Top-level config keys whose values only matter to native code (`disableAgent`, `persistencePreset`, `ignoreSpanNames`, `ignoreLogPatterns`) must be explicitly spread into the returned `InternalConfig` — otherwise they're silently dropped at the JS layer and the native side reads `null`. Platform-specific keys (`config.ios.*` / `config.android.*`) flow automatically via `...platformExtras`. Regex-bearing fields (`ignoreSpanNames`, `ignoreLogPatterns.name`) use the `RegexSource` shape (`{ source, flags }`) because real `RegExp` objects don't survive the bridge.
+`mergeConfig` in `EdotReactNative.ts` is the single source of truth for what reaches the native bridge. Top-level config keys whose values only matter to native code (`disableAgent`, `ignoreSpanNames`, `ignoreLogPatterns`) must be explicitly spread into the returned `InternalConfig` — otherwise they're silently dropped at the JS layer and the native side reads `null`. Platform-specific keys (`config.ios.*` / `config.android.*`) flow automatically via `...platformExtras`. Regex-bearing fields (`ignoreSpanNames`, `ignoreLogPatterns.name`) use the `RegexSource` shape (`{ source, flags }`) because real `RegExp` objects don't survive the bridge.
 
 ### App-State Tracking
 
@@ -188,7 +188,6 @@ For Wix consumers: `registerEdotNavigationListener` is called inside `Navigation
 JS-callable config knobs that pass through to apm-agent-ios v2.0.0's builder:
 
 - `disableAgent` — fully suppresses native agent startup
-- `persistencePreset: 'default' | 'lowUsage' | 'highVolume'` — tunes `PersistencePerformancePreset`
 - `ignoreSpanNames` and `ignoreLogPatterns` — predicate filters via `addSpanFilter` / `addLogFilter`
 
 Validation lives in `config.ts` and throws at `validateConfig` time on invalid input. Native compilation (regex compilation, predicate building) happens in `EdotReactNative.swift:initialize`.

@@ -93,24 +93,6 @@ describe('validateConfig', () => {
     );
   });
 
-  it('accepts valid ios.persistencePreset values', () => {
-    expect(() =>
-      validateConfig({ ...validConfig, ios: { persistencePreset: 'default' } }),
-    ).not.toThrow();
-    expect(() =>
-      validateConfig({ ...validConfig, ios: { persistencePreset: 'lowUsage' } }),
-    ).not.toThrow();
-    expect(() =>
-      validateConfig({ ...validConfig, ios: { persistencePreset: 'highVolume' } }),
-    ).not.toThrow();
-  });
-
-  it('throws on invalid ios.persistencePreset value', () => {
-    expect(() =>
-      validateConfig({ ...validConfig, ios: { persistencePreset: 'invalid' as 'default' } }),
-    ).toThrow('ios.persistencePreset must be one of: default, lowUsage, highVolume');
-  });
-
   it('accepts disableAgent boolean', () => {
     expect(() => validateConfig({ ...validConfig, disableAgent: true })).not.toThrow();
     expect(() => validateConfig({ ...validConfig, disableAgent: false })).not.toThrow();

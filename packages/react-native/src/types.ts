@@ -148,16 +148,6 @@ export interface EdotIosConfig {
   enableURLSessionInstrumentation?: boolean;
   enableViewControllerInstrumentation?: boolean;
   enableLifecycleEvents?: boolean;
-
-  /**
-   * Tunes the on-disk persistence buffer used by the iOS agent for failed
-   * export retries. Applies to metrics, traces, and logs on iOS.
-   *
-   * - `'default'` — low runtime impact, 4 MB per file, 512 MB directory cap (default).
-   * - `'lowUsage'` — alias for `'default'`; use on storage-constrained devices.
-   * - `'highVolume'` — instant delivery, shorter rotation interval; use on lossy networks.
-   */
-  persistencePreset?: 'default' | 'lowUsage' | 'highVolume';
 }
 
 export interface EdotAndroidConfig {
