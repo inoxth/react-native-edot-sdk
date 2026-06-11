@@ -1,6 +1,6 @@
 # Downgrade EDOT native agents to support iOS 15.6 and Kotlin 2.1.20
 
-Status: proposed
+Status: accepted
 
 ## Context
 
