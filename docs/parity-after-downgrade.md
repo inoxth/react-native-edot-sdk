@@ -121,5 +121,31 @@ Native-relevant options:
 - **Disk buffering:** Android exposes `android.diskBufferingEnabled` (on/off); iOS persists by default via the agent's on-disk buffer (no on/off toggle on 1.2.1). Documented as a platform-specific shape rather than unified.
 - **Sessions:** `getCurrentSessionId` returns a real id on iOS and `""` on Android (no public accessor in `agent-sdk` 1.1.0) — documented; revisit when upstream exposes a session API.
 - **`ios.persistencePreset` — removed** (was dead config; deleted in this change + added to the 0.2.0 changeset).
-- **Documentation items:** `recordMetric` iOS string-label limitation; `enableAppMetricInstrumentation`/`enableSystemMetrics` are Android-only; Android `getCurrentSessionId` returns `""`.
+- **Documentation items:** `recordMetric` iOS string-label limitation; Android `getCurrentSessionId` returns `""`.
 - **Agent changelog review: done** (see §4).
+
+---
+
+## 7. References
+
+### iOS — `apm-agent-ios` (built-in app/system metrics), `v1.2.1` tag (the pinned version)
+
+- [`CPUSampler.swift`](https://github.com/elastic/apm-agent-ios/blob/v1.2.1/Sources/Instrumentation/CPUSampler/CPUSampler.swift) → `system.cpu.usage` (`state=app`)
+- [`MemorySampler.swift`](https://github.com/elastic/apm-agent-ios/blob/v1.2.1/Sources/Instrumentation/MemorySampler/MemorySampler.swift) → `system.memory.usage` (`state=app`)
+- [`AppMetrics.swift`](https://github.com/elastic/apm-agent-ios/blob/v1.2.1/Sources/apm-agent-ios/Instrumentation/AppMetrics/AppMetrics.swift) + [`ElasticAttributes.swift`](https://github.com/elastic/apm-agent-ios/blob/v1.2.1/Sources/apm-agent-ios/ElasticAttributes.swift) → `application.launch.time`
+- [`InstrumentationConfiguration.swift`](https://github.com/elastic/apm-agent-ios/blob/v1.2.1/Sources/apm-agent-ios/InstrumentationConfiguration.swift) / [`InstrumentationConfigBuilder.swift`](https://github.com/elastic/apm-agent-ios/blob/v1.2.1/Sources/apm-agent-ios/InstrumentationConfigBuilder.swift) — `enableSystemMetrics` / `enableAppMetricInstrumentation` toggles (default `true`)
+- [`InstrumentationWrapper.swift`](https://github.com/elastic/apm-agent-ios/blob/v1.2.1/Sources/apm-agent-ios/InstrumentationWrapper.swift) — gates the samplers on those flags
+- [Releases](https://github.com/elastic/apm-agent-ios/releases) — 2.0.0 "Removed `AppMetrics`" (why the 2.x custom pipeline existed)
+- Docs: [EDOT iOS — instrumentations](https://www.elastic.co/docs/reference/opentelemetry/edot-sdks/ios/instrumentation) (documents `system.cpu.usage` / `system.memory.usage` + the launch metric)
+
+### Android — `apm-agent-android` / `agent-sdk` (no built-in app/system metrics — shown by absence)
+
+- [elastic/apm-agent-android](https://github.com/elastic/apm-agent-android) — the EDOT Android SDK (`agent-sdk`); no CPU/memory/app-launch metric instrumentation
+- [open-telemetry/opentelemetry-android](https://github.com/open-telemetry/opentelemetry-android) — upstream; instrumentations are ANR / slow-rendering / crash / network-change / activity-lifecycle (none for system metrics or `application.launch.time`)
+- Docs: [EDOT Android](https://www.elastic.co/docs/reference/opentelemetry/edot-sdks/android) · [release notes 1.1.0–1.5.0](https://www.elastic.co/docs/release-notes/edot/sdks/android)
+- In-repo fill-in (because the agent lacks them): `packages/react-native/android/.../EdotAppMetrics.kt`, `EdotSystemMetrics.kt`
+
+### Supporting
+
+- [open-telemetry/opentelemetry-swift](https://github.com/open-telemetry/opentelemetry-swift) — OTel-swift API (the legacy meter `recordMetric` uses on 1.2.1)
+- [Elastic Observability Labs — Monitoring Android with Elastic APM](https://www.elastic.co/observability-labs/blog/monitoring-android-applications-apm)
