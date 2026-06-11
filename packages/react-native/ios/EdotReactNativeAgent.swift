@@ -36,8 +36,7 @@ public class EdotReactNativeAgent: NSObject {
     secretToken: String? = nil,
     apiKey: String? = nil,
     sessionSamplingRate: NSNumber? = nil,
-    exportProtocol: String? = nil,
-    persistencePreset: String? = nil
+    exportProtocol: String? = nil
   ) {
     if serverUrl.isEmpty {
       raiseInvalid("serverUrl must not be blank")

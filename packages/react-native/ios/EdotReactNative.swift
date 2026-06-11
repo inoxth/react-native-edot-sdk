@@ -91,11 +91,10 @@ class EdotReactNative: NSObject {
 
   /// Logs (under `debug`) any JS config fields that the agent silently drops
   /// because the host app already pre-initialized via
-  /// `EdotReactNativeAgent.preInitialize(...)`. `exportProtocol` and
-  /// `secretToken` are intentionally NOT in this list — `EdotMeterProviderFactory`
-  /// still consumes them for the metrics pipeline.
+  /// `EdotReactNativeAgent.preInitialize(...)` — they cannot be applied to an
+  /// already-running agent.
   static func warnDroppedJsFieldsAfterPreInit(_ config: NSDictionary) {
-    let reserved = ["apiKey", "sessionSamplingRate", "persistencePreset"]
+    let reserved = ["apiKey", "sessionSamplingRate"]
     let present = reserved.filter { config[$0] != nil }
     guard !present.isEmpty, debugEnabledSnapshot() else { return }
     let joined = present.joined(separator: ", ")

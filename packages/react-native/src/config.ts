@@ -90,16 +90,6 @@ export function validateConfig(config: EdotConfig): void {
     }
   }
 
-  const PERSISTENCE_PRESETS = ['default', 'lowUsage', 'highVolume'] as const;
-  if (
-    config.ios?.persistencePreset !== undefined &&
-    !PERSISTENCE_PRESETS.includes(config.ios.persistencePreset)
-  ) {
-    throw new Error(
-      `[EDOT] ios.persistencePreset must be one of: ${PERSISTENCE_PRESETS.join(', ')}`,
-    );
-  }
-
   if (config.ignoreSpanNames !== undefined) {
     if (config.ignoreSpanNames.length === 0) {
       throw new Error('[EDOT] ignoreSpanNames must not be an empty array');
