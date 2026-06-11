@@ -53,8 +53,8 @@ Native-relevant options:
 | `secretToken`, `apiKey`, `exportProtocol`, `sessionSamplingRate` | ✅ | ✅ | OK |
 | `trackingConsent`, `debug`, `disableAgent` | ✅ | ✅ | OK |
 | `ignoreSpanNames`, `ignoreLogPatterns` | ✅ (`addSpanFilter`/`addLogFilter`) | ✅ (exporter interceptors) | OK |
-| `enableAppMetricInstrumentation` | ❌ **not read** | ✅ | **iOS no-op** (metrics pipeline deleted) |
-| `enableSystemMetrics` | ❌ **not read** | ✅ | **iOS no-op** |
+| `enableAppMetricInstrumentation` | ❌ **not read** | ✅ | **iOS no-op** — iOS app-launch metrics come from the agent's built-in `AppMetrics` |
+| `enableSystemMetrics` | ✅ | ✅ | re-wired on iOS (DEV-428) to gate `EdotSystemMetrics` |
 | `ios.enableCrashReporting` / `enableURLSessionInstrumentation` / `enableViewControllerInstrumentation` / `enableLifecycleEvents` | ✅ | ➖ | OK (iOS-only) |
 | `ios.persistencePreset` | ➖ **removed** — was dead config (never applied; persistence block removed in DEV-422), deleted in this change | ➖ | removed |
 | `android.diskBufferingEnabled` | ➖ | ✅ | OK (Android-only) |
@@ -70,8 +70,8 @@ Native-relevant options:
 | Sessions (`session.id` on signals) | ✅ | ✅ | ✅ |
 | Synthetic transaction parent for orphan HTTP spans | ✅ (`ElasticSpanProcessor`) | ✅ | ➖ |
 | Native crash reporting | ✅ | ✅ (`enableCrashReporting`) | ✅ |
-| App launch / responsiveness metrics | ✅ our `EdotAppMetrics.swift` | ⚠️ our reimpl removed, **but the agent's built-in `AppMetrics` is active on 1.2.1** (removed upstream only in 2.0.0) — metric names TBD → DEV-423 | ✅ (`EdotAppMetrics.kt`) |
-| `system.cpu.usage` / `system.memory.usage` | ✅ (`EdotSystemMetrics.swift`) | ❌ **removed** (these gauges were our addition — never part of the agent) | ✅ (`EdotSystemMetrics.kt`) |
+| App launch / responsiveness metrics | ✅ our `EdotAppMetrics.swift` | ✅ via the agent's built-in `AppMetrics` (active on 1.2.1; removed upstream only in 2.0.0) — names TBD → DEV-430 | ✅ (`EdotAppMetrics.kt`) |
+| `system.cpu.usage` / `system.memory.usage` | ✅ (`EdotSystemMetrics.swift`) | ✅ **re-added** (DEV-428) — `EdotSystemMetrics.swift` rewritten to legacy observable gauges on the agent's meter provider | ✅ (`EdotSystemMetrics.kt`) |
 | Resource-aware MeterProvider + central-config metric gating | ✅ (`EdotMeterProviderFactory` / `EdotCentralConfigMetricExporter`) | ❌ **removed** | ➖ (agent provider is resource-aware) |
 | `recordMetric` typed attributes | ✅ (stable meter) | ⚠️ string-only labels | ✅ |
 
@@ -104,8 +104,8 @@ Native-relevant options:
 
 | Gap | Recommendation |
 |---|---|
-| iOS app metrics | Likely **already covered** by the agent's built-in `AppMetrics` on 1.2.1 — confirm names in DEV-423 before deciding. |
-| iOS `system.cpu.usage` / `system.memory.usage` | Genuine loss (our addition). **Re-add** `EdotSystemMetrics` against `OpenTelemetry.instance.meterProvider` (small; the provider is usable) — see DEV-428. Fallback: accept + document Android-only. |
+| iOS app metrics | Covered by the agent's built-in `AppMetrics` on 1.2.1 — names to confirm/reconcile in DEV-430. |
+| iOS `system.cpu.usage` / `system.memory.usage` | ✅ **Re-added** (DEV-428) — `EdotSystemMetrics` rewritten to legacy observable gauges on the agent's meter provider; `enableSystemMetrics` re-wired on iOS. |
 | `ios.persistencePreset` dead config | ✅ **Removed** — deleted from types/config/validation/README + iOS `preInitialize` param (it did nothing on 1.2.1); added to the 0.2.0 changeset. |
 | `enableAppMetricInstrumentation` / `enableSystemMetrics` no-op on iOS | Tie to the DEV-428 decision: if metrics re-added, re-wire on iOS; else document Android-only. |
 | `recordMetric` string-only labels (iOS) | **Document** the limitation; optionally stringify-with-type-hint. Revisit if iOS agent ever exposes a stable meter. |
@@ -118,7 +118,7 @@ Native-relevant options:
 
 - **No NEW unintended public-API breakage** beyond DEV-424/425/426 — every removed method is accounted for, and each maps to a feature that only exists in apm-agent-ios 1.3.0+/2.x.
 - **Android 1.1.0: no meaningful capability loss** for our SDK.
-- **iOS metrics (refined):** likely **not** metric-less — the agent's built-in `AppMetrics` is active on 1.2.1 (it was removed only in 2.0.0). The real gap is `system.cpu.usage`/`system.memory.usage` (our addition). DEV-423 confirms what 1.2.1 emits; DEV-428 decides re-add vs accept.
+- **iOS metrics:** app-launch metrics come from the agent's built-in `AppMetrics` (active on 1.2.1); `system.cpu.usage`/`system.memory.usage` **re-added** (DEV-428) via legacy observable gauges on the agent's meter provider, so they're cross-platform again. Metric-name reconciliation → DEV-430.
 - **`ios.persistencePreset` — removed** (was dead config; deleted in this change + added to the 0.2.0 changeset).
 - **Documentation items:** `recordMetric` iOS string-label limitation; `enableAppMetricInstrumentation`/`enableSystemMetrics` are Android-only; Android `getCurrentSessionId` returns `""`.
 - **Agent changelog review: done** (see §4).
