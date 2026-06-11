@@ -214,6 +214,11 @@ class EdotReactNative: NSObject {
       if urlSessionEnabled {
         EdotReactNative.installURLSessionInstrumentation(serverUrl: serverUrl)
       }
+
+      let systemMetricsEnabled = config["enableSystemMetrics"] as? Bool ?? true
+      if systemMetricsEnabled {
+        EdotSystemMetrics.install()
+      }
     }
 
     EdotReactNative.stateLock.lock()
