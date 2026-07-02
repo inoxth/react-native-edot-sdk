@@ -50,6 +50,34 @@ describe('shouldIgnore', () => {
   it('does not ignore when no patterns', () => {
     expect(shouldIgnore('https://api.example.com/users', undefined, serverUrl)).toBe(false);
   });
+
+  it('does not ignore a lookalike host that shares a string prefix', () => {
+    expect(
+      shouldIgnore('https://apm.example.com.attacker.test/x', undefined, 'https://apm.example.com'),
+    ).toBe(false);
+  });
+
+  it('ignores the server on any path (same origin)', () => {
+    expect(shouldIgnore('https://apm.example.com:8200/anything', undefined, serverUrl)).toBe(true);
+  });
+
+  it('ignores when the server port is explicit but the request omits the default', () => {
+    expect(
+      shouldIgnore('https://apm.example.com/v1/traces', undefined, 'https://apm.example.com:443'),
+    ).toBe(true);
+  });
+
+  it('ignores when the server omits the port but the request has the explicit default', () => {
+    expect(
+      shouldIgnore('https://apm.example.com:443/v1/traces', undefined, 'https://apm.example.com'),
+    ).toBe(true);
+  });
+
+  it('does not ignore the same host on a different port', () => {
+    expect(
+      shouldIgnore('https://apm.example.com:9000/x', undefined, 'https://apm.example.com:8200'),
+    ).toBe(false);
+  });
 });
 
 describe('extractHost', () => {

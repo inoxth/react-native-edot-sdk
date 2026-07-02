@@ -23,7 +23,7 @@ export function shouldIgnore(
   ignoreUrls: (string | RegExp)[] | undefined,
   serverUrl: string,
 ): boolean {
-  if (url.startsWith(serverUrl)) {
+  if (sameOrigin(url, serverUrl)) {
     return true;
   }
   if (!ignoreUrls) {
@@ -35,6 +35,26 @@ export function shouldIgnore(
     }
     return pattern.test(url);
   });
+}
+
+/**
+ * Whether two URLs share the same origin (scheme + host + effective port).
+ * Used to exclude requests to the EDOT server from tracing. Compared by origin
+ * rather than a raw `startsWith(serverUrl)` prefix, which (a) over-matched
+ * lookalike hosts — `https://apm.example.com.evil.test` starts with
+ * `https://apm.example.com`, silently dropping unrelated requests — and (b)
+ * missed the server when the port normalized differently (explicit `:443` vs
+ * none). Reuses the existing extractors so scheme-default ports resolve
+ * consistently (`extractPort` returns 443/80 by scheme). (DEV-782)
+ */
+function sameOrigin(a: string, b: string): boolean {
+  const scheme = extractScheme(a);
+  const host = extractHostname(a);
+  const port = extractPort(a);
+  if (scheme === null || host === null || port === null) {
+    return false;
+  }
+  return scheme === extractScheme(b) && host === extractHostname(b) && port === extractPort(b);
 }
 
 export function shouldPropagate(url: string, targets: (string | RegExp)[] | undefined): boolean {
