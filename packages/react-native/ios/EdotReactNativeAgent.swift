@@ -64,7 +64,7 @@ public class EdotReactNativeAgent: NSObject {
     )
 
     var configBuilder = AgentConfigBuilder()
-      .withServerUrl(url)
+      .withServerUrl(withDefaultPort(url))
 
     if let token = secretToken, !token.isEmpty {
       configBuilder = configBuilder.withSecretToken(token)
@@ -159,5 +159,25 @@ public class EdotReactNativeAgent: NSObject {
     envLock.lock()
     setenv("OTEL_RESOURCE_ATTRIBUTES", pairs.joined(separator: ","), 1)
     envLock.unlock()
+  }
+
+  /// Ensures the pre-init `serverUrl` carries an explicit port. apm-agent-ios
+  /// falls back to its hardcoded `:8200` default when `URL.port` is nil (no port
+  /// written in the string) — Foundation does not infer 443/80 from the scheme —
+  /// so a portless URL silently targets `:8200` instead of the scheme default.
+  /// The JS `initialize` path normalizes this in `ensureExplicitPort`; this
+  /// mirrors it for host apps that pre-initialize natively. (DEV-783)
+  static func withDefaultPort(_ url: URL) -> URL {
+    guard url.port == nil,
+      var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+    else {
+      return url
+    }
+    switch components.scheme?.lowercased() {
+    case "https": components.port = 443
+    case "http": components.port = 80
+    default: return url
+    }
+    return components.url ?? url
   }
 }
