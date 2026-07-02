@@ -1,5 +1,14 @@
 # @inoxth/react-native-edot-sdk
 
+## 0.2.1
+
+### Patch Changes
+
+- 7f9e2ba: iOS: stop the agent from tracing its own OTLP/HTTP export requests. The `URLSessionInstrumentation` self-exclusion now matches export traffic by host + `/v1/` path instead of a raw `serverUrl` string prefix — the prefix missed the agent's own requests whenever `serverUrl` carried an explicit `:443`/`:80` (apm-agent-ios strips default ports from the export URL), producing spurious `POST <apm-host>` spans. (DEV-781)
+- 4d35b32: Match `serverUrl` by origin (scheme + host + effective port) in `shouldIgnore` instead of a raw string prefix. Fixes two matcher bugs: lookalike hosts that share a string prefix (e.g. `https://apm.example.com.evil.test`) were silently excluded from tracing, and the server exclusion missed when the port normalized differently (explicit `:443` vs none). (DEV-782)
+- 82c8990: Normalize a portless `serverUrl` to its scheme-default port (`:443` for https, `:80` for http) before it reaches the native agents, on both the JS `initialize` and native pre-init paths. Previously iOS silently fell back to apm-agent-ios's hardcoded `:8200` for a portless URL while Android used the scheme default, so the same config targeted different ports per platform — causing silent data loss on iOS when the collector was on 443. Explicit ports are respected. (DEV-783)
+  - @inoxth/react-native-edot-shared@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes
