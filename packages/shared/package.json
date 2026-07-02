@@ -1,6 +1,6 @@
 {
   "name": "@inoxth/react-native-edot-shared",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "EDOT shared core — cross-cutting state used by navigation and instrumentation packages",
   "license": "MIT",
   "author": {
