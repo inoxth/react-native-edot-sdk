@@ -141,3 +141,36 @@ export function extractTarget(url: string): string | null {
     return null;
   }
 }
+
+/**
+ * Ensures serverUrl carries an explicit port. apm-agent-ios falls back to its
+ * hardcoded :8200 default for a portless URL (Foundation's URL.port is nil when
+ * no port is written in the string), while Android and standard URL semantics
+ * resolve to the scheme default — so the same portless serverUrl silently
+ * targets different ports per platform. Appends the scheme default (443 for
+ * https, 80 for http) when no port is present. Idempotent: a URL that already
+ * specifies a port (default or not) is returned unchanged. (DEV-783)
+ */
+export function ensureExplicitPort(serverUrl: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(serverUrl);
+  } catch {
+    return serverUrl;
+  }
+  const defaultPort =
+    parsed.protocol === 'https:' ? '443' : parsed.protocol === 'http:' ? '80' : null;
+  if (defaultPort === null) {
+    return serverUrl;
+  }
+  const schemeEnd = serverUrl.indexOf('://') + 3;
+  const authority = serverUrl.slice(schemeEnd).split(/[/?#]/)[0];
+  const hostPort = authority.includes('@')
+    ? authority.slice(authority.lastIndexOf('@') + 1)
+    : authority;
+  if (/:\d+$/.test(hostPort)) {
+    return serverUrl;
+  }
+  const insertAt = schemeEnd + authority.length;
+  return `${serverUrl.slice(0, insertAt)}:${defaultPort}${serverUrl.slice(insertAt)}`;
+}
