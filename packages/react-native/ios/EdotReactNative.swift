@@ -592,9 +592,11 @@ class EdotReactNative: NSObject {
   private static func installURLSessionInstrumentation(serverUrl: String) {
     guard urlSessionInstrumentation == nil else { return }
 
+    let collectorHost = URLComponents(string: serverUrl)?.host
+
     let urlSessionConfig = URLSessionInstrumentationConfiguration(
       shouldInstrument: { request in
-        if let url = request.url?.absoluteString, url.hasPrefix(serverUrl) {
+        if isAgentExportRequest(request, collectorHost: collectorHost) {
           return false
         }
         if request.value(forHTTPHeaderField: dedupHeader) != nil {
@@ -613,6 +615,25 @@ class EdotReactNative: NSObject {
       }
     )
     urlSessionInstrumentation = URLSessionInstrumentation(configuration: urlSessionConfig)
+  }
+
+  /// Whether `request` is one of the agent's own OTLP/HTTP export requests, which
+  /// must not be natively instrumented (see feedback-loop note above).
+  ///
+  /// Matches on **host + `/v1/` path** rather than a raw `serverUrl` string prefix:
+  /// apm-agent-ios normalizes the export endpoint — it strips default ports
+  /// (`:80`/`:443`), drops any configured path, and always POSTs to
+  /// `<collectorHost>/v1/{traces,metrics,logs}`. A prefix match against the
+  /// configured `serverUrl` therefore misses whenever the URL carries an explicit
+  /// `:443`/`:80` or a path, letting the agent trace its own exports (DEV-781).
+  static func isAgentExportRequest(_ request: URLRequest, collectorHost: String?) -> Bool {
+    guard let collectorHost,
+      let host = request.url?.host,
+      host.caseInsensitiveCompare(collectorHost) == .orderedSame
+    else {
+      return false
+    }
+    return request.url?.path.hasPrefix("/v1/") ?? false
   }
 
   private static func compileSpanNamePredicates(_ rules: [Any]) -> [(String) -> Bool] {
