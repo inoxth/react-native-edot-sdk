@@ -1,4 +1,5 @@
 import {
+  ensureExplicitPort,
   extractHost,
   extractHostname,
   extractPort,
@@ -169,5 +170,37 @@ describe('extractTarget', () => {
 
   it('returns null for malformed URL', () => {
     expect(extractTarget('not a url')).toBeNull();
+  });
+});
+
+describe('ensureExplicitPort', () => {
+  it('appends 443 to a portless https URL', () => {
+    expect(ensureExplicitPort('https://apm.example.com')).toBe('https://apm.example.com:443');
+  });
+
+  it('appends 80 to a portless http URL', () => {
+    expect(ensureExplicitPort('http://apm.example.com')).toBe('http://apm.example.com:80');
+  });
+
+  it('leaves an explicit default port unchanged', () => {
+    expect(ensureExplicitPort('https://apm.example.com:443')).toBe('https://apm.example.com:443');
+  });
+
+  it('leaves an explicit non-default port unchanged', () => {
+    expect(ensureExplicitPort('https://apm.example.com:8200')).toBe('https://apm.example.com:8200');
+    expect(ensureExplicitPort('https://apm.example.com:1234')).toBe('https://apm.example.com:1234');
+  });
+
+  it('preserves path and query while inserting the port', () => {
+    expect(ensureExplicitPort('https://apm.example.com/otlp')).toBe(
+      'https://apm.example.com:443/otlp',
+    );
+    expect(ensureExplicitPort('https://apm.example.com/v1?x=1')).toBe(
+      'https://apm.example.com:443/v1?x=1',
+    );
+  });
+
+  it('returns malformed URLs unchanged', () => {
+    expect(ensureExplicitPort('not a url')).toBe('not a url');
   });
 });

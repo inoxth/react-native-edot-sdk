@@ -58,6 +58,13 @@ describe('EdotReactNative', () => {
       expect(nativeConfig.debug).toBe(false);
     });
 
+    it('normalizes a portless serverUrl to its scheme-default port before forwarding to native', async () => {
+      await EdotReactNative.initialize({ ...validConfig, serverUrl: 'https://apm.example.com' });
+
+      const nativeConfig = (EdotNativeModule.initialize as jest.Mock).mock.calls[0][0];
+      expect(nativeConfig.serverUrl).toBe('https://apm.example.com:443');
+    });
+
     it('warns and returns on duplicate initialize', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 

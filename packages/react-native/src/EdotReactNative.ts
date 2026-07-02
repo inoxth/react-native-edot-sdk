@@ -17,6 +17,7 @@ import { setupErrorHandler } from './instrumentation/errors';
 import { setupStartupTracing } from './instrumentation/startup';
 import { setupAppStateTracking } from './instrumentation/app-state';
 import { setupSpanCleanup } from './instrumentation/spanCleanup';
+import { ensureExplicitPort } from './instrumentation/urlUtils';
 
 interface InternalConfig {
   serverUrl: string;
@@ -44,7 +45,7 @@ function mergeConfig(config: EdotConfig): InternalConfig {
   const resolvedServiceName = resolveResourceField(config, 'serviceName') ?? '';
 
   return {
-    serverUrl: config.serverUrl,
+    serverUrl: ensureExplicitPort(config.serverUrl),
     serviceName: resolvedServiceName,
     serviceVersion: config.serviceVersion,
     deploymentEnvironment: config.deploymentEnvironment,
