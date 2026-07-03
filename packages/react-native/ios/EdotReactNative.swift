@@ -576,9 +576,11 @@ class EdotReactNative: NSObject {
   /// `enableURLSessionInstrumentation` is on/off only — it does not expose the
   /// `shouldInstrument` / `nameSpan` callbacks we need to:
   ///
-  /// 1. **Avoid an OTLP feedback loop.** The agent's exporter POSTs to the APM
-  ///    Server via `URLSession`. An unfiltered swizzle traces those exporter
-  ///    requests, which produces more spans, which get exported, and so on.
+  /// 1. **Avoid self-tracing the agent's own backend traffic.** The agent talks
+  ///    to the APM Server via `URLSession` for both OTLP export (`POST /v1/*`) and
+  ///    central-config polling (`GET /config/v1/agents`, on a timer). An unfiltered
+  ///    swizzle traces those requests — the export path even feeds back (spans →
+  ///    exported → more spans). `isCollectorHostRequest` filters all of it by host.
   /// 2. **Avoid duplicate spans for JS-initiated requests.** React Native's
   ///    `fetch` and `XMLHttpRequest` go through `NSURLSession` on iOS, so an
   ///    unfiltered native swizzle would emit a second span for every request
@@ -586,9 +588,9 @@ class EdotReactNative: NSObject {
   ///    layer claim ownership of a request so the native side stays out of it.
   /// 3. **Match span naming with the JS layer** (`"METHOD host"`).
   ///
-  /// Net effect: only non-JS, non-exporter URLSession traffic (e.g. requests
-  /// from third-party native SDKs) is traced natively. Everything originating
-  /// from JS is traced exactly once, in JS.
+  /// Net effect: only non-JS URLSession traffic that isn't bound for the collector
+  /// host (e.g. requests from third-party native SDKs) is traced natively.
+  /// Everything originating from JS is traced exactly once, in JS.
   private static func installURLSessionInstrumentation(serverUrl: String) {
     guard urlSessionInstrumentation == nil else { return }
 
@@ -596,7 +598,7 @@ class EdotReactNative: NSObject {
 
     let urlSessionConfig = URLSessionInstrumentationConfiguration(
       shouldInstrument: { request in
-        if isAgentExportRequest(request, collectorHost: collectorHost) {
+        if isCollectorHostRequest(request, collectorHost: collectorHost) {
           return false
         }
         if request.value(forHTTPHeaderField: dedupHeader) != nil {
@@ -617,23 +619,27 @@ class EdotReactNative: NSObject {
     urlSessionInstrumentation = URLSessionInstrumentation(configuration: urlSessionConfig)
   }
 
-  /// Whether `request` is one of the agent's own OTLP/HTTP export requests, which
-  /// must not be natively instrumented (see feedback-loop note above).
+  /// Whether `request` targets the collector host, i.e. it is one of the agent's
+  /// own requests to its backend and must not be natively instrumented (see
+  /// feedback-loop note above).
   ///
-  /// Matches on **host + `/v1/` path** rather than a raw `serverUrl` string prefix:
-  /// apm-agent-ios normalizes the export endpoint — it strips default ports
-  /// (`:80`/`:443`), drops any configured path, and always POSTs to
-  /// `<collectorHost>/v1/{traces,metrics,logs}`. A prefix match against the
-  /// configured `serverUrl` therefore misses whenever the URL carries an explicit
-  /// `:443`/`:80` or a path, letting the agent trace its own exports (DEV-781).
-  static func isAgentExportRequest(_ request: URLRequest, collectorHost: String?) -> Bool {
-    guard let collectorHost,
-      let host = request.url?.host,
-      host.caseInsensitiveCompare(collectorHost) == .orderedSame
-    else {
+  /// Matches on **host alone** — not host + path. The agent talks to the collector
+  /// for more than OTLP export: apm-agent-ios 1.2.1 also polls central config
+  /// (`GET /config/v1/agents`) on a timer via `URLSession.shared`, and neither its
+  /// `AgentConfigBuilder` nor `InstrumentationConfiguration` can disable that poll.
+  /// A path filter (`/v1/`) caught exports but leaked the central-config GET,
+  /// surfacing it as a spurious `GET <collectorHost>` transaction (DEV-785,
+  /// regression of DEV-781). Matching by host is complete by construction: it
+  /// covers export, central config, and any future agent→collector endpoint,
+  /// and is robust to the agent stripping `:80`/`:443` from the export URL (port
+  /// is never compared). Trade-off: native (non-JS) app requests to the same host
+  /// are also excluded — negligible for a dedicated APM host, and JS-origin
+  /// requests are still traced in JS.
+  static func isCollectorHostRequest(_ request: URLRequest, collectorHost: String?) -> Bool {
+    guard let collectorHost, let host = request.url?.host else {
       return false
     }
-    return request.url?.path.hasPrefix("/v1/") ?? false
+    return host.caseInsensitiveCompare(collectorHost) == .orderedSame
   }
 
   private static func compileSpanNamePredicates(_ rules: [Any]) -> [(String) -> Bool] {
