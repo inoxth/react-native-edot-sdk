@@ -1,5 +1,12 @@
 # @inoxth/react-native-edot-sdk
 
+## 0.2.2
+
+### Patch Changes
+
+- 6af85dd: iOS: stop the agent from tracing its own central-config poll. The `URLSessionInstrumentation` self-exclusion now matches the collector by host alone instead of host + `/v1/` path — the path filter (DEV-781) caught OTLP exports but leaked apm-agent-ios's `GET /config/v1/agents` poll, which surfaced as a recurring `GET <apm-host>` transaction. Host-only matching covers export, central config, and any future agent→collector request. (DEV-785)
+  - @inoxth/react-native-edot-shared@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

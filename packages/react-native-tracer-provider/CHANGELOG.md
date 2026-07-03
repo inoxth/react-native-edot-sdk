@@ -1,5 +1,13 @@
 # @inoxth/react-native-edot-tracer-provider
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [6af85dd]
+  - @inoxth/react-native-edot-sdk@0.2.2
+  - @inoxth/react-native-edot-shared@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes
