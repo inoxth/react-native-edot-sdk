@@ -1,6 +1,6 @@
 {
   "name": "@inoxth/react-native-edot-tracer-provider",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "EDOT TracerProvider — OTel-compatible manual instrumentation for React Native",
   "license": "MIT",
   "author": {
