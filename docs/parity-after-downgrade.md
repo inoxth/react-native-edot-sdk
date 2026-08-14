@@ -68,7 +68,9 @@ Native-relevant options:
 | Traces (manual + fetch/XHR), W3C propagation | ✅ | ✅ | ✅ |
 | JS errors / crashes (OTel log records) | ✅ | ✅ | ✅ |
 | Sessions (`session.id` on signals) | ✅ | ✅ | ✅ |
-| Synthetic transaction parent for orphan HTTP spans | ✅ (`ElasticSpanProcessor`) | ✅ | ➖ |
+| Synthetic transaction parent for orphan HTTP spans | ✅ (`ElasticSpanProcessor`) | ➖ no longer used | ➖ never had one |
+| Request Transaction for traced requests | ✅ (agent-supplied, iOS only) | ✅ **JS-minted** (`httpSpans.ts`, DEV-1232) | ✅ **JS-minted** (`httpSpans.ts`, DEV-1232) |
+| HTTP failure reported as | exception event (`URLSessionInstrumentation`) | ✅ exception event, no span status (DEV-1232) | ✅ exception event, no span status (DEV-1232) |
 | Native crash reporting | ✅ | ✅ (`enableCrashReporting`) | ✅ |
 | `application.launch.time` | ✅ our `EdotAppMetrics.swift` | ✅ **agent's built-in `AppMetrics`** (1.2.1; same name as Android) | ✅ (`EdotAppMetrics.kt`) |
 | `system.cpu.usage` / `system.memory.usage` | ✅ (`EdotSystemMetrics.swift`) | ✅ **agent's built-in `CPUSampler` / `MemorySampler`** (1.2.1; same names + `state=app` as Android) | ✅ (`EdotSystemMetrics.kt`) |

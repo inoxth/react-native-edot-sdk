@@ -43,6 +43,8 @@ When `EdotReactNativeAgent.isPreInitialized` is true, `EdotReactNativeModuleImpl
 
 `Collections.synchronizedMap(LinkedHashMap)` with `removeEldestEntry` returning true when `size > 512`. Evicted entries are auto-ended (`eldest.value.end()`) to prevent leaks if JS never calls `endSpan`.
 
+`endSpan` maps `2 → StatusCode.ERROR` and anything else to `StatusCode.OK`, **except `STATUS_UNSET` (`-1`), which ends the span without calling `setStatus`**. Don't collapse that branch into the `else`: intake derives `event.outcome` from `http.status_code` only for a statusless span, and the JS HTTP instrumentation depends on it (`docs/adr/0004-…`). Keep it in step with `EdotReactNative.swift`.
+
 ### No custom `MeterProvider` (contrast iOS)
 
 `apm-agent-android`'s `ElasticApmAgent.getOpenTelemetry()` returns a resource-aware `OpenTelemetry` instance. `EdotAppMetrics` and `EdotSystemMetrics` call `openTelemetry.getMeter(...)` / `openTelemetry.meterBuilder(...)` directly. apm-agent-ios 1.2.1's global meter is likewise resource-aware, so neither platform needs a custom `MeterProvider` — the 2.x-era custom iOS pipeline was removed in the downgrade.

@@ -26,7 +26,8 @@ These have a documented "why" in source comments. Removing or relaxing one **sil
 1. **`#if ELASTIC_APM_AVAILABLE` guard** wraps every file's body. The flag is set by `pod_target_xcconfig` only when `spm_dependency` resolves; calling `ElasticApm` outside the guard breaks builds for consumers without SPM.
 2. **`recordMetric` uses the legacy meter** (`OpenTelemetry.instance.meterProvider.get(...)` → `createIntCounter`/`createDoubleMeasure`) — do **not** switch to the stable `MeterProvider`/`gaugeBuilder` API; 1.2.1 registers no stable provider, so the stable route silently emits nothing.
 3. **`OTEL_RESOURCE_ATTRIBUTES` double-sets `deployment.environment` and `deployment.environment.name`** — apm-agent-ios hardcodes `deployment.environment.name="default"`. APM Server 8.16+ maps the new key to `service.environment`; the legacy key is kept for older versions. (`EdotReactNativeAgent.swift`)
-4. **`X-Edot-RN-Traced` dedup header check** in `URLSessionInstrumentation.shouldInstrument` — without it, every JS-originated `fetch`/`XHR` would be double-spanned (once in JS, once natively). (`EdotReactNative.swift`)
+4. **`endSpan`'s `statusUnset` (`-1`) branch** — ends the span without assigning `otelSpan.status`. Every other value falls through to `2 → .error` / else `.ok`. Removing it makes a statusless span `Ok`, which suppresses the intake fallback that derives `event.outcome` from `http.status_code`, so a 5xx HTTP exit span would report success ([ADR-0004](../../../docs/adr/0004-mint-a-request-transaction-for-every-traced-request.md)). Mirrored in `EdotReactNativeModuleImpl.kt`.
+5. **`X-Edot-RN-Traced` dedup header check** in `URLSessionInstrumentation.shouldInstrument` — without it, every JS-originated `fetch`/`XHR` would be double-spanned (once in JS, once natively). (`EdotReactNative.swift`)
 
 ## Distribution
 
@@ -51,9 +52,9 @@ Example apps' `project.pbxproj` carries **no** SPM refs, EDOT source files, brid
 
 - **`type=mobile`** and **`session.id`** — set on every span by the universal attribute interceptor (`ElasticSpanProcessor.swift`).
 - **`network.connection.type` (rich, via `NetworkStatusInjector`)** — set when `isHttpSpan() == true`, which keys on the presence of the `http.url` (legacy) OR `url.full` (v1.23 stable) attribute. Our JS spans emit `http.url` per the Elastic mobile spec.
-- **Synthetic parent transaction** — created automatically when an HTTP span has `parentSpanId == nil` (the default for `startClientSpan(name, attrs, null)`), so JS HTTP calls appear in APM as `transaction → child span` rather than flat root spans.
+- **Synthetic parent transaction** — created automatically when an HTTP span has `parentSpanId == nil`. **Dormant since DEV-1232**: `fetch.ts` / `xhr.ts` now mint the Request Transaction themselves (`startRequestTransaction` in `instrumentation/httpSpans.ts`) and pass it as `parentSpanId`, so the request span is never parentless and this path never fires. It existed only on iOS, which is why Android had no service-map edge — see [ADR-0004](../../../docs/adr/0004-mint-a-request-transaction-for-every-traced-request.md).
 
-**Implication:** anyone updating `startClientSpan` or fetch/XHR attributes must keep `http.url` (or `url.full`) in the emitted attribute set, otherwise `isHttpSpan()` returns false and JS HTTP spans silently lose `network.connection.type` and synthetic-parent wrapping.
+**Implication:** anyone updating `startClientSpan` or fetch/XHR attributes must keep `http.url` (or `url.full`) on the **request** span, otherwise `isHttpSpan()` returns false and JS HTTP spans silently lose `network.connection.type`. Conversely, never put `http.url` on the **Request Transaction** — that revives the synthetic-parent path and produces a third span per request. The Request Transaction is a deliberate copy of what this processor manufactures (same name, `kind=client`, no attributes of its own), so a change to either should be checked against the other.
 
 ## Per-Instrumentation Tracer Scope
 

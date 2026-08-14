@@ -21,6 +21,7 @@ src/
 │   ├── app-state.ts            # AppState listener — ends screen-lifetime span on background, re-emits on foreground
 │   ├── fetch.ts                # fetch() monkey-patch with span creation
 │   ├── xhr.ts                  # XMLHttpRequest monkey-patch
+│   ├── httpSpans.ts            # Request Transaction minting, statusless span end, HTTP failure events
 │   ├── errors.ts               # Global error + promise rejection handlers (OTel exception events / Elastic mobile crash events)
 │   ├── startup.ts              # Cold/warm start tracing
 │   ├── spanCleanup.ts          # Span lifecycle management
@@ -126,7 +127,9 @@ Both `startSpan` and `startClientSpan` accept an optional `instrumentationName: 
 
 All four scopes share the `@inoxth/react-native-edot-sdk/<class>` shape so a single `service.framework.name : "@inoxth/react-native-edot-sdk/<class>"` KQL filter cleanly classifies every emitted span — enabling per-class SLO definitions in Elastic APM (HTTP, navigation, startup, errors) without `transaction.name` regex hacks. Native `URLSession` traffic is rebranded under `.../http` via a custom `tracer` passed to `URLSessionInstrumentationConfiguration` (see `installURLSessionInstrumentation` in `EdotReactNative.swift`).
 
-`startSpan` creates `kind=INTERNAL` spans (used by errors, startup, view, action, custom JS-driven spans). `startClientSpan` creates `kind=CLIENT` spans and is used by `fetch.ts` / `xhr.ts` so HTTP spans match what apm-agent-ios's native `URLSessionInstrumentation` emits.
+`endSpan(spanId, statusCode)` takes the OTel status code — `1=Ok`, `2=Error` — plus **`-1`, meaning end the span without setting a status at all**. Unset is not `Ok`: intake derives `event.outcome` from `http.status_code` only for a statusless span, which is what the HTTP span pair relies on (ADR-0004). Both natives special-case `-1` before their `2 → ERROR / else → OK` mapping.
+
+`startSpan` creates `kind=INTERNAL` spans (used by errors, startup, view, action, custom JS-driven spans). `startClientSpan` creates `kind=CLIENT` spans and is used by `fetch.ts` / `xhr.ts` so HTTP spans match what apm-agent-ios's native `URLSessionInstrumentation` emits. `fetch.ts` / `xhr.ts` call `startClientSpan` **twice** per traced request: once for the Request Transaction, once for the request span parented to it — see "HTTP Span Shape".
 
 **Critical:** The wrapper must use `Proxy` + `Reflect.get()` — never object spread (`{...module, startSpan() {...}}`). TurboModule instances store methods on the prototype, not as own properties. Object spread silently drops them, causing runtime errors like `EdotNativeModule missing expected methods: endSpan`. The test suite includes a `preserves all Spec methods from prototype-based TurboModule instances` case that guards against this regression.
 
@@ -171,7 +174,17 @@ The legacy `'JS Error'` (JS-side) and `'js_error: <name>'` (native-side) spans w
 1. The Elastic mobile attributes spec (`https://github.com/elastic/apm/blob/main/specs/agents/mobile/README.md`) — which documents legacy names as the "OTel Convention" agents should send; APM Server remaps to ECS field names internally.
 2. apm-agent-ios 1.2.1 via opentelemetry-swift 1.13.0's `URLSessionLogger` (which emits the same legacy names on native HTTP spans).
 
-This alignment lets apm-agent-ios's `ElasticSpanProcessor` recognize JS HTTP spans as HTTP via `isHttpSpan()` (which keys on `http.url` presence) and apply the same enrichment as native: `network.connection.type` via `NetworkStatusInjector`, synthetic-parent transaction wrapping for orphan spans. See `ios/AGENTS.md` "JS-driven HTTP Spans Get Native Enrichment Automatically".
+This alignment lets apm-agent-ios's `ElasticSpanProcessor` recognize JS HTTP spans as HTTP via `isHttpSpan()` (which keys on `http.url` presence) and apply the same enrichment as native: `network.connection.type` via `NetworkStatusInjector`. Its synthetic-parent wrapping for orphan spans no longer applies — we supply the parent ourselves (see below). See `ios/AGENTS.md` "JS-driven HTTP Spans Get Native Enrichment Automatically".
+
+### HTTP Span Shape — Request Transaction + Exit Span
+
+Every traced request emits **two** spans: the **Request Transaction** minted by `startRequestTransaction` (`instrumentation/httpSpans.ts`) and the request span parented to it. Without the parent, the request span is a root, and apm-data classifies roots as transactions — which never carry `span.destination.service.resource`, the field Kibana's service map draws external edges from. Android had no service-map edge for this reason; iOS was masked by `ElasticSpanProcessor` manufacturing a parent for parentless `http.url` spans. Minting in JS fixes both platforms with one mechanism (DEV-1232, [ADR-0004](../../docs/adr/0004-mint-a-request-transaction-for-every-traced-request.md)).
+
+The Request Transaction is a deliberate copy of the parent apm-agent-ios manufactures, matching the Flutter plugin's ADR-0016: the request span's name, `kind=CLIENT` (so both spans go through `startClientSpan`), and **nothing else** — no attributes, no status, no events. `http.url` on it would revive the iOS rescue and produce a third span; screen attributes stay on the request span. It ends immediately after the request span. Requests filtered by `shouldIgnore` mint nothing.
+
+**Failure is an exception event, not a span status.** No span on the request path carries a status. A 4xx/5xx (`>= FAILURE_STATUS_FLOOR`, shared by both transports) records an `exception` event on the request span with the status code as `exception.type` and the reason phrase as `exception.message`; timeouts, network failures and cancellations do the same, told apart by type (`TimeoutError` / `NetworkError` / `AbortError`). This is what apm-agent-ios's `URLSessionInstrumentation` does for its own traffic. Consequence: every 4xx/5xx becomes an APM error document, and transaction error rate no longer sees HTTP failure — the exit span does, via the intake fallback from `http.status_code`.
+
+That fallback is why `endHttpSpan` ends spans with the `-1` sentinel rather than `1`: `endSpan` normally forces `Ok`/`ERROR`, and an explicit `Ok` would suppress the derivation and report a 5xx as a success. The only axis still unmatched with Flutter is timestamp equality (ADR-0004).
 
 ### Native UIKit View-Controller Instrumentation
 

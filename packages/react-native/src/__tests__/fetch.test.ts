@@ -4,8 +4,11 @@ import type { EdotConfig } from '../types';
 
 jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
-    startSpan: jest.fn().mockReturnValue('span-1'),
-    startClientSpan: jest.fn().mockReturnValue('span-1'),
+    startSpan: jest.fn().mockReturnValue('internal-1'),
+    // The Request Transaction is the attribute-free call; the request span carries attributes.
+    startClientSpan: jest.fn((_name: string, attributes: Record<string, string | number>) =>
+      Object.keys(attributes).length === 0 ? 'transaction-1' : 'span-1',
+    ),
     getTraceparent: jest
       .fn()
       .mockReturnValue('00-0123456789abcdef0123456789abcdef-fedcba9876543210-01'),
@@ -40,19 +43,70 @@ describe('setupFetchInstrumentation', () => {
     teardown?.();
   });
 
-  it('creates HTTP CLIENT span via startClientSpan, not startSpan', async () => {
+  it('mints a Request Transaction and hangs the request span under it', async () => {
     teardown = setupFetchInstrumentation(baseConfig);
     await global.fetch('https://api.example.com/users');
 
-    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledTimes(1);
+    // Both are CLIENT spans, as the parent apm-agent-ios manufactures takes its child's kind.
     expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
-    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
-      'GET api.example.com',
-      expect.objectContaining({ 'http.method': 'GET' }),
-      null,
-      '@inoxth/react-native-edot-sdk/http',
-    );
-    expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('span-1', 1);
+    expect((EdotNativeModule.startClientSpan as jest.Mock).mock.calls).toEqual([
+      ['GET api.example.com', {}, null, '@inoxth/react-native-edot-sdk/http'],
+      [
+        'GET api.example.com',
+        expect.objectContaining({ 'http.method': 'GET' }),
+        'transaction-1',
+        '@inoxth/react-native-edot-sdk/http',
+      ],
+    ]);
+  });
+
+  it('never gives the Request Transaction attributes that re-trigger the iOS agent rescue', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    await global.fetch('https://api.example.com/users');
+
+    const [, transactionAttrs] = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0];
+    expect(transactionAttrs).toEqual({});
+  });
+
+  it('ends the request span before the Request Transaction, both statuses unset', async () => {
+    teardown = setupFetchInstrumentation(baseConfig);
+    await global.fetch('https://api.example.com/users');
+
+    expect((EdotNativeModule.endSpan as jest.Mock).mock.calls).toEqual([
+      ['span-1', -1],
+      ['transaction-1', -1],
+    ]);
+  });
+
+  it('says a failed HTTP status with an exception event, not a span status', async () => {
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue(
+        new Response('nope', { status: 500, statusText: 'Internal Server Error' }),
+      );
+    teardown = setupFetchInstrumentation(baseConfig);
+
+    await global.fetch('https://api.example.com/users');
+
+    expect(EdotNativeModule.recordSpanException).toHaveBeenCalledTimes(1);
+    expect(EdotNativeModule.recordSpanException).toHaveBeenCalledWith('span-1', {
+      name: '500',
+      message: 'Internal Server Error',
+      stack: '',
+    });
+    expect((EdotNativeModule.endSpan as jest.Mock).mock.calls).toEqual([
+      ['span-1', -1],
+      ['transaction-1', -1],
+    ]);
+  });
+
+  it('records no exception event below 400', async () => {
+    global.fetch = jest.fn().mockResolvedValue(new Response(null, { status: 304 }));
+    teardown = setupFetchInstrumentation(baseConfig);
+
+    await global.fetch('https://api.example.com/users');
+
+    expect(EdotNativeModule.recordSpanException).not.toHaveBeenCalled();
   });
 
   it('uses legacy HTTP attribute names per Elastic mobile spec', async () => {
@@ -69,7 +123,7 @@ describe('setupFetchInstrumentation', () => {
         'net.peer.name': 'api.example.com',
         'net.peer.port': 443,
       }),
-      null,
+      'transaction-1',
       '@inoxth/react-native-edot-sdk/http',
     );
   });
@@ -78,7 +132,7 @@ describe('setupFetchInstrumentation', () => {
     teardown = setupFetchInstrumentation(baseConfig);
     await global.fetch('https://api.example.com/users');
 
-    const [, attrs] = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0];
+    const [, attrs] = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[1];
     expect(attrs).not.toHaveProperty('http.request.method');
     expect(attrs).not.toHaveProperty('url.full');
   });
@@ -126,7 +180,7 @@ describe('setupFetchInstrumentation', () => {
         'http.scheme': 'http',
         'net.peer.port': 80,
       }),
-      null,
+      'transaction-1',
       '@inoxth/react-native-edot-sdk/http',
     );
   });
@@ -138,7 +192,7 @@ describe('setupFetchInstrumentation', () => {
     expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({ 'net.peer.port': 8443 }),
-      null,
+      'transaction-1',
       '@inoxth/react-native-edot-sdk/http',
     );
   });
@@ -158,6 +212,15 @@ describe('setupFetchInstrumentation', () => {
     expect(EdotNativeModule.startClientSpan).not.toHaveBeenCalled();
   });
 
+  it('mints no Request Transaction for untraced requests', async () => {
+    teardown = setupFetchInstrumentation({ ...baseConfig, ignoreUrls: [/\/health$/] });
+    await global.fetch('https://api.example.com/health');
+    await global.fetch('https://apm.example.com:8200/intake');
+
+    expect(EdotNativeModule.startClientSpan).not.toHaveBeenCalled();
+    expect(EdotNativeModule.startSpan).not.toHaveBeenCalled();
+  });
+
   it('records error span on network failure', async () => {
     global.fetch = originalFetch;
     teardown = setupFetchInstrumentation(baseConfig);
@@ -169,8 +232,15 @@ describe('setupFetchInstrumentation', () => {
     teardown = setupFetchInstrumentation(baseConfig);
 
     await expect(global.fetch('https://api.example.com/fail')).rejects.toThrow('Network error');
-    expect(EdotNativeModule.recordSpanException).toHaveBeenCalled();
-    expect(EdotNativeModule.endSpan).toHaveBeenCalledWith('span-1', 2);
+    expect(EdotNativeModule.recordSpanException).toHaveBeenCalledWith(
+      'span-1',
+      expect.objectContaining({ message: 'Network error' }),
+    );
+    expect(EdotNativeModule.recordSpanException).toHaveBeenCalledTimes(1);
+    expect((EdotNativeModule.endSpan as jest.Mock).mock.calls).toEqual([
+      ['span-1', -1],
+      ['transaction-1', -1],
+    ]);
   });
 
   it('names GraphQL spans per OTel semconv and sets graphql.operation.* attributes', async () => {
@@ -190,6 +260,12 @@ describe('setupFetchInstrumentation', () => {
         'graphql.operation.type': 'query',
         'graphql.operation.name': 'GetUser',
       }),
+      'transaction-1',
+      '@inoxth/react-native-edot-sdk/http',
+    );
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
+      'query GetUser',
+      {},
       null,
       '@inoxth/react-native-edot-sdk/http',
     );

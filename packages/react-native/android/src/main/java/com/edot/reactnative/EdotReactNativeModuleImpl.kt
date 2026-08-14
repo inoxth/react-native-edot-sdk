@@ -37,6 +37,9 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
     companion object {
         const val NAME = "EdotReactNative"
 
+        /** `endSpan` sentinel: end the span without setting a status at all. */
+        const val STATUS_UNSET = -1
+
         @Volatile
         private var isInitialized = false
         @Volatile
@@ -236,8 +239,11 @@ class EdotReactNativeModuleImpl(private val reactContext: ReactApplicationContex
     fun endSpan(spanId: String, statusCode: Double) {
         val span = activeSpans.remove(spanId) ?: return
         if (!emissionAllowed()) return
-        // OTel StatusCode: 1=Ok, 2=Error
+        // OTel StatusCode: 1=Ok, 2=Error. STATUS_UNSET leaves the status alone, which is
+        // not the same as Ok: intake derives event.outcome from http.status_code only for
+        // an unset span, and the HTTP span pair relies on that (ADR-0004).
         when (statusCode.toInt()) {
+            STATUS_UNSET -> {}
             2 -> span.setStatus(StatusCode.ERROR)
             else -> span.setStatus(StatusCode.OK)
         }

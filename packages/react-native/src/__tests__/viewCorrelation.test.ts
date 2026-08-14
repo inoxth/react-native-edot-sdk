@@ -7,8 +7,11 @@ import type { EdotConfig } from '../types';
 
 jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
-    startSpan: jest.fn().mockReturnValue('span-1'),
-    startClientSpan: jest.fn().mockReturnValue('span-1'),
+    startSpan: jest.fn().mockReturnValue('internal-1'),
+    // The Request Transaction is the attribute-free call; the request span carries attributes.
+    startClientSpan: jest.fn((_name: string, attributes: Record<string, string | number>) =>
+      Object.keys(attributes).length === 0 ? 'transaction-1' : 'span-1',
+    ),
     getTraceparent: jest.fn().mockReturnValue(''),
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
@@ -54,7 +57,7 @@ describe('view correlation on fetch', () => {
         'screen.name': 'ProductDetail',
         'screen.id': 'view-span-123',
       }),
-      null,
+      'transaction-1',
       '@inoxth/react-native-edot-sdk/http',
     );
   });
@@ -64,7 +67,7 @@ describe('view correlation on fetch', () => {
 
     await global.fetch('https://api.example.com/products/42');
 
-    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
+    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[1][1];
     expect(attrs['screen.name']).toBeUndefined();
     expect(attrs['screen.id']).toBeUndefined();
     expect(attrs['view.name']).toBeUndefined();
@@ -120,7 +123,7 @@ describe('view correlation on XHR', () => {
         'screen.name': 'HomeScreen',
         'screen.id': 'view-span-456',
       }),
-      null,
+      'transaction-1',
       '@inoxth/react-native-edot-sdk/http',
     );
   });
@@ -132,7 +135,7 @@ describe('view correlation on XHR', () => {
     xhr.open('GET', 'https://api.example.com/data');
     xhr.send();
 
-    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
+    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[1][1];
     expect(attrs['screen.name']).toBeUndefined();
     expect(attrs['screen.id']).toBeUndefined();
     expect(attrs['view.name']).toBeUndefined();
