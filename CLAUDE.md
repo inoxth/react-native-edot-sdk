@@ -28,7 +28,7 @@ yarn build              # bob build for all @inoxth/* packages
 
 ### Issue tracker
 
-Issues/PRDs are tracked in **Linear** — project "React Native EDOT SDK" (team DELI Dev Tasks), via the connected Linear MCP tools. See `docs/agents/issue-tracker.md`.
+Issues/PRDs are tracked in **Linear** — project "EDOT SDK Multi Platform" (team DELI Dev Tasks), via the connected Linear MCP tools. Issue titles are prefixed `[React-Native]`. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
