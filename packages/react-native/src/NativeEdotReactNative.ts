@@ -19,6 +19,7 @@ export interface Spec extends TurboModule {
     instrumentationName?: string | null,
   ): string;
   getTraceparent(spanHandle: string): string;
+  /** OTel StatusCode: 1=Ok, 2=Error. `-1` ends the span leaving its status unset. */
   endSpan(spanId: string, statusCode: number): void;
   setSpanAttribute(spanId: string, key: string, value: string): void;
   setSpanAttributeNumber(spanId: string, key: string, value: number): void;

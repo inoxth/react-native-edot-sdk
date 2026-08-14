@@ -12,7 +12,13 @@ import {
   extractTarget,
 } from './urlUtils';
 import { buildGraphqlSpanName, extractGraphqlOperation, isGraphqlUrl } from './graphql';
-import { trackSpan, untrackSpan } from './spanCleanup';
+import {
+  endHttpSpan,
+  HTTP_INSTRUMENTATION_NAME,
+  recordHttpFailure,
+  startRequestTransaction,
+} from './httpSpans';
+import { trackSpan } from './spanCleanup';
 
 const DEDUP_HEADER = 'X-Edot-RN-Traced';
 
@@ -20,6 +26,7 @@ interface XhrState {
   method: string;
   url: string;
   spanId: string;
+  transactionSpanId: string;
 }
 
 const xhrStateMap = new WeakMap<XMLHttpRequest, XhrState>();
@@ -35,7 +42,12 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
   ): ReturnType<typeof originalOpen> {
     const [method, url] = args;
     try {
-      xhrStateMap.set(this, { method: method.toUpperCase(), url, spanId: '' });
+      xhrStateMap.set(this, {
+        method: method.toUpperCase(),
+        url,
+        spanId: '',
+        transactionSpanId: '',
+      });
     } catch (sdkError) {
       console.warn('[EDOT] XHR open instrumentation error:', sdkError);
     }
@@ -95,11 +107,13 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         spanAttributes['screen.id'] = activeView.spanId;
       }
 
+      state.transactionSpanId = startRequestTransaction(spanName);
+
       const nativeSpanId = EdotNativeModule.startClientSpan(
         spanName,
         spanAttributes,
-        null,
-        '@inoxth/react-native-edot-sdk/http',
+        state.transactionSpanId,
+        HTTP_INSTRUMENTATION_NAME,
       );
       state.spanId = nativeSpanId;
       trackSpan(nativeSpanId);
@@ -120,11 +134,12 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
         );
       }
 
-      const endSpan = (statusCode: number) => {
+      const endSpans = () => {
         if (!state.spanId) {
           return;
         }
         const currentSpanId = state.spanId;
+        const currentTransactionSpanId = state.transactionSpanId;
         EdotNativeModule.setSpanAttributeNumber(currentSpanId, 'http.status_code', this.status);
         const responseLength = this.getResponseHeader('content-length');
         if (responseLength) {
@@ -137,13 +152,15 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
             );
           }
         }
-        EdotNativeModule.endSpan(currentSpanId, statusCode);
         state.spanId = '';
-        untrackSpan(currentSpanId);
+        state.transactionSpanId = '';
+        endHttpSpan(currentSpanId);
+        endHttpSpan(currentTransactionSpanId);
       };
 
       this.addEventListener('load', () => {
-        endSpan(this.status >= 400 ? 2 : 1);
+        recordHttpFailure(state.spanId, this.status, this.statusText);
+        endSpans();
       });
 
       this.addEventListener('error', () => {
@@ -152,7 +169,7 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
           message: 'XHR request failed',
           stack: '',
         });
-        endSpan(2);
+        endSpans();
       });
 
       this.addEventListener('timeout', () => {
@@ -161,14 +178,31 @@ export function setupXhrInstrumentation(config: EdotConfig): () => void {
           message: 'XHR request timed out',
           stack: '',
         });
-        endSpan(2);
+        endSpans();
       });
 
+      // A cancellation is recorded like any other request failure, told apart by its
+      // exception type — as it is on the Flutter fleet.
       this.addEventListener('abort', () => {
-        endSpan(0);
+        EdotNativeModule.recordSpanException(state.spanId, {
+          name: 'AbortError',
+          message: 'XHR request aborted',
+          stack: '',
+        });
+        endSpans();
       });
     } catch (sdkError) {
       console.warn('[EDOT] XHR instrumentation error:', sdkError);
+
+      const state = xhrStateMap.get(this);
+      if (state?.spanId) {
+        endHttpSpan(state.spanId);
+        state.spanId = '';
+      }
+      if (state?.transactionSpanId) {
+        endHttpSpan(state.transactionSpanId);
+        state.transactionSpanId = '';
+      }
     }
 
     return originalSend.call(this, body);

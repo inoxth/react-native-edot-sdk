@@ -5,8 +5,11 @@ import type { EdotConfig } from '../types';
 
 jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
-    startSpan: jest.fn().mockReturnValue('net-span-1'),
-    startClientSpan: jest.fn().mockReturnValue('net-span-1'),
+    startSpan: jest.fn().mockReturnValue('internal-1'),
+    // The Request Transaction is the attribute-free call; the request span carries attributes.
+    startClientSpan: jest.fn((_name: string, attributes: Record<string, string | number>) =>
+      Object.keys(attributes).length === 0 ? 'transaction-1' : 'span-1',
+    ),
     getTraceparent: jest.fn().mockReturnValue(''),
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
@@ -53,6 +56,20 @@ describe('fetch view correlation', () => {
         'screen.name': 'ProductDetailScreen',
         'screen.id': 'vs1',
       }),
+      'transaction-1',
+      '@inoxth/react-native-edot-sdk/http',
+    );
+  });
+
+  it('keeps screen attributes off the Request Transaction', async () => {
+    ActiveViewContext.setActiveView({ name: 'ProductDetailScreen', spanId: 'vs1' });
+    teardown = setupFetchInstrumentation(baseConfig);
+
+    await global.fetch('https://api.example.com/products/1');
+
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
+      'GET api.example.com',
+      {},
       null,
       '@inoxth/react-native-edot-sdk/http',
     );
@@ -63,7 +80,7 @@ describe('fetch view correlation', () => {
 
     await global.fetch('https://api.example.com/data');
 
-    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
+    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[1][1];
     expect(attrs).not.toHaveProperty('screen.name');
     expect(attrs).not.toHaveProperty('screen.id');
     expect(attrs).not.toHaveProperty('view.name');
@@ -93,7 +110,7 @@ describe('fetch view correlation', () => {
         'screen.name': 'ScreenA',
         'screen.id': 'vs-a',
       }),
-      null,
+      'transaction-1',
       '@inoxth/react-native-edot-sdk/http',
     );
   });

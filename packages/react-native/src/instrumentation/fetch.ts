@@ -14,7 +14,13 @@ import {
   extractTarget,
 } from './urlUtils';
 import { buildGraphqlSpanName, extractGraphqlOperation, isGraphqlUrl } from './graphql';
-import { trackSpan, untrackSpan } from './spanCleanup';
+import {
+  endHttpSpan,
+  HTTP_INSTRUMENTATION_NAME,
+  recordHttpFailure,
+  startRequestTransaction,
+} from './httpSpans';
+import { trackSpan } from './spanCleanup';
 
 const DEDUP_HEADER = 'X-Edot-RN-Traced';
 
@@ -29,6 +35,7 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
       return originalFetch(forwardInput, init);
     }
 
+    let transactionSpanId: string | undefined;
     let nativeSpanId: string | undefined;
     try {
       const method = extractMethod(input, init);
@@ -70,11 +77,13 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
         spanAttributes['screen.id'] = activeView.spanId;
       }
 
+      transactionSpanId = startRequestTransaction(spanName);
+
       nativeSpanId = EdotNativeModule.startClientSpan(
         spanName,
         spanAttributes,
-        null,
-        '@inoxth/react-native-edot-sdk/http',
+        transactionSpanId,
+        HTTP_INSTRUMENTATION_NAME,
       );
       trackSpan(nativeSpanId);
 
@@ -110,9 +119,10 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
         }
       }
 
-      // OTel StatusCode: 1=Ok, 2=Error
-      EdotNativeModule.endSpan(nativeSpanId, response.ok ? 1 : 2);
-      untrackSpan(nativeSpanId);
+      recordHttpFailure(nativeSpanId, response.status, response.statusText);
+
+      endHttpSpan(nativeSpanId);
+      endHttpSpan(transactionSpanId);
 
       return response;
     } catch (error) {
@@ -122,8 +132,10 @@ export function setupFetchInstrumentation(config: EdotConfig): () => void {
           message: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? (error.stack ?? '') : '',
         });
-        EdotNativeModule.endSpan(nativeSpanId, 2);
-        untrackSpan(nativeSpanId);
+        endHttpSpan(nativeSpanId);
+      }
+      if (transactionSpanId) {
+        endHttpSpan(transactionSpanId);
       }
       throw error;
     }

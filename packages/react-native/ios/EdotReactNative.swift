@@ -65,6 +65,9 @@ class EdotReactNative: NSObject {
 
   private static let activeSpansCap = 512
 
+  /// `endSpan` sentinel: end the span without setting a status at all.
+  private static let statusUnset = -1
+
   #if ELASTIC_APM_AVAILABLE
   private static var urlSessionInstrumentation: URLSessionInstrumentation?
   #endif
@@ -390,7 +393,13 @@ class EdotReactNative: NSObject {
     guard EdotReactNative.emissionAllowed() else { return }
 
     if let otelSpan = span {
-      // OTel StatusCode: 1=Ok, 2=Error
+      // OTel StatusCode: 1=Ok, 2=Error. statusUnset leaves the status alone, which is not
+      // the same as Ok: intake derives event.outcome from http.status_code only for an
+      // unset span, and the HTTP span pair relies on that (ADR-0004).
+      if statusCode == EdotReactNative.statusUnset {
+        otelSpan.end()
+        return
+      }
       if statusCode == 2 {
         otelSpan.status = .error(description: "")
       } else {

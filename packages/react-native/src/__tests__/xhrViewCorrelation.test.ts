@@ -5,8 +5,11 @@ import type { EdotConfig } from '../types';
 
 jest.mock('../nativeModule', () => ({
   EdotNativeModule: {
-    startSpan: jest.fn().mockReturnValue('xhr-span-1'),
-    startClientSpan: jest.fn().mockReturnValue('xhr-span-1'),
+    startSpan: jest.fn().mockReturnValue('internal-1'),
+    // The Request Transaction is the attribute-free call; the request span carries attributes.
+    startClientSpan: jest.fn((_name: string, attributes: Record<string, string | number>) =>
+      Object.keys(attributes).length === 0 ? 'transaction-1' : 'span-1',
+    ),
     getTraceparent: jest.fn().mockReturnValue(''),
     endSpan: jest.fn(),
     setSpanAttribute: jest.fn(),
@@ -72,6 +75,22 @@ describe('XHR view correlation', () => {
         'screen.name': 'HomeScreen',
         'screen.id': 'hs1',
       }),
+      'transaction-1',
+      '@inoxth/react-native-edot-sdk/http',
+    );
+  });
+
+  it('keeps screen attributes off the Request Transaction', () => {
+    ActiveViewContext.setActiveView({ name: 'HomeScreen', spanId: 'hs1' });
+    teardown = setupXhrInstrumentation(baseConfig);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://api.example.com/feed');
+    xhr.send();
+
+    expect(EdotNativeModule.startClientSpan).toHaveBeenCalledWith(
+      'GET api.example.com',
+      {},
       null,
       '@inoxth/react-native-edot-sdk/http',
     );
@@ -84,7 +103,7 @@ describe('XHR view correlation', () => {
     xhr.open('GET', 'https://api.example.com/data');
     xhr.send();
 
-    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[0][1];
+    const attrs = (EdotNativeModule.startClientSpan as jest.Mock).mock.calls[1][1];
     expect(attrs).not.toHaveProperty('screen.name');
     expect(attrs).not.toHaveProperty('screen.id');
     expect(attrs).not.toHaveProperty('view.name');
@@ -107,7 +126,7 @@ describe('XHR view correlation', () => {
         'screen.name': 'ScreenB',
         'screen.id': 'vs-b',
       }),
-      null,
+      'transaction-1',
       '@inoxth/react-native-edot-sdk/http',
     );
   });
